@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tou-calculator"
+version = "0.1.0"
+description = "Taiwan time-of-use electricity tariff calculator"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Gary"}]
+
+dependencies = [
+    "numpy>=1.21.0",
+    "pandas>=1.5.0",
+    "platformdirs>=4.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"tou_calculator" = ["data/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

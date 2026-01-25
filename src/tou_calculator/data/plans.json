@@ -1,0 +1,3574 @@
+{
+  "version": "20251001",
+  "definitions": {
+    "seasons": [
+      {
+        "name": "summer",
+        "start": "06-01",
+        "end": "09-30"
+      },
+      {
+        "name": "non_summer",
+        "start": "10-01",
+        "end": "05-31"
+      }
+    ],
+    "seasons_high_voltage": [
+      {
+        "name": "summer",
+        "start": "05-16",
+        "end": "10-15"
+      },
+      {
+        "name": "non_summer",
+        "start": "10-16",
+        "end": "05-15"
+      }
+    ],
+    "periods": [
+      "peak",
+      "semi_peak",
+      "off_peak",
+      "flat"
+    ],
+    "day_types": [
+      "weekday",
+      "saturday",
+      "sunday_holiday"
+    ],
+    "minimum_usage_rules": {
+      "lighting_minimum_usage": [
+        {
+          "label": "single_low_voltage",
+          "phase": "single",
+          "voltage_v": 110,
+          "ampere_threshold": 10,
+          "kwh_per_ampere": 2,
+          "kwh_per_ampere_over": 20
+        },
+        {
+          "label": "single_low_voltage",
+          "phase": "single",
+          "voltage_v": 220,
+          "ampere_threshold": 10,
+          "kwh_per_ampere": 2,
+          "kwh_per_ampere_over": 20
+        },
+        {
+          "label": "three_low_voltage",
+          "phase": "three",
+          "voltage_v": 220,
+          "ampere_threshold": 10,
+          "kwh_per_ampere": 6,
+          "kwh_per_ampere_over": 60
+        },
+        {
+          "label": "single_high_voltage_3300",
+          "phase": "single",
+          "voltage_v": 3300,
+          "kwh_per_ampere": 60
+        },
+        {
+          "label": "single_high_voltage_6600",
+          "phase": "single",
+          "voltage_v": 6600,
+          "kwh_per_ampere": 120
+        },
+        {
+          "label": "three_high_voltage_3300",
+          "phase": "three",
+          "voltage_v": 3300,
+          "kwh_per_ampere": 100
+        },
+        {
+          "label": "three_high_voltage_5700",
+          "phase": "three",
+          "voltage_v": 5700,
+          "kwh_per_ampere": 180
+        },
+        {
+          "label": "three_high_voltage_11400",
+          "phase": "three",
+          "voltage_v": 11400,
+          "kwh_per_ampere": 360
+        }
+      ]
+    }
+  },
+  "plans": [
+    {
+      "id": "residential_non_tou",
+      "name": "表燈(住商)非時間電價-住宅用",
+      "type": "TIERED",
+      "category": "lighting",
+      "season_strategy": "seasons",
+      "tiers": [
+        {
+          "min": 0,
+          "max": 120,
+          "summer": 1.78,
+          "non_summer": 1.78
+        },
+        {
+          "min": 121,
+          "max": 330,
+          "summer": 2.55,
+          "non_summer": 2.26
+        },
+        {
+          "min": 331,
+          "max": 500,
+          "summer": 3.8,
+          "non_summer": 3.13
+        },
+        {
+          "min": 501,
+          "max": 700,
+          "summer": 5.14,
+          "non_summer": 4.24
+        },
+        {
+          "min": 701,
+          "max": 1000,
+          "summer": 6.44,
+          "non_summer": 5.27
+        },
+        {
+          "min": 1001,
+          "max": null,
+          "summer": 8.86,
+          "non_summer": 7.03
+        }
+      ],
+      "billing_rules": {
+        "min_monthly_fee": 100,
+        "minimum_usage_rules_ref": "lighting_minimum_usage",
+        "billing_cycle_months": 2
+      }
+    },
+    {
+      "id": "lighting_non_business_tiered",
+      "name": "表燈(住商)非時間電價-住宅以外非營業用",
+      "type": "TIERED",
+      "category": "lighting",
+      "season_strategy": "seasons",
+      "tiers": [
+        {
+          "min": 0,
+          "max": 120,
+          "summer": 1.78,
+          "non_summer": 1.78
+        },
+        {
+          "min": 121,
+          "max": 330,
+          "summer": 2.55,
+          "non_summer": 2.26
+        },
+        {
+          "min": 331,
+          "max": 500,
+          "summer": 3.8,
+          "non_summer": 3.13
+        },
+        {
+          "min": 501,
+          "max": 700,
+          "summer": 5.14,
+          "non_summer": 4.24
+        },
+        {
+          "min": 701,
+          "max": 1000,
+          "summer": 6.44,
+          "non_summer": 5.27
+        },
+        {
+          "min": 1001,
+          "max": null,
+          "summer": 8.86,
+          "non_summer": 7.03
+        }
+      ],
+      "billing_rules": {
+        "min_monthly_fee": 100,
+        "minimum_usage_rules_ref": "lighting_minimum_usage",
+        "billing_cycle_months": 2
+      }
+    },
+    {
+      "id": "lighting_business_tiered",
+      "name": "表燈(住商)非時間電價-營業用",
+      "type": "TIERED",
+      "category": "lighting",
+      "season_strategy": "seasons",
+      "tiers": [
+        {
+          "min": 0,
+          "max": 330,
+          "summer": 2.71,
+          "non_summer": 2.28
+        },
+        {
+          "min": 331,
+          "max": 700,
+          "summer": 3.76,
+          "non_summer": 3.1
+        },
+        {
+          "min": 701,
+          "max": 1500,
+          "summer": 4.46,
+          "non_summer": 3.61
+        },
+        {
+          "min": 1501,
+          "max": 3000,
+          "summer": 7.08,
+          "non_summer": 5.56
+        },
+        {
+          "min": 3001,
+          "max": null,
+          "summer": 7.43,
+          "non_summer": 5.83
+        }
+      ],
+      "billing_rules": {
+        "min_monthly_fee": 100,
+        "minimum_usage_rules_ref": "lighting_minimum_usage",
+        "billing_cycle_months": 2
+      }
+    },
+    {
+      "id": "residential_simple_2_tier",
+      "name": "簡易型時間電價-二段式",
+      "type": "TOU",
+      "category": "lighting",
+      "season_strategy": "seasons",
+      "basic_fee": 75.0,
+      "over_2000_kwh_surcharge": 1.04,
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "cost": 5.16
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "cost": 2.06
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "cost": 4.93
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "cost": 1.99
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_2000_kwh_surcharge": {
+          "threshold_kwh": 2000,
+          "cost_per_kwh": 1.04
+        }
+      }
+    },
+    {
+      "id": "residential_simple_3_tier",
+      "name": "簡易型時間電價-三段式",
+      "type": "TOU",
+      "category": "lighting",
+      "season_strategy": "seasons",
+      "basic_fee": 75.0,
+      "over_2000_kwh_surcharge": 1.04,
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "cost": 7.13
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "cost": 4.69
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "cost": 2.06
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "cost": 4.48
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "cost": 1.99
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "16:00",
+          "end": "22:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "16:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "22:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_2000_kwh_surcharge": {
+          "threshold_kwh": 2000,
+          "cost_per_kwh": 1.04
+        }
+      }
+    },
+    {
+      "id": "lighting_standard_2_tier",
+      "name": "標準型時間電價-二段式",
+      "type": "TOU",
+      "category": "lighting",
+      "season_strategy": "seasons",
+      "basic_fees": [
+        {
+          "label": "按戶計收-單相",
+          "unit": "per_household_month",
+          "cost": 129.1
+        },
+        {
+          "label": "按戶計收-三相",
+          "unit": "per_household_month",
+          "cost": 262.5
+        },
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 236.2,
+          "non_summer": 173.2
+        },
+        {
+          "label": "非夏月契約",
+          "unit": "per_kw_month",
+          "non_summer": 173.2
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 47.2,
+          "non_summer": 34.6
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 47.2,
+          "non_summer": 34.6
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 5.54
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 5.39
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.76
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.65
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.27
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.15
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.27
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.15
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.27
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.15
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "zero_usage_basic_fee_ratio": 0.5,
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "power_factor_adjustment": {
+          "apply_to": "energy"
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "經常契約",
+          "non_summer_label": "非夏月契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "lighting_standard_3_tier",
+      "name": "標準型時間電價-三段式",
+      "type": "TOU",
+      "category": "lighting",
+      "season_strategy": "seasons",
+      "basic_fees": [
+        {
+          "label": "按戶計收-單相",
+          "unit": "per_household_month",
+          "cost": 129.1
+        },
+        {
+          "label": "按戶計收-三相",
+          "unit": "per_household_month",
+          "cost": 262.5
+        },
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 236.2,
+          "non_summer": 173.2
+        },
+        {
+          "label": "半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 173.2,
+          "non_summer": 173.2
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 47.2,
+          "non_summer": 34.6
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 47.2,
+          "non_summer": 34.6
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 8.12
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "weekday",
+          "cost": 5.02
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "weekday",
+          "cost": 4.86
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.5
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.4
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.23
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.12
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.23
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.12
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.23
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.12
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "16:00",
+          "end": "22:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "16:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "22:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "zero_usage_basic_fee_ratio": 0.5,
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "three_stage"
+        },
+        "power_factor_adjustment": {
+          "apply_to": "energy"
+        },
+        "basic_fee_formula": {
+          "type": "three_stage",
+          "regular_label": "經常契約",
+          "semi_peak_label": "半尖峰契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "low_voltage_power",
+      "name": "低壓電力-非時間電價",
+      "type": "NON_TOU",
+      "category": "low_voltage",
+      "season_strategy": "seasons",
+      "basic_fees": [
+        {
+          "label": "裝置契約",
+          "unit": "per_kw_month",
+          "cost": 137.5
+        },
+        {
+          "label": "需量經常契約",
+          "unit": "per_kw_month",
+          "summer": 236.2,
+          "non_summer": 173.2
+        },
+        {
+          "label": "需量非夏月契約",
+          "unit": "per_kw_month",
+          "non_summer": 173.2
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "flat",
+          "cost": 4.08
+        },
+        {
+          "season": "non_summer",
+          "period": "flat",
+          "cost": 3.87
+        }
+      ]
+    },
+    {
+      "id": "low_voltage_two_stage",
+      "name": "低壓電力-二段式時間電價",
+      "type": "TOU",
+      "category": "low_voltage",
+      "season_strategy": "seasons",
+      "basic_fees": [
+        {
+          "label": "按戶計收",
+          "unit": "per_household_month",
+          "cost": 105.0
+        },
+        {
+          "label": "裝置契約",
+          "unit": "per_kw_month",
+          "cost": 137.5
+        },
+        {
+          "label": "按戶計收(需量)",
+          "unit": "per_household_month",
+          "cost": 262.5
+        },
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 236.2,
+          "non_summer": 173.2
+        },
+        {
+          "label": "非夏月契約",
+          "unit": "per_kw_month",
+          "non_summer": 173.2
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 47.2,
+          "non_summer": 34.6
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 47.2,
+          "non_summer": 34.6
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 5.54
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 5.39
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.76
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.65
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.27
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.15
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.27
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.15
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.27
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.15
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "power_factor_adjustment": {
+          "apply_to": "energy"
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "經常契約",
+          "non_summer_label": "非夏月契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "low_voltage_three_stage",
+      "name": "低壓電力-三段式時間電價",
+      "type": "TOU",
+      "category": "low_voltage",
+      "season_strategy": "seasons",
+      "basic_fees": [
+        {
+          "label": "按戶計收",
+          "unit": "per_household_month",
+          "cost": 262.5
+        },
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 236.2,
+          "non_summer": 173.2
+        },
+        {
+          "label": "半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 173.2,
+          "non_summer": 173.2
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 47.2,
+          "non_summer": 34.6
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 47.2,
+          "non_summer": 34.6
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 8.12
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "weekday",
+          "cost": 5.02
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "weekday",
+          "cost": 4.86
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.5
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.4
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.23
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.12
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.23
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.12
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.23
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.12
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "16:00",
+          "end": "22:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "16:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "22:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "three_stage"
+        },
+        "power_factor_adjustment": {
+          "apply_to": "energy"
+        },
+        "basic_fee_formula": {
+          "type": "three_stage",
+          "regular_label": "經常契約",
+          "semi_peak_label": "半尖峰契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "low_voltage_ev",
+      "name": "低壓-電動車充換電設施電價",
+      "type": "TOU",
+      "category": "low_voltage",
+      "season_strategy": "seasons",
+      "basic_fees": [
+        {
+          "label": "按戶計收",
+          "unit": "per_household_month",
+          "cost": 262.5
+        },
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 47.2,
+          "non_summer": 34.6
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 12.47
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 12.14
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 3.05
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.9
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 3.05
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.9
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 3.05
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.9
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "16:00",
+          "end": "22:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "16:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "22:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "15:00",
+          "end": "21:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "15:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "21:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "power_factor_adjustment": {
+          "apply_to": "energy"
+        },
+        "basic_fee_formula": {
+          "type": "regular_only",
+          "regular_label": "經常契約",
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "high_voltage_power",
+      "name": "高壓電力",
+      "type": "TOU",
+      "category": "high_voltage",
+      "season_strategy": "seasons_high_voltage",
+      "basic_fees": [
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 223.6,
+          "non_summer": 166.9
+        },
+        {
+          "label": "非夏月契約",
+          "unit": "per_kw_month",
+          "non_summer": 166.9
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 44.7,
+          "non_summer": 33.3
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 44.7,
+          "non_summer": 33.3
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 6.75
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 6.37
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.77
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.54
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.71
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.46
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.71
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.46
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.71
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.46
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "apply_to": "total"
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "經常契約",
+          "non_summer_label": "非夏月契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "high_voltage_two_stage",
+      "name": "高壓電力-二段式時間電價",
+      "type": "TOU",
+      "category": "high_voltage",
+      "season_strategy": "seasons_high_voltage",
+      "basic_fees": [
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 223.6,
+          "non_summer": 166.9
+        },
+        {
+          "label": "非夏月契約",
+          "unit": "per_kw_month",
+          "non_summer": 166.9
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 44.7,
+          "non_summer": 33.3
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 44.7,
+          "non_summer": 33.3
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 6.75
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 6.37
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.77
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.54
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.71
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.46
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.71
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.46
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.71
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.46
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "apply_to": "total"
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "經常契約",
+          "non_summer_label": "非夏月契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "high_voltage_three_stage",
+      "name": "高壓電力-三段式時間電價",
+      "type": "TOU",
+      "category": "high_voltage",
+      "season_strategy": "seasons_high_voltage",
+      "basic_fees": [
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 223.6,
+          "non_summer": 166.9
+        },
+        {
+          "label": "半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 166.9,
+          "non_summer": 166.9
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 44.7,
+          "non_summer": 33.3
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 44.7,
+          "non_summer": 33.3
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 9.39
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "weekday",
+          "cost": 5.85
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "weekday",
+          "cost": 5.47
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.6
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.41
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.53
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.32
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.53
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.32
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.53
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.32
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "16:00",
+          "end": "22:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "16:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "22:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "three_stage"
+        },
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "apply_to": "total"
+        },
+        "basic_fee_formula": {
+          "type": "three_stage",
+          "regular_label": "經常契約",
+          "semi_peak_label": "半尖峰契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "high_voltage_batch",
+      "name": "高壓-批次生產時間電價",
+      "type": "TOU",
+      "category": "high_voltage",
+      "season_strategy": "seasons_high_voltage",
+      "basic_fees": [
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 223.6,
+          "non_summer": 166.9
+        },
+        {
+          "label": "非夏月契約",
+          "unit": "per_kw_month",
+          "non_summer": 166.9
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 44.7,
+          "non_summer": 33.3
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 44.7,
+          "non_summer": 33.3
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 12.47
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 11.79
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 3.26
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 3.0
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 3.18
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.88
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 3.18
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.88
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 3.18
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.88
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "15:30",
+          "end": "21:30",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "15:30",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "21:30",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "15:30",
+          "end": "21:30",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "15:30",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "21:30",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "15:30",
+          "end": "21:30",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "15:30",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "21:30",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "15:30",
+          "end": "21:30",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "15:30",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "21:30",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "apply_to": "total"
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "經常契約",
+          "non_summer_label": "非夏月契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "high_voltage_ev",
+      "name": "高壓-電動車充換電設施電價",
+      "type": "TOU",
+      "category": "high_voltage",
+      "season_strategy": "seasons_high_voltage",
+      "basic_fees": [
+        {
+          "label": "按戶計收",
+          "unit": "per_household_month",
+          "cost": 249.375
+        },
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 44.84,
+          "non_summer": 32.87
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 11.8465
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 11.533
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.8975
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.755
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.8975
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.755
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.8975
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.755
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "16:00",
+          "end": "22:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "16:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "22:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "15:00",
+          "end": "21:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "15:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "21:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "power_factor_adjustment": {
+          "apply_to": "energy"
+        },
+        "basic_fee_formula": {
+          "type": "regular_only",
+          "regular_label": "經常契約",
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "extra_high_voltage_power",
+      "name": "特高壓電力",
+      "type": "TOU",
+      "category": "extra_high_voltage",
+      "season_strategy": "seasons_high_voltage",
+      "basic_fees": [
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 217.3,
+          "non_summer": 160.6
+        },
+        {
+          "label": "非夏月契約",
+          "unit": "per_kw_month",
+          "non_summer": 160.6
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 43.4,
+          "non_summer": 32.1
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 43.4,
+          "non_summer": 32.1
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 6.17
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 5.79
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.73
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.48
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.55
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.28
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.55
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.28
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.55
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.28
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "apply_to": "total"
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "經常契約",
+          "non_summer_label": "非夏月契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "extra_high_voltage_two_stage",
+      "name": "特高壓電力-二段式時間電價",
+      "type": "TOU",
+      "category": "extra_high_voltage",
+      "season_strategy": "seasons_high_voltage",
+      "basic_fees": [
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 217.3,
+          "non_summer": 160.6
+        },
+        {
+          "label": "非夏月契約",
+          "unit": "per_kw_month",
+          "non_summer": 160.6
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 43.4,
+          "non_summer": 32.1
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 43.4,
+          "non_summer": 32.1
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 6.17
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 5.79
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.73
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.48
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.55
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.28
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.55
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.28
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.55
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.28
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "apply_to": "total"
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "經常契約",
+          "non_summer_label": "非夏月契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "extra_high_voltage_three_stage",
+      "name": "特高壓電力-三段式時間電價",
+      "type": "TOU",
+      "category": "extra_high_voltage",
+      "season_strategy": "seasons_high_voltage",
+      "basic_fees": [
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 217.3,
+          "non_summer": 160.6
+        },
+        {
+          "label": "半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 160.6,
+          "non_summer": 160.6
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 43.4,
+          "non_summer": 32.1
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 43.4,
+          "non_summer": 32.1
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 8.69
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "weekday",
+          "cost": 5.38
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "weekday",
+          "cost": 5.03
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.5
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.31
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.4
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.18
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.4
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.18
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.4
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.18
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "16:00",
+          "end": "22:00",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "09:00",
+          "end": "16:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "22:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "09:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "09:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "06:00",
+          "end": "11:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "14:00",
+          "end": "24:00",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "06:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "11:00",
+          "end": "14:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "three_stage"
+        },
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "apply_to": "total"
+        },
+        "basic_fee_formula": {
+          "type": "three_stage",
+          "regular_label": "經常契約",
+          "semi_peak_label": "半尖峰契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    },
+    {
+      "id": "extra_high_voltage_batch",
+      "name": "特高壓-批次生產時間電價",
+      "type": "TOU",
+      "category": "extra_high_voltage",
+      "season_strategy": "seasons_high_voltage",
+      "basic_fees": [
+        {
+          "label": "經常契約",
+          "unit": "per_kw_month",
+          "summer": 217.3,
+          "non_summer": 160.6
+        },
+        {
+          "label": "非夏月契約",
+          "unit": "per_kw_month",
+          "non_summer": 160.6
+        },
+        {
+          "label": "週六半尖峰契約",
+          "unit": "per_kw_month",
+          "summer": 43.4,
+          "non_summer": 32.1
+        },
+        {
+          "label": "離峰契約",
+          "unit": "per_kw_month",
+          "summer": 43.4,
+          "non_summer": 32.1
+        }
+      ],
+      "rates": [
+        {
+          "season": "summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 11.44
+        },
+        {
+          "season": "non_summer",
+          "period": "peak",
+          "day_type": "weekday",
+          "cost": 10.8
+        },
+        {
+          "season": "summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 3.2
+        },
+        {
+          "season": "non_summer",
+          "period": "semi_peak",
+          "day_type": "saturday",
+          "cost": 2.89
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.99
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "weekday",
+          "cost": 2.67
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.99
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "saturday",
+          "cost": 2.67
+        },
+        {
+          "season": "summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.99
+        },
+        {
+          "season": "non_summer",
+          "period": "off_peak",
+          "day_type": "sunday_holiday",
+          "cost": 2.67
+        }
+      ],
+      "schedules": [
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "15:30",
+          "end": "21:30",
+          "period": "peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "15:30",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "weekday",
+          "start": "21:30",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "15:30",
+          "end": "21:30",
+          "period": "semi_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "15:30",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "saturday",
+          "start": "21:30",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "15:30",
+          "end": "21:30",
+          "period": "peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "00:00",
+          "end": "15:30",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "weekday",
+          "start": "21:30",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "15:30",
+          "end": "21:30",
+          "period": "semi_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "00:00",
+          "end": "15:30",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "saturday",
+          "start": "21:30",
+          "end": "24:00",
+          "period": "off_peak"
+        },
+        {
+          "season": "non_summer",
+          "day_type": "sunday_holiday",
+          "start": "00:00",
+          "end": "24:00",
+          "period": "off_peak"
+        }
+      ],
+      "billing_rules": {
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "經常契約",
+          "tier": "two_stage"
+        },
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "apply_to": "total"
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "經常契約",
+          "non_summer_label": "非夏月契約",
+          "saturday_label": "週六半尖峰契約",
+          "off_peak_label": "離峰契約",
+          "weekend_ratio": 0.5,
+          "household_label": "按戶計收"
+        }
+      }
+    }
+  ]
+}

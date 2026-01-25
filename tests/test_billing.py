@@ -1,0 +1,70 @@
+from datetime import datetime
+
+import pandas as pd
+
+import tou_calculator as tou
+
+
+def test_calculate_bill_basic_fee(tmp_path) -> None:
+    index = pd.to_datetime(["2025-07-15 10:00", "2025-07-15 23:00"])
+    usage = pd.Series([1.0, 2.0], index=index)
+    result = tou.calculate_bill_simple(
+        usage,
+        "residential_simple_2_tier",
+        calendar_instance=tou.taiwan_calendar(cache_dir=tmp_path),
+    )
+
+    assert list(result.columns) == [
+        "energy_cost",
+        "basic_cost",
+        "surcharge",
+        "adjustment",
+        "total",
+    ]
+    assert result["basic_cost"].iloc[0] == 75.0
+    assert (result["total"] >= result["energy_cost"] + result["basic_cost"]).all()
+
+
+def test_calculate_bill_minimum_usage_rule(tmp_path) -> None:
+    index = pd.to_datetime([datetime(2025, 7, 1, 0, 0)])
+    usage = pd.Series([0.0], index=index)
+    inputs = tou.BillingInputs(
+        meter_phase="single",
+        meter_voltage_v=110,
+        meter_ampere=10,
+    )
+    result = tou.calculate_bill(
+        usage,
+        "residential_non_tou",
+        inputs=inputs,
+        calendar_instance=tou.taiwan_calendar(cache_dir=tmp_path),
+    )
+
+    assert result["energy_cost"].iloc[0] > 0
+
+
+def test_calculate_bill_two_month_cycle(tmp_path) -> None:
+    index = pd.to_datetime(["2025-07-01 00:00", "2025-08-01 00:00"])
+    usage = pd.Series([10.0, 10.0], index=index)
+    result = tou.calculate_bill_simple(
+        usage,
+        "residential_non_tou",
+        calendar_instance=tou.taiwan_calendar(cache_dir=tmp_path),
+    )
+    assert len(result.index) == 1
+
+
+def test_calculate_bill_breakdown(tmp_path) -> None:
+    index = pd.to_datetime(["2025-07-15 10:00", "2025-07-15 23:00"])
+    usage = pd.Series([1.0, 2.0], index=index)
+    breakdown = tou.calculate_bill_breakdown(
+        usage,
+        "residential_simple_2_tier",
+        calendar_instance=tou.taiwan_calendar(cache_dir=tmp_path),
+    )
+
+    assert set(breakdown.keys()) == {"summary", "details"}
+    summary = breakdown["summary"]
+    details = breakdown["details"]
+    assert "total" in summary.columns
+    assert {"period", "season", "period_type", "usage_kwh", "energy_cost"} <= set(details.columns)
