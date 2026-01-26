@@ -33,6 +33,70 @@ usage = pd.Series(
 print(tou.calculate_costs(usage, plan))
 ```
 
+## Calculation Rules and Formulas
+
+### 1. Electricity Bill Formula (電費計算公式)
+
+The total monthly bill is calculated using the following components:
+**Total Bill = Energy Cost + Basic Cost + Surcharges + Adjustments**
+*(Subject to a **Minimum Monthly Fee** if applicable)*
+
+#### Energy Cost (流動電費)
+- **Time-of-Use (TOU) Plans**: Sum of `(Usage in Period * Rate for Period)` across all periods (Peak, Semi-Peak, Off-Peak).
+- **Tiered Plans (累進電價)**: Calculated by applying usage to cumulative tiers (e.g., 0-120kWh @ $1.78, 121-330kWh @ $2.55).
+
+#### Basic Cost (基本電費)
+Mainly applies to contract-based plans (High Voltage or Standard TOU):
+- **Fixed Fee**: A flat monthly charge (e.g., $75 per household).
+- **Capacity Fee**: Based on Contract Capacity (kW) and specific rates for different types of contract (Regular, Non-Summer, Saturday Semi-Peak, etc.).
+- **Formula (Multi-stage)**:
+  `Basic Cost = (Regular Rate * Regular kW) + (Semi-Peak Rate * Semi-Peak kW) + ...`
+
+#### Adjustments (電費調整)
+- **Power Factor Adjustment (功率因數調整)**:
+    - **Base**: 80%.
+    - **Logic**: For every 1% PF deviates from 80%, the bill (Basic + Energy) is adjusted by 0.1%.
+    - **Discount**: Applied up to 95% PF.
+- **Over-Contract Penalty (超約用電附加費)**:
+    - If peak demand exceeds contract capacity:
+        - Within 10% excess: `Basic Rate * Excess kW * 2`.
+        - Beyond 10% excess: `Basic Rate * Excess kW * 3`.
+
+#### Minimum Usage & Fee (底度與最低費用)
+- **Minimum Usage (底度)**: Based on meter ampere and phase (e.g., Single-phase 10A = 20kWh bottom). If actual usage is lower, the bottom usage is billed.
+- **Minimum Monthly Fee**: If the total bill is lower than a threshold (e.g., $100), the threshold is charged.
+
+### 2. Time Period Judgment (時段判斷規則)
+
+The calculator determines the pricing period (Peak/Off-Peak) based on the following rules:
+
+#### Season (季節)
+| Category | Summer (夏月) | Non-Summer (非夏月) |
+| :--- | :--- | :--- |
+| **Residential / Lighting** | 06/01 - 09/30 | 10/01 - 05/31 |
+| **High Voltage / Industrial** | 05/16 - 10/15 | 10/16 - 05/15 |
+
+#### Day Type (日類型)
+1.  **Sunday & National Holidays**: Entire day is typically **Off-Peak**.
+2.  **Saturday**: Often has special **Semi-Peak** or **Off-Peak** rules depending on the plan.
+3.  **Weekday**: Normal peak/off-peak schedule applies.
+
+#### Example: Residential 2-Stage Plan
+- **Summer Weekday**:
+    - `00:00 - 09:00`: Off-Peak
+    - `09:00 - 24:00`: Peak
+- **Non-Summer Weekday**:
+    - `00:00 - 06:00`: Off-Peak
+    - `06:00 - 11:00`: Peak
+    - `11:00 - 14:00`: Off-Peak
+    - `14:00 - 24:00`: Peak
+
+### 3. Rate Specification (費率規格)
+
+All rates (e.g., $8.86/kWh, $236.2/kW) are stored in `src/tou_calculator/data/plans.json`. These are derived from official Taipower tariff tables.
+
+---
+
 ## API
 
 ### `taiwan_calendar(cache_dir=None, api_timeout=10)`
