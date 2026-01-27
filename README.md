@@ -12,24 +12,133 @@ pip install tou-calculator
 
 ## Calculation Logic & Background (基本計算邏輯)
 
-Taiwan's electricity pricing, especially for Time-of-Use (TOU) plans, is determined by three main factors. This calculator handles all of them efficiently:
+This section explains how Taiwan Power Company (Taipower) calculates electricity bills. Understanding this helps you verify the results and optimize your electricity usage.
 
-1.  **Season (季節)**:
-    - **Summer (夏月)**: June - September (Prices are generally higher).
-    - **Non-Summer (非夏月)**: October - May.
-    - *Note: High-voltage industrial users have a slightly longer summer period (mid-May to mid-Oct).*
+### Quick Formula (電費計算公式)
 
-2.  **Day Type (日類型)**:
-    - **Weekdays**: Typically have Peak and Off-Peak hours.
-    - **Weekends**: Often treated largely as Off-Peak.
-    - **Holidays**: National holidays are treated as Off-Peak days (like Sundays). This library automatically fetches Taiwan's government holiday calendar to determine this correctly without manual input.
+```
+總電費 = 電能費 + 基本費 + 違約金 ± 力率調整 + 其他調整
 
-3.  **Time Period (時段)**:
-    - **Peak (尖峰)**: Expensive hours (e.g., weekday afternoons).
-    - **Off-Peak (離峰)**: Cheaper hours (nights, weekends).
-    - **Semi-Peak (半尖峰)**: Intermediate rates for some industrial plans.
+Total Bill = Energy Cost + Basic Fee + Penalty ± PF Adjustment + Others
+```
 
-**Data Resolution Requirements (數據解析度要求)**
+---
+
+### 1. Energy Cost (電能費) - Consumption × Rate
+
+**The electricity you use during different time periods is charged at different rates.**
+
+```
+電能費 = Σ(各時段用電度數 × 該時段費率)
+
+Energy Cost = Σ(Usage_kWh × Rate) for each time period
+```
+
+**How it works:**
+
+| Component | Description | Example |
+|-----------|-------------|---------|
+| **用電度數** | Your actual electricity consumption | 150 kWh in peak hours |
+| **時段費率** | Different rate for each time period | $5.16/kWh for summer peak |
+| **計算** | Multiply and sum across all periods | 150 × 5.16 = $774 |
+
+**Rate varies by:**
+
+| Factor | Options | Impact on Rate |
+|--------|---------|----------------|
+| **季節 Season** | 夏月 Summer (6-9月) / 非夏月 Non-Summer | Summer rates ≈ 20-40% higher |
+| **日期 Day Type** | 週日+國定假日 Sunday+Holidays / 週六 Saturday / 平日 Weekday | Holidays get off-peak rates |
+| **時段 Time Period** | 尖峰 Peak / 半尖峰 Semi-Peak / 離峰 Off-Peak | Peak most expensive, off-peak cheapest |
+
+---
+
+### 2. Basic Fee (基本費) - Contract Capacity × Unit Price
+
+**A fixed monthly fee based on your contracted power capacity.**
+
+```
+基本費 = 契約容量(kW) × 單價
+
+Basic Fee = Contract Capacity(kW) × Unit Rate
+```
+
+| Fee Type | Description | Who Pays This |
+|----------|-------------|---------------|
+| **經常契約** | Regular contract capacity (year-round) | All contract users |
+| **非夏月契約** | Additional non-summer capacity | High-voltage users |
+| **半尖峰契約** | Semi-peak capacity | 3-stage TOU users |
+| **週六半尖峰契約** | Saturday semi-peak capacity | 2/3-stage TOU users |
+| **離峰契約** | Off-peak capacity | 2/3-stage TOU users |
+
+---
+
+### 3. Demand Penalty (違約金) - Exceeding Contract Capacity
+
+**If your peak demand exceeds your contract capacity, you pay a penalty.**
+
+```
+最高需量 = 當月內任意15分鐘平均功率的最大值
+Peak Demand = Maximum 15-minute average power during the month
+
+超約容量 = 最高需量 - 契約容量
+Over-contract = Peak Demand - Contract Capacity
+
+違約金 = 超約容量 × 基本費單價 × 罰款倍率
+Penalty = Over-contract × Basic Fee Rate × Penalty Multiplier
+```
+
+**Penalty Rates:**
+
+| Over-contract Amount | Penalty Rate |
+|---------------------|--------------|
+| Within 10% of contract | **2×** basic fee rate |
+| Exceeds 10% of contract | **3×** basic fee rate (for the excess portion) |
+
+**Example:**
+- Contract: 200 kW
+- Actual peak: 230 kW
+- Over-contract: 30 kW (15% over)
+- Penalty calculation:
+  - First 20 kW (10%): 20 × Rate × 2
+  - Remaining 10 kW: 10 × Rate × 3
+
+---
+
+### 4. Power Factor Adjustment (力率調整)
+
+**Power factor measures how efficiently you use electricity. Taipower rewards high PF and penalizes low PF.**
+
+```
+力率調整 = 基本費 × (基準力率% - 實際力率%) × 0.1%
+
+PF Adjustment = Basic Fee × (Base PF% - Actual PF%) × 0.1%
+```
+
+| Power Factor | Result | Example |
+|--------------|--------|---------|
+| **> 80%** (base) | Discount | 95% PF → 1.5% discount on basic fee |
+| **< 80%** (base) | Surcharge | 75% PF → 0.5% surcharge on basic fee |
+| **Max discount** | Up to 95% PF | Max discount = (95-80) × 0.1% = 1.5% |
+
+---
+
+### Complete Bill Example (完整帳單範例)
+
+**Scenario:** High-voltage factory in July (summer)
+
+| Item | Calculation | Amount (TWD) |
+|------|-------------|--------------|
+| **Energy Cost** | Peak: 10,000 kWh × $5.16 | 51,600 |
+| | Off-peak: 20,000 kWh × $2.06 | 41,200 |
+| | **Subtotal** | **92,800** |
+| **Basic Fee** | 200 kW × $236.20 | 47,240 |
+| **Penalty** | (230-200) kW × $236.20 × 2 | 14,172 |
+| **PF Discount** | -47,240 × 1.5% | -709 |
+| **Total** | | **153,503** |
+
+---
+
+### Data Resolution Requirements (數據解析度要求)
 
 | Calculation Type | Recommended Resolution | Notes |
 |------------------|------------------------|-------|
@@ -39,9 +148,6 @@ Taiwan's electricity pricing, especially for Time-of-Use (TOU) plans, is determi
 
 **Critical for Industrial Users:**
 Taipower calculates demand penalties based on **15-minute average demand** (台電詳細電價表：最高需量以15分鐘平均計算). Using hourly or coarser data for `demand_kw` may significantly underestimate peak demand and penalty charges. See Section 4 for detailed guidance.
-
-**Why use this tool?**
-Manually implementing these rules is error-prone because holidays change every year and peak hours differ by plan. `tou_calculator` automates this entire lookup process.
 
 ## API Quickstart (API 使用範例)
 
