@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import functools
+import warnings
 from datetime import date, datetime, time
 from typing import Any, Protocol
 
@@ -683,7 +684,18 @@ def _create_high_voltage_two_stage(calendar: Any) -> TariffProfile:
 
 
 class TaipowerTariffs:
+    """Deprecated: Use TariffFactory instead.
+
+    This class is kept for backward compatibility only.
+    New code should use tou_calculator.factory.TariffFactory.
+    """
+
     def __init__(self, calendar: Any) -> None:
+        warnings.warn(
+            "TaipowerTariffs is deprecated. Use TariffFactory instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.calendar = calendar
         self._loader = TariffJSONLoader()
 

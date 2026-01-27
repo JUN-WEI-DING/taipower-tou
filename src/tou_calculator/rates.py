@@ -82,6 +82,20 @@ class TariffJSONLoader:
     def get_high_voltage_two_stage_rate(self) -> TariffRate:
         return TariffRate(period_costs={})
 
+    def get_plan_data(self, plan_id: str) -> dict[str, Any]:
+        """Get raw plan data by ID.
+
+        Args:
+            plan_id: The plan identifier
+
+        Returns:
+            The raw plan data dictionary
+
+        Raises:
+            KeyError: If plan_id is not found
+        """
+        return self._find_plan(plan_id)
+
     def get_residential_non_tou_rate(self) -> TariffRate:
         try:
             section = self._find_plan("residential_non_tou")["tiers"]

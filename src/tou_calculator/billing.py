@@ -10,14 +10,12 @@ from typing import Any
 import pandas as pd
 
 from tou_calculator.calendar import TaiwanCalendar, taiwan_calendar
-from tou_calculator.custom import (
-    build_tariff_plan,
-    build_tariff_profile,
-    build_tariff_rate,
-)
 from tou_calculator.errors import InvalidUsageInput
-from tou_calculator.rates import TariffJSONLoader
-from tou_calculator.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
+from tou_calculator.factory import (
+    PlanStore,
+    _build_tariff_plan_from_data,
+    _season_strategy,
+)
 
 
 @dataclass
@@ -32,29 +30,6 @@ class BillingInputs:
     meter_voltage_v: int | None = None
     meter_ampere: float | None = None
     billing_cycle_months: int | None = None
-
-
-class PlanStore:
-    def __init__(self, filename: str = "plans.json") -> None:
-        self._loader = TariffJSONLoader(filename=filename)
-        self._data: dict[str, Any] | None = None
-
-    def _load(self) -> dict[str, Any]:
-        if self._data is None:
-            self._data = self._loader.load()
-        return self._data
-
-    def definitions(self) -> dict[str, Any]:
-        return self._load().get("definitions", {})
-
-    def get_plan(self, plan_id: str) -> dict[str, Any]:
-        for plan in self._load().get("plans", []):
-            if plan.get("id") == plan_id:
-                return plan
-        raise KeyError(f"Plan not found: {plan_id}")
-
-    def resolve_plan(self, plan_id: str) -> dict[str, Any]:
-        return dict(self.get_plan(plan_id))
 
 
 def calculate_bill(
@@ -264,68 +239,6 @@ def calculate_bill_breakdown(
         "basic_details": basic_details,
         "adjustment_details": adjustment_details,
     }
-
-
-def _build_tariff_plan_from_data(
-    plan_data: dict[str, Any],
-    store: PlanStore,
-    calendar: TaiwanCalendar,
-    billing_cycle_months: int | None = None,
-) -> Any:
-    season_strategy = _season_strategy(plan_data, store)
-    day_type_strategy = TaiwanDayTypeStrategy(calendar)
-
-    schedules = _normalize_schedules(plan_data.get("schedules", []))
-    if not schedules:
-        schedules = [
-            {
-                "season": "summer",
-                "day_type": "weekday",
-                "slots": [{"start": "00:00", "end": "24:00", "period": "off_peak"}],
-            }
-        ]
-
-    profile = build_tariff_profile(
-        name=plan_data.get("name", plan_data.get("id", "Plan")),
-        season_strategy=season_strategy,
-        day_type_strategy=day_type_strategy,
-        schedules=schedules,
-        default_period="off_peak",
-    )
-
-    rates = plan_data.get("rates", [])
-    tiered = plan_data.get("tiers", [])
-    if tiered and billing_cycle_months and billing_cycle_months > 1:
-        scaled = []
-        for item in tiered:
-            entry = dict(item)
-            entry["min"] = entry["min"] * billing_cycle_months
-            entry["max"] = (
-                None if entry["max"] is None else entry["max"] * billing_cycle_months
-            )
-            scaled.append(entry)
-        tiered = scaled
-    tiered = _normalize_tiers(tiered)
-    rate = build_tariff_rate(
-        period_costs=rates if rates else None,
-        tiered_rates=tiered if tiered else None,
-        season_strategy=season_strategy,
-    )
-    return build_tariff_plan(profile, rate)
-
-
-def _season_strategy(
-    plan_data: dict[str, Any], store: PlanStore
-) -> TaiwanSeasonStrategy:
-    strategy_name = plan_data.get("season_strategy", "seasons")
-    definitions = store.definitions()
-    seasons = definitions.get(strategy_name, [])
-    if not seasons:
-        return TaiwanSeasonStrategy((6, 1), (9, 30))
-    summer = next((s for s in seasons if s.get("name") == "summer"), seasons[0])
-    start_month, start_day = map(int, summer["start"].split("-"))
-    end_month, end_day = map(int, summer["end"].split("-"))
-    return TaiwanSeasonStrategy((start_month, start_day), (end_month, end_day))
 
 
 def _month_season_label(
@@ -817,38 +730,6 @@ def _minimum_monthly_fee(plan_data: dict[str, Any]) -> float | None:
     if value is None:
         return None
     return float(value)
-
-
-def _normalize_schedules(schedules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    if not schedules:
-        return []
-    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
-    for item in schedules:
-        season = item["season"]
-        day_type = item["day_type"]
-        grouped.setdefault((season, day_type), []).append(
-            {"start": item["start"], "end": item["end"], "period": item["period"]}
-        )
-    normalized = []
-    for (season, day_type), slots in grouped.items():
-        normalized.append({"season": season, "day_type": day_type, "slots": slots})
-    return normalized
-
-
-def _normalize_tiers(tiers: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    if not tiers:
-        return []
-    normalized = []
-    for item in tiers:
-        normalized.append(
-            {
-                "start_kwh": item["min"],
-                "end_kwh": 999999.0 if item["max"] is None else item["max"],
-                "summer_cost": item["summer"],
-                "non_summer_cost": item["non_summer"],
-            }
-        )
-    return normalized
 
 
 def _apply_minimum_usage(

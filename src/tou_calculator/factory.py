@@ -1,0 +1,203 @@
+"""Factory for creating tariff plans from JSON data."""
+
+from __future__ import annotations
+
+from functools import lru_cache
+from typing import Any
+
+from tou_calculator.calendar import TaiwanCalendar, taiwan_calendar
+from tou_calculator.custom import (
+    build_tariff_plan,
+    build_tariff_profile,
+    build_tariff_rate,
+)
+from tou_calculator.rates import TariffJSONLoader
+from tou_calculator.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
+
+
+class PlanStore:
+    """Centralized store for plan data from JSON."""
+
+    def __init__(self, filename: str = "plans.json") -> None:
+        self._loader = TariffJSONLoader(filename=filename)
+        self._data: dict[str, Any] | None = None
+
+    def _load(self) -> dict[str, Any]:
+        if self._data is None:
+            self._data = self._loader.load()
+        return self._data
+
+    def definitions(self) -> dict[str, Any]:
+        return self._load().get("definitions", {})
+
+    def get_plan(self, plan_id: str) -> dict[str, Any]:
+        for plan in self._load().get("plans", []):
+            if plan.get("id") == plan_id:
+                return plan
+        raise KeyError(f"Plan not found: {plan_id}")
+
+    def resolve_plan(self, plan_id: str) -> dict[str, Any]:
+        return dict(self.get_plan(plan_id))
+
+    @lru_cache(maxsize=1)
+    def list_plan_ids(self) -> tuple[str, ...]:
+        """Return tuple of all available plan IDs."""
+        plans = self._load().get("plans", [])
+        return tuple(p.get("id", "") for p in plans if p.get("id"))
+
+
+class TariffFactory:
+    """Factory for creating TariffPlan instances from JSON data."""
+
+    def __init__(
+        self,
+        calendar: TaiwanCalendar | None = None,
+        store: PlanStore | None = None,
+    ) -> None:
+        self._calendar = calendar or taiwan_calendar()
+        self._store = store or PlanStore()
+
+    def create_plan(
+        self,
+        plan_id: str,
+        billing_cycle_months: int | None = None,
+    ) -> Any:
+        """Create a TariffPlan from the given plan_id.
+
+        Args:
+            plan_id: The plan identifier in plans.json
+            billing_cycle_months: Optional billing cycle duration in months
+
+        Returns:
+            A TariffPlan instance
+
+        Raises:
+            KeyError: If plan_id is not found
+        """
+        plan_data = self._store.get_plan(plan_id)
+        return _build_tariff_plan_from_data(
+            plan_data,
+            self._store,
+            self._calendar,
+            billing_cycle_months=billing_cycle_months,
+        )
+
+    @classmethod
+    def create(
+        cls,
+        plan_id: str,
+        calendar: TaiwanCalendar | None = None,
+        billing_cycle_months: int | None = None,
+    ) -> Any:
+        """Convenience method to create a plan without instantiating factory."""
+        return cls(calendar).create_plan(plan_id, billing_cycle_months)
+
+    def list_plans(self) -> tuple[str, ...]:
+        """Return all available plan IDs."""
+        return self._store.list_plan_ids()
+
+
+def _season_strategy(
+    plan_data: dict[str, Any], store: PlanStore
+) -> TaiwanSeasonStrategy:
+    """Build season strategy from plan data."""
+    strategy_name = plan_data.get("season_strategy", "seasons")
+    definitions = store.definitions()
+    seasons = definitions.get(strategy_name, [])
+    if not seasons:
+        return TaiwanSeasonStrategy((6, 1), (9, 30))
+    summer = next((s for s in seasons if s.get("name") == "summer"), seasons[0])
+    start_month, start_day = map(int, summer["start"].split("-"))
+    end_month, end_day = map(int, summer["end"].split("-"))
+    return TaiwanSeasonStrategy((start_month, start_day), (end_month, end_day))
+
+
+def _normalize_schedules(schedules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Normalize schedule data from JSON."""
+    if not schedules:
+        return []
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for item in schedules:
+        season = item["season"]
+        day_type = item["day_type"]
+        grouped.setdefault((season, day_type), []).append(
+            {"start": item["start"], "end": item["end"], "period": item["period"]}
+        )
+    normalized = []
+    for (season, day_type), slots in grouped.items():
+        normalized.append({"season": season, "day_type": day_type, "slots": slots})
+    return normalized
+
+
+def _normalize_tiers(
+    tiers: list[dict[str, Any]], billing_cycle_months: int | None = None
+) -> list[dict[str, Any]]:
+    """Normalize tier data from JSON, applying billing cycle scaling if needed."""
+    if not tiers:
+        return []
+
+    normalized = []
+    for item in tiers:
+        start_kwh = float(item["min"])
+        max_val = item.get("max")
+        end_kwh = 999999.0 if max_val is None else float(max_val)
+
+        if billing_cycle_months and billing_cycle_months > 1:
+            start_kwh *= billing_cycle_months
+            if end_kwh < 999999.0:
+                end_kwh *= billing_cycle_months
+
+        normalized.append(
+            {
+                "start_kwh": start_kwh,
+                "end_kwh": end_kwh,
+                "summer_cost": item["summer"],
+                "non_summer_cost": item["non_summer"],
+            }
+        )
+    return normalized
+
+
+def _build_tariff_plan_from_data(
+    plan_data: dict[str, Any],
+    store: PlanStore,
+    calendar: TaiwanCalendar,
+    billing_cycle_months: int | None = None,
+) -> Any:
+    """Build a TariffPlan from raw plan data dictionary.
+
+    This is the core factory function that creates a complete TariffPlan
+    from JSON data, including profile and rates.
+    """
+    season_strategy = _season_strategy(plan_data, store)
+    day_type_strategy = TaiwanDayTypeStrategy(calendar)
+
+    schedules = _normalize_schedules(plan_data.get("schedules", []))
+    if not schedules:
+        schedules = [
+            {
+                "season": "summer",
+                "day_type": "weekday",
+                "slots": [{"start": "00:00", "end": "24:00", "period": "off_peak"}],
+            }
+        ]
+
+    profile = build_tariff_profile(
+        name=plan_data.get("name", plan_data.get("id", "Plan")),
+        season_strategy=season_strategy,
+        day_type_strategy=day_type_strategy,
+        schedules=schedules,
+        default_period="off_peak",
+    )
+
+    rates = plan_data.get("rates", [])
+    tiered = _normalize_tiers(
+        plan_data.get("tiers", []), billing_cycle_months=billing_cycle_months
+    )
+
+    rate = build_tariff_rate(
+        period_costs=rates if rates else None,
+        tiered_rates=tiered if tiered else None,
+        season_strategy=season_strategy,
+    )
+    return build_tariff_plan(profile, rate)

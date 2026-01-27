@@ -27,6 +27,7 @@ from tou_calculator.errors import (
     PowerKitError,
     TariffError,
 )
+from tou_calculator.factory import TariffFactory
 from tou_calculator.tariff import (
     PeriodType,
     SeasonType,
@@ -75,12 +76,13 @@ def residential_simple_two_stage_plan(
     cache_dir: Path | None = None,
     api_timeout: int = 10,
 ) -> TariffPlan:
-    plan = taipower_tariffs(
+    """Backward compatibility wrapper for residential_simple_two_stage plan."""
+    return plan(
+        "residential_simple_two_stage",
         calendar_instance,
         cache_dir,
         api_timeout,
-    ).get_residential_simple_two_stage_plan()
-    return TariffPlan(plan.profile, plan.rates)
+    )
 
 
 def high_voltage_two_stage_plan(
@@ -88,12 +90,8 @@ def high_voltage_two_stage_plan(
     cache_dir: Path | None = None,
     api_timeout: int = 10,
 ) -> TariffPlan:
-    plan = taipower_tariffs(
-        calendar_instance,
-        cache_dir,
-        api_timeout,
-    ).get_high_voltage_two_stage_plan()
-    return TariffPlan(plan.profile, plan.rates)
+    """Backward compatibility wrapper for high_voltage_two_stage plan."""
+    return plan("high_voltage_two_stage", calendar_instance, cache_dir, api_timeout)
 
 
 def residential_non_tou_plan(
@@ -101,20 +99,13 @@ def residential_non_tou_plan(
     cache_dir: Path | None = None,
     api_timeout: int = 10,
 ) -> TariffPlan:
-    plan = taipower_tariffs(
-        calendar_instance,
-        cache_dir,
-        api_timeout,
-    ).get_residential_non_tou_plan()
-    return TariffPlan(plan.profile, plan.rates)
+    """Backward compatibility wrapper for residential_non_tou plan."""
+    return plan("residential_non_tou", calendar_instance, cache_dir, api_timeout)
 
 
 def available_plans() -> list[str]:
-    return [
-        "high_voltage_two_stage",
-        "residential_non_tou",
-        "residential_simple_two_stage",
-    ]
+    """Return list of all available plan IDs from plans.json."""
+    return list(TariffFactory().list_plans())
 
 
 def plan(
@@ -123,15 +114,38 @@ def plan(
     cache_dir: Path | None = None,
     api_timeout: int = 10,
 ) -> TariffPlan:
-    if name == "residential_simple_two_stage":
-        return residential_simple_two_stage_plan(
-            calendar_instance, cache_dir, api_timeout
-        )
-    if name == "high_voltage_two_stage":
-        return high_voltage_two_stage_plan(calendar_instance, cache_dir, api_timeout)
-    if name == "residential_non_tou":
-        return residential_non_tou_plan(calendar_instance, cache_dir, api_timeout)
-    raise ValueError(f"Unsupported plan name: {name}")
+    """Get a tariff plan by name.
+
+    This function now uses the data-driven TariffFactory to create plans.
+    Any plan defined in plans.json can be loaded.
+
+    Args:
+        name: The plan identifier
+        calendar_instance: Optional calendar instance
+        cache_dir: Optional cache directory for calendar
+        api_timeout: API timeout for calendar
+
+    Returns:
+        A TariffPlan instance
+
+    Raises:
+        ValueError: If plan name is not found
+    """
+    # Backward compatibility aliases for old plan names
+    _PLAN_ALIASES = {
+        "residential_simple_two_stage": "residential_simple_2_tier",
+    }
+
+    # Apply alias mapping
+    plan_id = _PLAN_ALIASES.get(name, name)
+
+    calendar = calendar_instance or taiwan_calendar(
+        cache_dir=cache_dir, api_timeout=api_timeout
+    )
+    try:
+        return TariffFactory.create(plan_id, calendar=calendar)
+    except KeyError as exc:
+        raise ValueError(f"Unsupported plan name: {name}") from exc
 
 
 def period_at(
