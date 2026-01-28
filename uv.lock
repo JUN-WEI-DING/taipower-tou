@@ -1025,6 +1025,9 @@ dev = [
     { name = "pre-commit", version = "4.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "ruff" },
 ]
+lunar = [
+    { name = "zhdate" },
+]
 test = [
     { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pytest", version = "9.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -1039,8 +1042,9 @@ requires-dist = [
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "ruff", marker = "extra == 'dev'" },
+    { name = "zhdate", marker = "extra == 'lunar'", specifier = ">=0.1.0" },
 ]
-provides-extras = ["test", "dev"]
+provides-extras = ["test", "dev", "lunar"]
 
 [[package]]
 name = "typing-extensions"
@@ -1075,4 +1079,13 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/aa/a3/4d310fa5f00863544e1d0f4de93bddec248499ccf97d4791bc3122c9d4f3/virtualenv-20.36.1.tar.gz", hash = "sha256:8befb5c81842c641f8ee658481e42641c68b5eab3521d8e092d18320902466ba", size = 6032239, upload-time = "2026-01-09T18:21:01.296Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/2a/dc2228b2888f51192c7dc766106cd475f1b768c10caaf9727659726f7391/virtualenv-20.36.1-py3-none-any.whl", hash = "sha256:575a8d6b124ef88f6f51d56d656132389f961062a9177016a50e4f507bbcc19f", size = 6008258, upload-time = "2026-01-09T18:20:59.425Z" },
+]
+
+[[package]]
+name = "zhdate"
+version = "0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/67/64/7ba359eab7f61a4852a5125da723544a99d27d37d89b0e3608177195a1cb/zhdate-0.1.tar.gz", hash = "sha256:cf54c07a9a9a027db3a970f7477b7eb7962a0fc0d5f5d5d284a76e953e68993c", size = 6598, upload-time = "2019-02-18T22:48:39.672Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/5e/5ddf769b1ca31d1e997b94a390279da6892c99702593c1feedb93a70f508/zhdate-0.1-py3-none-any.whl", hash = "sha256:d003657bf49d6722c4c3adcb9a91722f6de1077bf3be0e54c0f4492b5e028fa4", size = 19442, upload-time = "2019-02-18T22:48:37.629Z" },
 ]
