@@ -11,8 +11,13 @@ from typing import Any
 import pandas as pd
 
 from tou_calculator.calendar import TaiwanCalendar, taiwan_calendar
-from tou_calculator.errors import InvalidUsageInput
+from tou_calculator.errors import (
+    InvalidBasicFeeInput,
+    InvalidUsageInput,
+    MissingRequiredInput,
+)
 from tou_calculator.factory import (
+    PlanRequirements,
     PlanStore,
     _build_tariff_plan_from_data,
     _season_strategy,
@@ -33,6 +38,298 @@ class BillingInputs:
     billing_cycle_months: int | None = None
     demand_adjustment_factor: float = 1.0
 
+    @classmethod
+    def for_high_voltage(
+        cls,
+        regular: float,
+        non_summer: float,
+        saturday_semi_peak: float,
+        off_peak: float,
+        power_factor: float | None = None,
+        demand_kw: pd.Series | None = None,
+        demand_adjustment_factor: float = 1.0,
+    ) -> "BillingInputs":
+        """Create inputs for high voltage two-stage TOU plans.
+
+        Args:
+            regular: Regular contract capacity (kW)
+            non_summer: Non-summer contract capacity (kW)
+            saturday_semi_peak: Saturday semi-peak contract capacity (kW)
+            off_peak: Off-peak contract capacity (kW)
+            power_factor: Optional power factor percentage
+            demand_kw: Optional demand series for penalty calculation
+            demand_adjustment_factor: Adjustment factor for demand data
+
+        Example:
+            inputs = BillingInputs.for_high_voltage(
+                regular=100,
+                non_summer=50,
+                saturday_semi_peak=30,
+                off_peak=20,
+            )
+        """
+        return cls(
+            contract_capacities={
+                "regular": regular,
+                "non_summer": non_summer,
+                "saturday_semi_peak": saturday_semi_peak,
+                "off_peak": off_peak,
+            },
+            power_factor=power_factor,
+            demand_kw=demand_kw,
+            demand_adjustment_factor=demand_adjustment_factor,
+        )
+
+    @classmethod
+    def for_high_voltage_three_stage(
+        cls,
+        regular: float,
+        semi_peak: float,
+        saturday_semi_peak: float,
+        off_peak: float,
+        power_factor: float | None = None,
+        demand_kw: pd.Series | None = None,
+        demand_adjustment_factor: float = 1.0,
+    ) -> "BillingInputs":
+        """Create inputs for high voltage three-stage TOU plans.
+
+        Args:
+            regular: Regular contract capacity (kW)
+            semi_peak: Semi-peak contract capacity (kW)
+            saturday_semi_peak: Saturday semi-peak contract capacity (kW)
+            off_peak: Off-peak contract capacity (kW)
+            power_factor: Optional power factor percentage
+            demand_kw: Optional demand series for penalty calculation
+            demand_adjustment_factor: Adjustment factor for demand data
+        """
+        return cls(
+            contract_capacities={
+                "regular": regular,
+                "semi_peak": semi_peak,
+                "saturday_semi_peak": saturday_semi_peak,
+                "off_peak": off_peak,
+            },
+            power_factor=power_factor,
+            demand_kw=demand_kw,
+            demand_adjustment_factor=demand_adjustment_factor,
+        )
+
+    @classmethod
+    def for_extra_high_voltage(
+        cls,
+        regular: float,
+        non_summer: float,
+        saturday_semi_peak: float,
+        off_peak: float,
+        power_factor: float | None = None,
+        demand_kw: pd.Series | None = None,
+        demand_adjustment_factor: float = 1.0,
+    ) -> "BillingInputs":
+        """Create inputs for extra high voltage two-stage TOU plans.
+
+        Args:
+            regular: Regular contract capacity (kW)
+            non_summer: Non-summer contract capacity (kW)
+            saturday_semi_peak: Saturday semi-peak contract capacity (kW)
+            off_peak: Off-peak contract capacity (kW)
+            power_factor: Optional power factor percentage
+            demand_kw: Optional demand series for penalty calculation
+            demand_adjustment_factor: Adjustment factor for demand data
+        """
+        return cls(
+            contract_capacities={
+                "regular": regular,
+                "non_summer": non_summer,
+                "saturday_semi_peak": saturday_semi_peak,
+                "off_peak": off_peak,
+            },
+            power_factor=power_factor,
+            demand_kw=demand_kw,
+            demand_adjustment_factor=demand_adjustment_factor,
+        )
+
+    @classmethod
+    def for_extra_high_voltage_three_stage(
+        cls,
+        regular: float,
+        semi_peak: float,
+        saturday_semi_peak: float,
+        off_peak: float,
+        power_factor: float | None = None,
+        demand_kw: pd.Series | None = None,
+        demand_adjustment_factor: float = 1.0,
+    ) -> "BillingInputs":
+        """Create inputs for extra high voltage three-stage TOU plans.
+
+        Args:
+            regular: Regular contract capacity (kW)
+            semi_peak: Semi-peak contract capacity (kW)
+            saturday_semi_peak: Saturday semi-peak contract capacity (kW)
+            off_peak: Off-peak contract capacity (kW)
+            power_factor: Optional power factor percentage
+            demand_kw: Optional demand series for penalty calculation
+            demand_adjustment_factor: Adjustment factor for demand data
+        """
+        return cls(
+            contract_capacities={
+                "regular": regular,
+                "semi_peak": semi_peak,
+                "saturday_semi_peak": saturday_semi_peak,
+                "off_peak": off_peak,
+            },
+            power_factor=power_factor,
+            demand_kw=demand_kw,
+            demand_adjustment_factor=demand_adjustment_factor,
+        )
+
+    @classmethod
+    def for_residential(
+        cls,
+        phase: str,
+        voltage: int,
+        ampere: float,
+        basic_fee_multiplier: float = 1.0,
+    ) -> "BillingInputs":
+        """Create inputs for residential plans with meter specification.
+
+        Args:
+            phase: Meter phase ("single" or "three")
+            voltage: Voltage level (110, 220, or other valid voltage)
+            ampere: Amperage rating
+            basic_fee_multiplier: Multiplier for per-household fees (default 1.0)
+
+        Example:
+            inputs = BillingInputs.for_residential(
+                phase="single",
+                voltage=110,
+                ampere=10,
+            )
+        """
+        return cls(
+            meter_phase=phase,
+            meter_voltage_v=voltage,
+            meter_ampere=ampere,
+            basic_fee_inputs={"basic_fee": basic_fee_multiplier},
+        )
+
+    @classmethod
+    def for_lighting_standard(
+        cls,
+        phase: str,
+        contract_kw: float,
+        household_count: float = 1.0,
+    ) -> "BillingInputs":
+        """Create inputs for standard lighting TOU plans with contract capacity.
+
+        Args:
+            phase: Meter phase for per-household fee ("single" or "three")
+            contract_kw: Contract capacity in kW
+            household_count: Number of households (default 1.0)
+        """
+        label = "按戶計收-單相" if phase == "single" else "按戶計收-三相"
+        return cls(
+            contract_capacity_kw=contract_kw,
+            basic_fee_inputs={label: household_count, "經常契約": contract_kw},
+        )
+
+
+def _get_required_capacities_for_formula(formula_type: str) -> set[str]:
+    """Return required contract_capacities keys for each formula type."""
+    if formula_type == "two_stage":
+        return {"regular", "non_summer", "saturday_semi_peak", "off_peak"}
+    if formula_type == "three_stage":
+        return {"regular", "semi_peak", "saturday_semi_peak", "off_peak"}
+    if formula_type == "regular_only":
+        return {"regular"}
+    return set()
+
+
+def _validate_billing_inputs(
+    plan_data: dict[str, Any],
+    inputs: BillingInputs,
+    strict: bool = False,
+) -> list[str]:
+    """Validate billing inputs and return warnings.
+
+    Args:
+        plan_data: The plan's JSON data
+        inputs: User-provided billing inputs
+        strict: If True, raise errors on unknown keys and missing optional fields
+
+    Returns:
+        A list of warning messages for non-strict validation issues
+
+    Raises:
+        MissingRequiredInput: If required inputs are missing
+        InvalidBasicFeeInput: If basic_fee_inputs has invalid keys (strict mode)
+    """
+    requirements = PlanRequirements.from_plan_data(plan_data)
+    warnings = []
+
+    # 1. Check contract capacity requirement (critical - always enforced)
+    if requirements.requires_contract_capacity:
+        has_capacity = (
+            inputs.contract_capacity_kw is not None
+            or inputs.contract_capacities
+        )
+        if not has_capacity:
+            raise MissingRequiredInput(
+                f"Plan '{plan_data.get('id')}' requires contract capacity. "
+                f"Provide either contract_capacity_kw or contract_capacities. "
+                f"Use BillingInputs.for_high_voltage() or "
+                f"BillingInputs.for_extra_high_voltage() for convenient setup."
+            )
+
+    # 2. Validate basic_fee_inputs keys
+    if inputs.basic_fee_inputs:
+        unknown_keys = set(inputs.basic_fee_inputs.keys()) - requirements.valid_basic_fee_labels
+        if unknown_keys:
+            if strict:
+                raise InvalidBasicFeeInput(
+                    f"Unknown keys in basic_fee_inputs: {unknown_keys}. "
+                    f"Valid keys for this plan: {requirements.valid_basic_fee_labels}"
+                )
+            warnings.append(
+                f"Unknown keys in basic_fee_inputs (ignored): {unknown_keys}"
+            )
+
+    # 3. For formula-based plans, validate required capacities
+    if requirements.uses_basic_fee_formula and requirements.formula_type:
+        required_caps = _get_required_capacities_for_formula(requirements.formula_type)
+        provided_caps = set(inputs.contract_capacities.keys())
+        missing_caps = required_caps - provided_caps
+
+        if missing_caps:
+            # In strict mode, this is an error
+            if strict:
+                raise MissingRequiredInput(
+                    f"Formula type '{requirements.formula_type}' requires "
+                    f"contract_capacities with keys: {required_caps}. "
+                    f"Missing: {missing_caps}. "
+                    f"Use BillingInputs.for_high_voltage() or similar factory method."
+                )
+            # In non-strict mode, warn
+            warnings.append(
+                f"Formula may require contract_capacities keys: {missing_caps}"
+            )
+
+    # 4. Check meter spec requirement for minimum usage rules
+    if requirements.requires_meter_spec:
+        if not all([inputs.meter_phase, inputs.meter_voltage_v, inputs.meter_ampere]):
+            if strict:
+                raise MissingRequiredInput(
+                    f"Plan '{plan_data.get('id')}' has minimum usage rules. "
+                    f"Providing meter_phase, meter_voltage_v, and meter_ampere "
+                    f"is required for accurate billing. "
+                    f"Use BillingInputs.for_residential() for convenient setup."
+                )
+            warnings.append(
+                f"Plan '{plan_data.get('id')}' has minimum usage rules. "
+                f"Providing meter specifications is recommended."
+            )
+
+    return warnings
+
 
 def calculate_bill(
     usage: pd.Series,
@@ -41,6 +338,7 @@ def calculate_bill(
     calendar_instance: TaiwanCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int = 10,
+    strict: bool = False,
 ) -> pd.DataFrame:
     if not isinstance(usage, pd.Series):
         raise InvalidUsageInput("usage must be a pandas.Series")
@@ -50,6 +348,12 @@ def calculate_bill(
     inputs = inputs or BillingInputs()
     store = PlanStore()
     plan_data = store.resolve_plan(plan_id)
+
+    # Validate inputs against plan requirements
+    validation_warnings = _validate_billing_inputs(plan_data, inputs, strict=strict)
+    for warning in validation_warnings:
+        warnings.warn(warning, UserWarning, stacklevel=2)
+
     calendar = calendar_instance or taiwan_calendar(
         cache_dir=cache_dir, api_timeout=api_timeout
     )
@@ -118,6 +422,7 @@ def calculate_bill_simple(
     calendar_instance: TaiwanCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int = 10,
+    strict: bool = False,
 ) -> pd.DataFrame:
     return calculate_bill(
         usage,
@@ -126,6 +431,7 @@ def calculate_bill_simple(
         calendar_instance=calendar_instance,
         cache_dir=cache_dir,
         api_timeout=api_timeout,
+        strict=strict,
     )
 
 
@@ -136,10 +442,22 @@ def calculate_bill_breakdown(
     calendar_instance: TaiwanCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int = 10,
+    strict: bool = False,
 ) -> dict[str, pd.DataFrame]:
+    if not isinstance(usage, pd.Series):
+        raise InvalidUsageInput("usage must be a pandas.Series")
+    if not isinstance(usage.index, pd.DatetimeIndex):
+        raise InvalidUsageInput("usage index must be a pandas.DatetimeIndex")
+
     inputs = inputs or BillingInputs()
     store = PlanStore()
     plan_data = store.resolve_plan(plan_id)
+
+    # Validate inputs against plan requirements
+    validation_warnings = _validate_billing_inputs(plan_data, inputs, strict=strict)
+    for warning in validation_warnings:
+        warnings.warn(warning, UserWarning, stacklevel=2)
+
     calendar = calendar_instance or taiwan_calendar(
         cache_dir=cache_dir, api_timeout=api_timeout
     )
@@ -1091,3 +1409,158 @@ def _calculate_period_costs(
             )
 
     return pd.DataFrame(records)
+
+
+# ============================================================================
+# Flexible Input Support (Non-Pandas Entry Points)
+# ============================================================================
+
+
+def _normalize_usage_to_series(
+    usage: Any,
+    start: Any = None,
+    freq: str | None = None,
+) -> pd.Series:
+    """Convert various input formats to pandas.Series with DatetimeIndex.
+
+    Args:
+        usage: Input data - pd.Series, list of floats, or dict of timestamp:value
+        start: Start date (required if usage is list), e.g. "2024-01-01"
+        freq: Frequency string (e.g., "15min", "1h", "1D")
+
+    Returns:
+        pandas.Series with DatetimeIndex
+
+    Raises:
+        InvalidUsageInput: If input format is invalid or missing required params
+    """
+    if isinstance(usage, pd.Series):
+        if not isinstance(usage.index, pd.DatetimeIndex):
+            raise InvalidUsageInput("usage index must be a pandas.DatetimeIndex")
+        return usage
+
+    if isinstance(usage, list):
+        if start is None:
+            raise InvalidUsageInput(
+                "start parameter is required when usage is a list. "
+                "Example: start='2024-01-01'"
+            )
+        if freq is None:
+            raise InvalidUsageInput(
+                "freq parameter is required when usage is a list. "
+                "Example: freq='1h' or freq='15min'"
+            )
+        index = pd.date_range(start=start, periods=len(usage), freq=freq)
+        return pd.Series(usage, index=index)
+
+    if isinstance(usage, dict):
+        # Convert dict keys to timestamps
+        try:
+            index = pd.to_datetime(list(usage.keys()))
+        except Exception as e:
+            raise InvalidUsageInput(
+                f"Cannot convert dict keys to datetime: {e}"
+            )
+        return pd.Series(list(usage.values()), index=index)
+
+    raise InvalidUsageInput(
+        f"usage must be pd.Series, list, or dict, got {type(usage).__name__}"
+    )
+
+
+def calculate_bill_from_list(
+    usage: list[float],
+    plan_id: str,
+    start: str | date,
+    freq: str = "1h",
+    inputs: BillingInputs | None = None,
+    calendar_instance: TaiwanCalendar | None = None,
+    cache_dir: Path | None = None,
+    api_timeout: int = 10,
+    strict: bool = False,
+) -> pd.DataFrame:
+    """Calculate bill from a list of usage values.
+
+    This is a convenience function that avoids the need to create pandas objects.
+
+    Args:
+        usage: List of usage values in kWh
+        plan_id: The plan identifier (flexible matching supported)
+        start: Start date for the usage data (e.g., "2024-01-01")
+        freq: Frequency of the data (e.g., "15min", "1h", "1D")
+        inputs: Optional billing inputs
+        calendar_instance: Optional calendar instance
+        cache_dir: Optional cache directory for calendar
+        api_timeout: API timeout for calendar
+        strict: If True, raise errors on invalid/missing inputs
+
+    Returns:
+        DataFrame with billing breakdown
+
+    Example:
+        result = calculate_bill_from_list(
+            usage=[1.0, 1.5, 2.0, 1.8, ...],
+            plan_id="residential_simple_2_tier",
+            start="2024-01-01",
+            freq="1h",
+        )
+    """
+    series = _normalize_usage_to_series(usage, start=start, freq=freq)
+    return calculate_bill(
+        series,
+        plan_id,
+        inputs=inputs,
+        calendar_instance=calendar_instance,
+        cache_dir=cache_dir,
+        api_timeout=api_timeout,
+        strict=strict,
+    )
+
+
+def calculate_bill_from_dict(
+    usage: dict[str | date, float],
+    plan_id: str,
+    inputs: BillingInputs | None = None,
+    calendar_instance: TaiwanCalendar | None = None,
+    cache_dir: Path | None = None,
+    api_timeout: int = 10,
+    strict: bool = False,
+) -> pd.DataFrame:
+    """Calculate bill from a dictionary of timestamp -> usage values.
+
+    This is a convenience function for irregularly-spaced or
+    pre-aggregated usage data.
+
+    Args:
+        usage: Dictionary mapping timestamps to usage values in kWh.
+                Timestamps can be strings or datetime objects.
+        plan_id: The plan identifier (flexible matching supported)
+        inputs: Optional billing inputs
+        calendar_instance: Optional calendar instance
+        cache_dir: Optional cache directory for calendar
+        api_timeout: API timeout for calendar
+        strict: If True, raise errors on invalid/missing inputs
+
+    Returns:
+        DataFrame with billing breakdown
+
+    Example:
+        result = calculate_bill_from_dict(
+            usage={
+                "2024-01-01 00:00": 1.0,
+                "2024-01-01 01:00": 1.5,
+                "2024-01-01 02:00": 2.0,
+            },
+            plan_id="residential_simple_2_tier",
+        )
+    """
+    series = _normalize_usage_to_series(usage)
+    return calculate_bill(
+        series,
+        plan_id,
+        inputs=inputs,
+        calendar_instance=calendar_instance,
+        cache_dir=cache_dir,
+        api_timeout=api_timeout,
+        strict=strict,
+    )

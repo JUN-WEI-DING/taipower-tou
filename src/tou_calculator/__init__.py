@@ -9,6 +9,8 @@ from tou_calculator.billing import (
     BillingInputs,
     calculate_bill,
     calculate_bill_breakdown,
+    calculate_bill_from_dict,
+    calculate_bill_from_list,
     calculate_bill_simple,
 )
 from tou_calculator.calendar import TaiwanCalendar, taiwan_calendar
@@ -23,11 +25,13 @@ from tou_calculator.custom import (
 )
 from tou_calculator.errors import (
     CalendarError,
+    InvalidBasicFeeInput,
     InvalidUsageInput,
+    MissingRequiredInput,
     PowerKitError,
     TariffError,
 )
-from tou_calculator.factory import PlanStore, TariffFactory
+from tou_calculator.factory import PlanRequirements, PlanStore, TariffFactory
 from tou_calculator.tariff import (
     PeriodType,
     SeasonType,
@@ -118,7 +122,7 @@ def available_plans() -> list[str]:
     plan_ids = store.list_plan_ids()
 
     # Bilingual name mapping for each plan ID
-    # 雙語名稱映射
+    # 雙語名稱對映
     bilingual_names = {
         "residential_non_tou": "表燈非時間電價 Residential Non-TOU",
         "lighting_non_business_tiered": "表燈非時間-住宅非營業 Non-Business Tiered",
@@ -163,7 +167,7 @@ def _normalize_plan_name(name: str) -> str:
     normalized = name.replace(" ", "").lower()
 
     # Mapping from various input formats to plan IDs
-    # 從各種輸入格式映射到 plan ID
+    # 從各種輸入格式對映到 plan ID
     aliases = {
         # residential_non_tou
         "residentialnontou": "residential_non_tou",
@@ -494,6 +498,44 @@ def pricing_context(
     )
 
 
+def get_plan_requirements(plan_name: str) -> dict[str, Any]:
+    """Get the requirements for a plan.
+
+    Returns a dict with information about what inputs are required
+    for the given plan. Useful for introspection before calculating bills.
+
+    Args:
+        plan_name: The plan identifier (flexible matching supported)
+
+    Returns:
+        A dict with:
+            - requires_contract_capacity: bool - Whether contract capacity is required
+            - requires_meter_spec: bool - Whether meter specs are required
+            - valid_basic_fee_labels: list[str] - Valid keys for basic_fee_inputs
+            - uses_basic_fee_formula: bool - Whether formula-based calculation is used
+            - formula_type: str | None - Type of formula if used
+
+    Example:
+        >>> reqs = get_plan_requirements("high_voltage_2_tier")
+        >>> print(reqs["requires_contract_capacity"])
+        True
+        >>> print(reqs["valid_basic_fee_labels"])
+        ['經常契約', '非夏月契約', '週六半尖峰契約', '離峰契約']
+    """
+    store = PlanStore()
+    plan_id = _normalize_plan_name(plan_name)
+    plan_data = store.get_plan(plan_id)
+    requirements = PlanRequirements.from_plan_data(plan_data)
+
+    return {
+        "requires_contract_capacity": requirements.requires_contract_capacity,
+        "requires_meter_spec": requirements.requires_meter_spec,
+        "valid_basic_fee_labels": list(requirements.valid_basic_fee_labels),
+        "uses_basic_fee_formula": requirements.uses_basic_fee_formula,
+        "formula_type": requirements.formula_type,
+    }
+
+
 __all__ = [
     "TaiwanCalendar",
     "CustomCalendar",
@@ -523,8 +565,11 @@ __all__ = [
     "plan_details",
     "costs",
     "monthly_breakdown",
+    "get_plan_requirements",
     "CalendarError",
     "InvalidUsageInput",
+    "InvalidBasicFeeInput",
+    "MissingRequiredInput",
     "PowerKitError",
     "TariffError",
     "WeekdayDayTypeStrategy",
@@ -536,5 +581,8 @@ __all__ = [
     "calculate_bill",
     "calculate_bill_breakdown",
     "calculate_bill_simple",
+    "calculate_bill_from_list",
+    "calculate_bill_from_dict",
+    "PlanRequirements",
     "__version__",
 ]

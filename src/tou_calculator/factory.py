@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
 
@@ -13,6 +14,67 @@ from tou_calculator.custom import (
 )
 from tou_calculator.rates import TariffJSONLoader
 from tou_calculator.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
+
+
+@dataclass
+class PlanRequirements:
+    """Required and optional inputs for a tariff plan.
+
+    Attributes:
+        requires_contract_capacity: Whether the plan requires contract capacity input
+            (typically for high_voltage and extra_high_voltage plans).
+        requires_meter_spec: Whether the plan requires meter specifications
+            (phase, voltage, ampere) for minimum usage calculation.
+        valid_basic_fee_labels: Set of valid labels for basic_fee_inputs.
+        uses_basic_fee_formula: Whether the plan uses a formula for basic fee calculation.
+        formula_type: The type of formula ("two_stage", "three_stage", "regular_only").
+    """
+
+    requires_contract_capacity: bool
+    requires_meter_spec: bool
+    valid_basic_fee_labels: set[str]
+    uses_basic_fee_formula: bool
+    formula_type: str | None
+
+    @classmethod
+    def from_plan_data(cls, plan_data: dict[str, Any]) -> "PlanRequirements":
+        """Extract requirements from plan JSON data.
+
+        Args:
+            plan_data: The plan's JSON data dictionary.
+
+        Returns:
+            A PlanRequirements instance describing the plan's input requirements.
+        """
+        category = plan_data.get("category", "")
+        basic_fees = plan_data.get("basic_fees", [])
+        rules = plan_data.get("billing_rules", {})
+
+        # High voltage and extra high voltage plans require contract capacity
+        requires_contract_capacity = category in (
+            "high_voltage",
+            "extra_high_voltage",
+        )
+
+        # Plans with minimum usage rules require meter specifications
+        requires_meter_spec = "minimum_usage_rules_ref" in rules
+
+        # Extract all valid basic fee labels
+        valid_basic_fee_labels = {
+            fee.get("label", "") for fee in basic_fees if fee.get("label")
+        }
+
+        # Check if plan uses formula-based basic fee calculation
+        uses_basic_fee_formula = "basic_fee_formula" in rules
+        formula_type = rules.get("basic_fee_formula", {}).get("type")
+
+        return cls(
+            requires_contract_capacity=requires_contract_capacity,
+            requires_meter_spec=requires_meter_spec,
+            valid_basic_fee_labels=valid_basic_fee_labels,
+            uses_basic_fee_formula=uses_basic_fee_formula,
+            formula_type=formula_type,
+        )
 
 
 class PlanStore:
