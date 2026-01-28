@@ -101,16 +101,24 @@ class _HolidayParser:
         - Tomb Sweeping Day (Solar 4/4, already in static)
         - Dragon Boat Festival (Lunar 5/5)
         - Mid-Autumn Festival (Lunar 8/15)
+
+        This optimized version uses efficient Sunday calculation.
         """
+        import calendar
+
         holidays = set()
 
-        # All Sundays
-        current = date(year, 1, 1)
-        end = date(year, 12, 31)
-        while current <= end:
-            if current.weekday() == 6:
-                holidays.add(current)
-            current = date.fromordinal(current.toordinal() + 1)
+        # All Sundays - calculate directly without iteration
+        # Find first Sunday of the year, then add 7 days each time
+        jan_1 = date(year, 1, 1)
+        first_sunday_offset = (6 - jan_1.weekday()) % 7  # 6 = Sunday
+        first_sunday = date.fromordinal(jan_1.toordinal() + first_sunday_offset)
+
+        # Add all Sundays (52 or 53 per year)
+        current = first_sunday
+        while current.year == year:
+            holidays.add(current)
+            current = date.fromordinal(current.toordinal() + 7)
 
         # Fixed solar holidays
         fixed_solar = [
@@ -124,27 +132,21 @@ class _HolidayParser:
             holidays.add(date(year, month, day))
 
         # Lunar holidays
-        lunar_holiday_dates = []
-
         # Spring Festival: Lunar 1/1-1/3 (3 consecutive days)
         for day in range(1, 4):
             solar_date = self._lunar_to_solar(year, 1, day)
             if solar_date and solar_date.year == year:
-                lunar_holiday_dates.append(solar_date)
+                holidays.add(solar_date)
 
         # Dragon Boat Festival: Lunar 5/5
         dragon_boat = self._lunar_to_solar(year, 5, 5)
         if dragon_boat and dragon_boat.year == year:
-            lunar_holiday_dates.append(dragon_boat)
+            holidays.add(dragon_boat)
 
         # Mid-Autumn Festival: Lunar 8/15
         mid_autumn = self._lunar_to_solar(year, 8, 15)
         if mid_autumn and mid_autumn.year == year:
-            lunar_holiday_dates.append(mid_autumn)
-
-        # Add all lunar holidays
-        for d in lunar_holiday_dates:
-            holidays.add(d)
+            holidays.add(mid_autumn)
 
         return holidays
 
@@ -242,6 +244,19 @@ class TaiwanCalendar:
         cache_dir = Path(cache_dir) if cache_dir else user_cache_path("tou_calculator")
         cache_dir = cache_dir / "calendar" / "taiwan"
         self._loader = _HolidayLoader(cache_dir, api_timeout)
+
+    def preload_years(self, years: set[int]) -> None:
+        """Preload holiday data for multiple years in batch.
+
+        This method loads all holiday data for the specified years into memory
+        in a single operation, significantly improving performance for bulk
+        operations like evaluating large time series.
+
+        Args:
+            years: Set of years to preload (e.g., {2024, 2025})
+        """
+        for year in years:
+            self._loader.load_holidays(year)
 
     @singledispatchmethod
     def is_holiday(self, target: object) -> Any:

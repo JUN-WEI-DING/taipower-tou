@@ -268,9 +268,11 @@ def _calculate_basic_fees(
     season_labels = _month_season_label(month_index, plan_data, store)
     monthly = pd.Series(0.0, index=month_index)
     if formula and inputs.contract_capacities:
-        monthly = _basic_fee_from_formula(
-            plan_data, inputs, month_index, store, formula
+        basic_fee_result = _basic_fee_from_formula(
+            plan_data, inputs, month_index, store, formula, detailed=False
         )
+        # _basic_fee_from_formula always returns (monthly, details) tuple
+        monthly = basic_fee_result[0] if isinstance(basic_fee_result, tuple) else basic_fee_result
     else:
         basic_fee = plan_data.get("basic_fee")
         if basic_fee is not None:

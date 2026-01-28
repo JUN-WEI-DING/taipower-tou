@@ -75,6 +75,35 @@ class TaiwanDayTypeStrategy:
             return "saturday"
         return "weekday"
 
+    def get_day_types_batch(self, dates: pd.Series) -> dict[date, str]:
+        """Batch get day types for multiple dates using vectorized calendar lookup.
+
+        This method is significantly faster than calling get_day_type() repeatedly
+        for large numbers of dates.
+
+        Args:
+            dates: pandas Series with date objects
+
+        Returns:
+            Dictionary mapping each date to its day type
+        """
+        # Create DatetimeIndex for vectorized lookup
+        dates_index = pd.DatetimeIndex(dates.values)
+        is_saturday = dates_index.dayofweek == 5
+
+        # Use vectorized is_holiday if available (for DatetimeIndex)
+        is_holiday_series = self._calendar.is_holiday(dates_index)
+
+        day_types = {}
+        for dt, is_sat, is_hol in zip(dates, is_saturday, is_holiday_series):
+            if is_hol:
+                day_types[dt] = "sunday_holiday"
+            elif is_sat:
+                day_types[dt] = "saturday"
+            else:
+                day_types[dt] = "weekday"
+        return day_types
+
     def get_all_day_types(self) -> list[str]:
         return ["weekday", "saturday", "sunday_holiday"]
 
@@ -195,7 +224,14 @@ class _TariffEngine:
         if not isinstance(index, pd.DatetimeIndex):
             raise TypeError("Index must be a pandas.DatetimeIndex")
 
+        # Preload all years for batch calendar optimization
+        unique_years = index.year.unique()
+        years_set = {int(y) for y in unique_years}
+        self._preload_calendar_years(years_set)
+
         unique_dates = pd.Series(index.normalize().unique())
+
+        # Season mapping (fast - no calendar needed)
         date_to_season = unique_dates.dt.date.apply(
             self.profile.season_strategy.get_season
         )
@@ -206,10 +242,15 @@ class _TariffEngine:
             season_objs.map(self._season_map).fillna(0).astype(np.int8).values
         )
 
-        date_to_day_type = unique_dates.dt.date.apply(
-            self.profile.day_type_strategy.get_day_type
-        )
-        day_type_map = dict(zip(unique_dates, date_to_day_type))
+        # Day type mapping - use batch method for vectorized calendar lookup
+        day_type_strategy = self.profile.day_type_strategy
+        if hasattr(day_type_strategy, "get_day_types_batch"):
+            date_to_day_type = day_type_strategy.get_day_types_batch(unique_dates)
+        else:
+            date_to_day_type = {
+                dt: day_type_strategy.get_day_type(dt) for dt in unique_dates.dt.date
+            }
+        day_type_map = date_to_day_type
         day_type_objs = index.normalize().map(day_type_map)
         day_type_series = pd.Series(day_type_objs, index=index, name="day_type")
         day_type_codes = (
@@ -222,6 +263,14 @@ class _TariffEngine:
         period_series = pd.Series(period_objs, index=index, name="period")
 
         return pd.concat([season_series, day_type_series, period_series], axis=1)
+
+    def _preload_calendar_years(self, years: set[int]) -> None:
+        """Preload calendar data for all years in batch for optimization."""
+        day_type_strategy = self.profile.day_type_strategy
+        if hasattr(day_type_strategy, "_calendar"):
+            calendar = day_type_strategy._calendar
+            if hasattr(calendar, "preload_years"):
+                calendar.preload_years(years)
 
     def get_period_type_scalar(self, dt: datetime) -> PeriodType | str:
         season = self.profile.season_strategy.get_season(dt.date())
