@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2025-01-29
+## [Unreleased]
 
 ### Added
 - Initial release of Taiwan TOU Calculator
@@ -55,4 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pre-commit hooks for code quality (ruff, mypy)
 - MIT License
 
-[0.1.0]: https://github.com/JUN-WEI-DING/tou_calculator/releases/tag/v0.1.0
+## [0.1.0] - TBD
+
+### Release Notes
+- First stable release
+- PyPI publication pending
