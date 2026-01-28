@@ -132,6 +132,27 @@ import tou_calculator as tou
 # List all available plans
 # 列出所有可用的方案
 print(tou.available_plans())
+# Output:
+# 表燈非時間電價 Residential Non-TOU
+# 表燈非時間-住宅非營業 Non-Business Tiered
+# 表燈非時間-營業用 Business Tiered
+# 簡易型二段式 Simple 2-Tier
+# 簡易型三段式 Simple 3-Tier
+# 標準型二段式 Standard 2-Tier
+# 標準型三段式 Standard 3-Tier
+# 低壓電力非時間 Low Voltage Power
+# 低壓電力二段式 Low Voltage 2-Tier
+# 低壓電力三段式 Low Voltage 3-Stage
+# 低壓電動車 Low Voltage EV
+# 高壓電力 High Voltage Power
+# 高壓電力二段式 High Voltage 2-Tier
+# 高壓電力三段式 High Voltage 3-Stage
+# 高壓批次生產 High Voltage Batch
+# 高壓電動車 High Voltage EV
+# 特高壓電力 Extra High Voltage Power
+# 特高壓電力二段式 EHV 2-Tier
+# 特高壓電力三段式 EHV 3-Stage
+# 特高壓批次生產 EHV Batch
 ```
 
 Common plans:
@@ -452,15 +473,15 @@ This guide covers the primary functions for querying plans, checking rates, and 
 import tou_calculator as tou
 
 print(tou.available_plans())
-# 20 plans available:
-# ['residential_non_tou', 'residential_simple_2_tier', 'residential_simple_3_tier',
-#  'lighting_non_business_tiered', 'lighting_business_tiered',
-#  'lighting_standard_2_tier', 'lighting_standard_3_tier',
-#  'low_voltage_power', 'low_voltage_2_tier', 'low_voltage_three_stage', 'low_voltage_ev',
-#  'high_voltage_power', 'high_voltage_2_tier', 'high_voltage_three_stage',
-#  'high_voltage_batch', 'high_voltage_ev',
-#  'extra_high_voltage_power', 'extra_high_voltage_2_tier',
-#  'extra_high_voltage_three_stage', 'extra_high_voltage_batch']
+# 20 plans available with bilingual names:
+# 表燈非時間電價 Residential Non-TOU
+# 表燈非時間-住宅非營業 Non-Business Tiered
+# 表燈非時間-營業用 Business Tiered
+# 簡易型二段式 Simple 2-Tier
+# 簡易型三段式 Simple 3-Tier
+# 標準型二段式 Standard 2-Tier
+# 標準型三段式 Standard 3-Tier
+# ... (and more)
 ```
 
 **Get Plan Details:**
@@ -646,7 +667,8 @@ print(result["adjustment_details"])  # Specific adjustments (e.g., PF discount a
 Quick index of all public entry points exported by `tou_calculator`.
 
 ### Core helpers (核心入口)
-- `available_plans()` list supported plan IDs
+- `available_plans()` list supported plans with bilingual (EN/ZH) names
+- `available_plan_ids()` list supported plan IDs (for internal use)
 - `plan(name, ...)` get a `TariffPlan`
 - `plan_details(name, ...)` return structured plan schema
 - `period_at(target, plan_name, ...)` return period enum at timepoint
