@@ -12,6 +12,10 @@ pip install tou-calculator
 
 # With lunar calendar support (recommended for accurate holiday calculation)
 pip install tou-calculator[lunar]
+
+# Alternatively, using uv (faster)
+uv pip install tou-calculator
+uv add tou-calculator  # add to a project
 ```
 
 ## Quick Start Tutorial (快速入門教學)
