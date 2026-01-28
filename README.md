@@ -7,7 +7,11 @@ This library encapsulates the complex rules of Taiwan's electricity pricing—in
 ## Installation
 
 ```bash
+# Basic installation
 pip install tou-calculator
+
+# With lunar calendar support (recommended for accurate holiday calculation)
+pip install tou-calculator[lunar]
 ```
 
 ## Calculation Logic & Background (基本計算邏輯)
@@ -165,10 +169,10 @@ print(tou.available_plans())
 # ['residential_non_tou', 'residential_simple_2_tier', 'residential_simple_3_tier',
 #  'lighting_non_business_tiered', 'lighting_business_tiered',
 #  'lighting_standard_2_tier', 'lighting_standard_3_tier',
-#  'low_voltage_power', 'low_voltage_two_stage', 'low_voltage_three_stage', 'low_voltage_ev',
-#  'high_voltage_power', 'high_voltage_two_stage', 'high_voltage_three_stage',
+#  'low_voltage_power', 'low_voltage_2_tier', 'low_voltage_three_stage', 'low_voltage_ev',
+#  'high_voltage_power', 'high_voltage_2_tier', 'high_voltage_three_stage',
 #  'high_voltage_batch', 'high_voltage_ev',
-#  'extra_high_voltage_power', 'extra_high_voltage_two_stage',
+#  'extra_high_voltage_power', 'extra_high_voltage_2_tier',
 #  'extra_high_voltage_three_stage', 'extra_high_voltage_batch']
 ```
 
@@ -185,6 +189,7 @@ print(f"Plan Name: {details['profile']['name']}")
 
 **Check Holiday Status:**
 The library automatically handles Taiwan's national holidays (e.g., New Year, Moon Festival).
+Holiday data is loaded with fallback priority: API → lunar calendar calculation → static preset.
 
 ```python
 from datetime import datetime
@@ -329,7 +334,7 @@ inputs = BillingInputs(
 
 # Calculate for High-Voltage Plan
 # Returns DataFrame with columns: [energy_cost, basic_cost, surcharge, adjustment, total]
-bill = calculate_bill(usage, "high_voltage_two_stage", inputs=inputs)
+bill = calculate_bill(usage, "high_voltage_2_tier", inputs=inputs)
 print(f"This Month's Bill: {bill['total'].iloc[0]:.0f} TWD")
 ```
 
@@ -339,7 +344,7 @@ If you need to know exactly how the bill was composed (e.g., how much was the Po
 ```python
 from tou_calculator import calculate_bill_breakdown
 
-result = calculate_bill_breakdown(usage, "high_voltage_two_stage", inputs=inputs)
+result = calculate_bill_breakdown(usage, "high_voltage_2_tier", inputs=inputs)
 
 print("Summary:")
 print(result["summary"])
@@ -439,9 +444,9 @@ print(tou.monthly_breakdown(usage, "residential_simple_2_tier"))
 ```python
 inputs = BillingInputs(contract_capacities={"regular": 200}, power_factor=95.0)
 
-print(tou.calculate_bill(usage, "high_voltage_two_stage", inputs=inputs))
-print(tou.calculate_bill_breakdown(usage, "high_voltage_two_stage", inputs=inputs))
-print(tou.calculate_bill_simple(usage, "high_voltage_two_stage"))
+print(tou.calculate_bill(usage, "high_voltage_2_tier", inputs=inputs))
+print(tou.calculate_bill_breakdown(usage, "high_voltage_2_tier", inputs=inputs))
+print(tou.calculate_bill_simple(usage, "high_voltage_2_tier"))
 ```
 
 ### Calendar & tariff access (日曆與費率)
@@ -527,9 +532,9 @@ All 20 Taipower plans are now supported. Plans are organized by category:
 |----------|-------|
 | **Residential** | `residential_non_tou`, `residential_simple_2_tier`, `residential_simple_3_tier` |
 | **Lighting** | `lighting_non_business_tiered`, `lighting_business_tiered`, `lighting_standard_2_tier`, `lighting_standard_3_tier` |
-| **Low Voltage** | `low_voltage_power`, `low_voltage_two_stage`, `low_voltage_three_stage`, `low_voltage_ev` |
-| **High Voltage** | `high_voltage_power`, `high_voltage_two_stage`, `high_voltage_three_stage`, `high_voltage_batch`, `high_voltage_ev` |
-| **Extra High Voltage** | `extra_high_voltage_power`, `extra_high_voltage_two_stage`, `extra_high_voltage_three_stage`, `extra_high_voltage_batch` |
+| **Low Voltage** | `low_voltage_power`, `low_voltage_2_tier`, `low_voltage_three_stage`, `low_voltage_ev` |
+| **High Voltage** | `high_voltage_power`, `high_voltage_2_tier`, `high_voltage_three_stage`, `high_voltage_batch`, `high_voltage_ev` |
+| **Extra High Voltage** | `extra_high_voltage_power`, `extra_high_voltage_2_tier`, `extra_high_voltage_three_stage`, `extra_high_voltage_batch` |
 
 ## Custom Plans (自定義費率)
 

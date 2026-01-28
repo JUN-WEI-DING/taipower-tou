@@ -18,6 +18,12 @@ try:
 except ImportError:
     pd = None
 
+try:
+    from lunarcalendar import Converter, Solar, Lunar
+    LUNAR_AVAILABLE = True
+except ImportError:
+    LUNAR_AVAILABLE = False
+
 from tou_calculator.errors import CalendarError
 
 HOLIDAY_API_URL = (
@@ -77,7 +83,74 @@ class _HolidayParser:
                         continue
         return holidays
 
+    def _lunar_to_solar(self, year: int, month: int, day: int) -> date | None:
+        """Convert lunar date to solar date."""
+        if not LUNAR_AVAILABLE:
+            return None
+        try:
+            lunar = Lunar(year, month, day, False)
+            solar = Converter.lunar2solar(lunar)
+            return date(solar.year, solar.month, solar.day)
+        except Exception:
+            return None
+
+    def lunar_holidays(self, year: int) -> set[date]:
+        """Calculate Taiwan national holidays using lunar calendar.
+
+        According to Taipower regulations:
+        - Spring Festival (Lunar 1/1-3/0, adjusted if falls on Sat/Sun)
+        - Tomb Sweeping Day (Solar 4/4, already in static)
+        - Dragon Boat Festival (Lunar 5/5)
+        - Mid-Autumn Festival (Lunar 8/15)
+        """
+        holidays = set()
+
+        # All Sundays
+        current = date(year, 1, 1)
+        end = date(year, 12, 31)
+        while current <= end:
+            if current.weekday() == 6:
+                holidays.add(current)
+            current = date.fromordinal(current.toordinal() + 1)
+
+        # Fixed solar holidays
+        fixed_solar = [
+            (1, 1),   # New Year's Day
+            (2, 28),  # Peace Memorial Day
+            (4, 4),   # Tomb Sweeping Day (Children's Day)
+            (5, 1),   # Labor Day
+            (10, 10), # National Day
+        ]
+        for month, day in fixed_solar:
+            holidays.add(date(year, month, day))
+
+        # Lunar holidays
+        lunar_holiday_dates = []
+
+        # Spring Festival: Lunar 1/1-1/3 (3 consecutive days)
+        for day in range(1, 4):
+            solar_date = self._lunar_to_solar(year, 1, day)
+            if solar_date and solar_date.year == year:
+                lunar_holiday_dates.append(solar_date)
+
+        # Dragon Boat Festival: Lunar 5/5
+        dragon_boat = self._lunar_to_solar(year, 5, 5)
+        if dragon_boat and dragon_boat.year == year:
+            lunar_holiday_dates.append(dragon_boat)
+
+        # Mid-Autumn Festival: Lunar 8/15
+        mid_autumn = self._lunar_to_solar(year, 8, 15)
+        if mid_autumn and mid_autumn.year == year:
+            lunar_holiday_dates.append(mid_autumn)
+
+        # Add all lunar holidays
+        for d in lunar_holiday_dates:
+            holidays.add(d)
+
+        return holidays
+
     def static_holidays(self, year: int) -> set[date]:
+        """Fallback static holidays when API and lunar calculation fail."""
         holidays = set()
 
         current = date(year, 1, 1)
@@ -137,6 +210,7 @@ class _HolidayLoader:
         if year in self._holiday_cache:
             return self._holiday_cache[year]
 
+        # Try local cache first
         try:
             data = self._cache.read_file(year)
             if data is not None:
@@ -146,6 +220,7 @@ class _HolidayLoader:
         except Exception:
             pass
 
+        # Try API fetch
         try:
             data = self._fetcher.fetch(year)
             self._cache.write_file(year, data)
@@ -155,7 +230,8 @@ class _HolidayLoader:
         except Exception:
             pass
 
-        holidays = self._parser.static_holidays(year)
+        # Fallback: lunar calendar calculation
+        holidays = self._parser.lunar_holidays(year)
         self._holiday_cache[year] = holidays
         return holidays
 
