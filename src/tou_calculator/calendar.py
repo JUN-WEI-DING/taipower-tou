@@ -8,7 +8,7 @@ from datetime import date, datetime
 from functools import singledispatchmethod
 from pathlib import Path
 from typing import Any
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 from urllib.request import urlopen
 
 from platformdirs import user_cache_path
@@ -189,6 +189,15 @@ class _HolidayFetcher:
             try:
                 with urlopen(url, timeout=self._api_timeout) as response:
                     return json.loads(response.read().decode("utf-8"))
+            except HTTPError as exc:
+                # 404 means year doesn't exist yet - don't retry
+                if exc.code == 404:
+                    raise exc
+                last_exc = exc
+                if attempt == 2:
+                    break
+                time.sleep(min(delay, 10.0))
+                delay *= 2
             except (URLError, TimeoutError, OSError) as exc:
                 last_exc = exc
                 if attempt == 2:
@@ -221,15 +230,24 @@ class _HolidayLoader:
         except Exception:
             pass
 
-        # Try API fetch
-        try:
-            data = self._fetcher.fetch(year)
-            self._cache.write_file(year, data)
-            holidays = self._parser.extract_holidays(data)
-            self._holiday_cache[year] = holidays
-            return holidays
-        except Exception:
-            pass
+        # Try API fetch - skip for far future years to avoid timeout delays
+        # API only has current and recent past years
+        current_year = date.today().year
+        try_api = year <= current_year + 1
+
+        if try_api:
+            try:
+                data = self._fetcher.fetch(year)
+                self._cache.write_file(year, data)
+                holidays = self._parser.extract_holidays(data)
+                self._holiday_cache[year] = holidays
+                return holidays
+            except HTTPError as exc:
+                # 404 means year doesn't exist - fall through to lunar
+                if exc.code != 404:
+                    raise
+            except Exception:
+                pass
 
         # Fallback: lunar calendar calculation
         holidays = self._parser.lunar_holidays(year)
