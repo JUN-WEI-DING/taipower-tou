@@ -18,7 +18,7 @@ pip install tou-calculator[lunar]
 
 This section teaches you how to use this library to calculate Taiwan electricity costs with simple examples. Whatever format your data is in, we can handle it!
 
-這個章節用簡單的範例教妳如何使用這個套件計算台灣電費。不管妳的資料是什麼格式，我們都能處理！
+這个章節用簡單的範例教妳如何使用這個套件計算台灣電費。不管妳的資料是什麼格式，我們都能處理！
 
 ---
 
@@ -164,6 +164,33 @@ Common plans:
 | Low Voltage | 低壓用電 | `low_voltage_2_tier` | | General commercial | 一般商業用電 |
 | High Voltage | 高壓用電 | `high_voltage_2_tier` | | Industrial | 工業用電 |
 | High Voltage 3-Stage | 高壓三段式 | `high_voltage_three_stage` | | Peak/Semi-Peak/Off-Peak | 尖峰/半尖峰/離峰 |
+
+**Flexible Plan Name Matching (靈活的方案名稱匹配):**
+
+The `plan()` function accepts multiple input formats for your convenience:
+`plan()` 函數接受多種輸入格式供您選擇：
+
+```python
+# All of these work for the same plan!
+# 以下寫法都能取得同一個方案！
+
+# English ID (英文 ID)
+plan = tou.plan("residential_simple_2_tier")
+
+# Chinese name (中文)
+plan = tou.plan("簡易型二段式")
+
+# English part only (僅英文)
+plan = tou.plan("Simple 2-Tier")
+
+# Full bilingual from available_plans() output
+# 使用 available_plans() 輸出的完整雙語名稱
+plan = tou.plan("簡易型二段式 Simple 2-Tier")
+
+# Without spaces/hyphens (無空格或連字符)
+plan = tou.plan("residentialsimple2tier")
+plan = tou.plan("簡易型二段式")
+```
 
 ---
 
@@ -665,7 +692,7 @@ Quick index of all public entry points exported by `tou_calculator`.
 ### Core helpers (核心入口)
 - `available_plans()` list supported plans with bilingual (EN/ZH) names
 - `available_plan_ids()` list supported plan IDs (for internal use)
-- `plan(name, ...)` get a `TariffPlan`
+- `plan(name, ...)` get a `TariffPlan` (accepts English ID, Chinese, bilingual, or flexible formats)
 - `plan_details(name, ...)` return structured plan schema
 - `period_at(target, plan_name, ...)` return period enum at timepoint
 - `period_context(target, plan_name, ...)` return season/day/period context
