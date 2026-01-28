@@ -18,11 +18,11 @@ pip install tou-calculator[lunar]
 
 This section teaches you how to use this library to calculate Taiwan electricity costs with simple examples. Whatever format your data is in, we can handle it!
 
-這个章節用簡單的範例教妳如何使用這個套件計算台灣電費。不管妳的資料是什麼格式，我們都能處理！
+這個章節用簡單的範例教你如何使用這個套件計算臺灣電費。不管你的資料是什麼格式，我們都能處理！
 
 ---
 
-### Step 1: Prepare Your Data (準備妳的用電資料)
+### Step 1: Prepare Your Data (準備你的用電資料)
 
 This library requires two pieces of information: **Time** and **Usage (kWh)**. Time must be in datetime format, and usage is just a number.
 
@@ -56,7 +56,7 @@ print(usage_series)
 #### Example B: Read from CSV (範例 B：從 CSV 檔案讀取)
 
 Assume you have an `electricity.csv` file:
-假設妳有一個 `electricity.csv` 檔案：
+假設你有一個 `electricity.csv` 檔案：
 
 ```csv
 timestamp,usage
@@ -121,10 +121,10 @@ usage_series = df["用電"]
 
 ---
 
-### Step 2: Choose Your Tariff Plan (選擇妳的電價方案)
+### Step 2: Choose Your Tariff Plan (選擇你的電價方案)
 
 Taipower has many plans. Let's see what's available:
-台電有很多種方案，先看看有哪些：
+臺電有很多種方案，先看看有哪些：
 
 ```python
 import tou_calculator as tou
@@ -158,7 +158,7 @@ print(tou.available_plans())
 Common plans:
 常見的方案：
 
-| User Type | 用戶類型 | Recommended Plan | 推薦方案 | Description | 說明 |
+| User Type | 使用者型別 | Recommended Plan | 推薦方案 | Description | 說明 |
 |-----------|---------|------------------|---------|-------------|------|
 | Residential | 家庭用電 | `residential_simple_2_tier` | | Simple 2-tier | 簡單兩段式 |
 | Low Voltage | 低壓用電 | `low_voltage_2_tier` | | General commercial | 一般商業用電 |
@@ -168,7 +168,7 @@ Common plans:
 **Flexible Plan Name Matching (靈活的方案名稱匹配):**
 
 The `plan()` function accepts multiple input formats for your convenience:
-`plan()` 函數接受多種輸入格式供您選擇：
+`plan()` 函式接受多種輸入格式供您選擇：
 
 ```python
 # All of these work for the same plan!
@@ -187,7 +187,7 @@ plan = tou.plan("Simple 2-Tier")
 # 使用 available_plans() 輸出的完整雙語名稱
 plan = tou.plan("簡易型二段式 Simple 2-Tier")
 
-# Without spaces/hyphens (無空格或連字符)
+# Without spaces/hyphens (無空格或連字元)
 plan = tou.plan("residentialsimple2tier")
 plan = tou.plan("簡易型二段式")
 ```
@@ -197,13 +197,13 @@ plan = tou.plan("簡易型二段式")
 ### Step 3: Check Rate Period (判斷費率時段)
 
 Before calculating costs, you might want to know what rate period applies at a specific time.
-在計算電費之前，妳可能想知道某個時間點屬於哪個費率時段。
+在計算電費之前，你可能想知道某個時間點屬於哪個費率時段。
 
 ```python
 from datetime import datetime
 
 # Check period type at a specific time
-# 查詢特定時間的時段類型
+# 查詢特定時間的時段型別
 dt = datetime(2025, 7, 15, 14, 0)  # July 15, 2025, 2:00 PM (summer weekday afternoon)
 
 period = tou.period_at(dt, "residential_simple_2_tier")
@@ -222,7 +222,7 @@ print(f"Period: {ctx['period']}")   # peak (尖峰)
 print(f"Rate: {ctx['rate']} TWD/kWh")  # 5.16 TWD/kWh
 ```
 
-**Common Period Types (常見時段類型):**
+**Common Period Types (常見時段型別):**
 
 | Period Type | 時段 | Description |
 |-------------|------|-------------|
@@ -259,7 +259,7 @@ print(costs)
 #### Advanced Calculation: With Basic Fee and Penalty (進階計算：包含基本費和違約金)
 
 For industrial users or those with contract capacity:
-適合工業用戶或有契約容量的用戶：
+適合工業使用者或有契約容量的使用者：
 
 ```python
 from tou_calculator import calculate_bill, BillingInputs
@@ -282,11 +282,11 @@ print(bill)
 
 ---
 
-### Step 5: View Detailed Report (查看詳細報表)
+### Step 5: View Detailed Report (檢視詳細報表)
 
 ```python
 # View monthly statistics
-# 查看每月統計
+# 檢視每月統計
 report = plan.monthly_breakdown(usage_series)
 print(report)
 #         month  season period  usage_kwh     cost
@@ -320,7 +320,7 @@ import pandas as pd
 import tou_calculator as tou
 
 # 1. Load your usage data
-# 1. 讀取妳的用電資料
+# 1. 讀取你的用電資料
 df = pd.read_csv("my_usage.csv")
 df["timestamp"] = pd.to_datetime(df["timestamp"])
 df = df.set_index("timestamp")
@@ -473,7 +473,7 @@ PF Adjustment = Basic Fee × (Base PF% - Actual PF%) × 0.1%
 
 ---
 
-### Data Resolution Requirements (數據解析度要求)
+### Data Resolution Requirements (資料解析度要求)
 
 | Calculation Type | Recommended Resolution | Notes |
 |------------------|------------------------|-------|
@@ -482,7 +482,7 @@ PF Adjustment = Basic Fee × (Base PF% - Actual PF%) × 0.1%
 | Basic Fee (基本費) | N/A | Based on contract capacity, not usage |
 
 **Critical for Industrial Users:**
-Taipower calculates demand penalties based on **15-minute average demand** (台電詳細電價表：最高需量以15分鐘平均計算). Using hourly or coarser data for `demand_kw` may significantly underestimate peak demand and penalty charges. See Section 4 for detailed guidance.
+Taipower calculates demand penalties based on **15-minute average demand** (臺電詳細電價表：最高需量以15分鐘平均計算). Using hourly or coarser data for `demand_kw` may significantly underestimate peak demand and penalty charges. See Section 4 for detailed guidance.
 
 ## API Quickstart (API 使用範例)
 
@@ -592,9 +592,9 @@ print(report)
 
 For industrial or complex scenarios involving Basic Fees (基本費), Contract Capacities (契約容量), and Adjustments (Power Factor, etc.).
 
-#### ⚠️ Important: Data Resolution Requirements (數據解析度要求)
+#### ⚠️ Important: Data Resolution Requirements (資料解析度要求)
 
-**Taiwan Power Company's Official Standard (台電官方規定)**
+**Taiwan Power Company's Official Standard (臺電官方規定)**
 
 According to Taipower's official tariff regulations (詳細電價表 第八章), contract capacity and demand penalties are calculated based on **15-minute average demand**:
 
@@ -868,7 +868,7 @@ All 20 Taipower plans are now supported. Plans are organized by category:
 | **High Voltage** | `high_voltage_power`, `high_voltage_2_tier`, `high_voltage_three_stage`, `high_voltage_batch`, `high_voltage_ev` |
 | **Extra High Voltage** | `extra_high_voltage_power`, `extra_high_voltage_2_tier`, `extra_high_voltage_three_stage`, `extra_high_voltage_batch` |
 
-## Performance (性能效能)
+## Performance (效能效能)
 
 The library is optimized for processing large time-series datasets efficiently through vectorized calendar queries and intelligent caching.
 
@@ -883,7 +883,7 @@ The library is optimized for processing large time-series datasets efficiently t
 
 *First run may take longer due to API calls and cache generation. Subsequent runs use cached data and are significantly faster.*
 
-### Optimization Features (優化特性)
+### Optimization Features (最佳化特性)
 
 1. **Vectorized Calendar Queries (向量化日曆查詢)**
    - Batch processing of unique dates instead of individual lookups
@@ -894,7 +894,7 @@ The library is optimized for processing large time-series datasets efficiently t
    - Prevents timeout delays for non-existent calendar data
    - Falls back to lunar calendar calculation when needed
 
-3. **Memory Caching (記憶體緩存)**
+3. **Memory Caching (記憶體快取)**
    - Holiday data cached per year in memory
    - Subsequent queries for same year are O(1) lookups
 
@@ -902,7 +902,7 @@ The library is optimized for processing large time-series datasets efficiently t
    - Direct calculation without iteration through all days
    - ~50x faster than naive date-by-date iteration
 
-### Tips for Best Performance (性能優化建議)
+### Tips for Best Performance (效能最佳化建議)
 
 ```python
 # For very large datasets, preload years in advance
