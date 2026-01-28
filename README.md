@@ -146,7 +146,7 @@ Common plans:
 
 ---
 
-### Step 3: Check Rate Period (判斷費率时段)
+### Step 3: Check Rate Period (判斷費率時段)
 
 Before calculating costs, you might want to know what rate period applies at a specific time.
 在計算電費之前，妳可能想知道某個時間點屬於哪個費率時段。
