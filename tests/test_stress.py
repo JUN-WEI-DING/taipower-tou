@@ -35,7 +35,7 @@ from tou_calculator.errors import InvalidUsageInput, TariffError
 def test_extreme_data_volumes():
     """Test with extremely large datasets (5M+ records)."""
     print("\n" + "="*70)
-    print("STRESS TEST 1: Extreme Data Volumes (極限數據量測試)")
+    print("STRESS TEST 1: Extreme Data Volumes (極限資料量測試)")
     print("="*70)
 
     plan = tou.plan("residential_simple_2_tier")
@@ -74,7 +74,7 @@ def test_extreme_data_volumes():
             print(f"{name}: ❌ 失敗 - {e}")
 
     print("\n" + "-"*70)
-    print("極限數據量測試摘要:")
+    print("極限資料量測試摘要:")
     for name, size, elapsed, mem, cost, status in results:
         print(f"  {name}: {status}")
 
@@ -132,7 +132,7 @@ def test_extreme_values():
         except (InvalidUsageInput, ValueError) as e:
             print(f"✅ {name}: 正確拒絕 - {type(e).__name__}")
         except Exception as e:
-            print(f"❌ {name}: 錯誤的異常類型 - {type(e).__name__}: {e}")
+            print(f"❌ {name}: 錯誤的異常型別 - {type(e).__name__}: {e}")
 
     return all("✅" in r[-1] or "❌" not in r[-1] for r in results)
 
@@ -180,7 +180,7 @@ def test_concurrent_access():
         elapsed = time_module.time() - start
 
         success_rate = completed / n_workers * 100
-        print(f"{n_workers} 並發線程:")
+        print(f"{n_workers} 並發執行緒:")
         print(f"  成功: {completed}/{n_workers} ({success_rate:.1f}%)")
         print(f"  耗時: {elapsed:.3f}秒")
         print(f"  錯誤: {len(errors)}")
@@ -192,7 +192,7 @@ def test_concurrent_access():
             print(f"  ❌ 並發測試失敗")
             return False
 
-    print("\n✅ 並發訪問測試通過")
+    print("\n✅ 並發訪問測試透過")
     return True
 
 
@@ -229,7 +229,7 @@ def test_memory_stability():
     end_mem = get_memory_usage()
     total_delta = end_mem - start_mem
 
-    print(f"運行 {iterations} 次迭代後:")
+    print(f"執行 {iterations} 次迭代後:")
     print(f"  初始記憶體: {start_mem:.2f} MB")
     print(f"  最終記憶體: {end_mem:.2f} MB")
     print(f"  記憶體增長: {total_delta:.2f} MB")
@@ -316,7 +316,7 @@ def test_all_plans_stress():
             else:
                 print(f"  ✅ {plan_id}")
 
-    print(f"\n結果: {len(plan_ids) - len(failed_plans)}/{len(plan_ids)} 方案通過")
+    print(f"\n結果: {len(plan_ids) - len(failed_plans)}/{len(plan_ids)} 方案透過")
     if skipped_tiered:
         print(f"  (其中 {len(skipped_tiered)} 個 tiered 方案已正確處理: {', '.join(skipped_tiered)})")
 
@@ -386,8 +386,8 @@ def test_holiday_edge_cases():
         # 2025 春節連假(含調休): 1/25-1/31，1/27(一)是調休假日
         ("週六1/25", datetime(2025, 1, 25, 12, 0), False),
         ("週日1/26", datetime(2025, 1, 26, 12, 0), True),
-        ("調休1/27", datetime(2025, 1, 27, 12, 0), True),  # 春节调休
-        ("調休1/28", datetime(2025, 1, 28, 12, 0), True),  # 春节调休
+        ("調休1/27", datetime(2025, 1, 27, 12, 0), True),  # 春節調休
+        ("調休1/28", datetime(2025, 1, 28, 12, 0), True),  # 春節調休
         ("春節初一", datetime(2025, 1, 29, 12, 0), True),
         ("春節初三", datetime(2025, 1, 31, 12, 0), True),
         ("春節後", datetime(2025, 2, 5, 12, 0), False),
@@ -424,7 +424,7 @@ def test_holiday_edge_cases():
 def test_repeated_object_creation():
     """Test stability of repeatedly creating calendar and plan objects."""
     print("\n" + "="*70)
-    print("STRESS TEST 8: Repeated Object Creation (重複對象創建)")
+    print("STRESS TEST 8: Repeated Object Creation (重複物件建立)")
     print("="*70)
 
     iterations = 1000
@@ -448,7 +448,7 @@ def test_repeated_object_creation():
 
     elapsed = time_module.time() - start
 
-    print(f"創建並使用對象 {iterations} 次:")
+    print(f"建立並使用物件 {iterations} 次:")
     print(f"  耗時: {elapsed:.3f}秒")
     print(f"  平均每次: {elapsed/iterations*1000:.2f}ms")
     print(f"  錯誤數: {len(errors)}")
@@ -457,7 +457,7 @@ def test_repeated_object_creation():
         print(f"  錯誤詳情: {errors[:5]}")
         return False
 
-    print("  ✅ 對象創建穩定")
+    print("  ✅ 物件建立穩定")
     return True
 
 
@@ -596,7 +596,7 @@ def test_invalid_input_handling():
             print(f"✅ {name}: 正確拒絕 ({desc})")
             proper_rejections += 1
         except Exception as e:
-            print(f"❌ {name}: 錯誤的異常類型 - {type(e).__name__}")
+            print(f"❌ {name}: 錯誤的異常型別 - {type(e).__name__}")
 
     rejection_rate = proper_rejections / len(invalid_inputs) * 100
     print(f"\n拒絕率: {proper_rejections}/{len(invalid_inputs)} ({rejection_rate:.0f}%)")
@@ -611,7 +611,7 @@ def test_invalid_input_handling():
 def test_performance_consistency():
     """Test that performance remains consistent over multiple runs."""
     print("\n" + "="*70)
-    print("STRESS TEST 12: Performance Consistency (性能一致性)")
+    print("STRESS TEST 12: Performance Consistency (效能一致性)")
     print("="*70)
 
     plan = tou.plan("residential_simple_2_tier")
@@ -625,27 +625,36 @@ def test_performance_consistency():
         elapsed = time_module.time() - start
         times.append(elapsed)
 
-    # Skip first few runs to avoid cold start skewing results
-    times_warm = times[5:]
+    # Skip first 10 runs to ensure warm start
+    times_warm = times[10:]
 
     mean_time = np.mean(times_warm)
+    median_time = np.median(times_warm)
     std_time = np.std(times_warm)
     min_time = np.min(times_warm)
     max_time = np.max(times_warm)
-    cv = std_time / mean_time * 100  # Coefficient of variation
+    p90 = np.percentile(times_warm, 90)
+    p10 = np.percentile(times_warm, 10)
 
-    print(f"50次運行統計 (跳過前5次冷啟動):")
+    print(f"50次執行統計 (跳過前10次冷啟動):")
     print(f"  平均: {mean_time:.4f}秒")
+    print(f"  中位數: {median_time:.4f}秒")
     print(f"  標準差: {std_time:.4f}秒")
     print(f"  最小: {min_time:.4f}秒")
     print(f"  最大: {max_time:.4f}秒")
-    print(f"  變異係數: {cv:.2f}%")
+    print(f"  P10-P90範圍: {p10:.4f}s - {p90:.4f}s")
 
-    if cv > 50:  # Relaxed threshold for acceptable variation
-        print(f"  ⚠️  性能波動較大")
+    # Check if most runs are within acceptable range
+    # Use p90/p10 ratio instead of CV to be more robust to outliers
+    ratio = p90 / p10 if p10 > 0 else float('inf')
+
+    print(f"  P90/P10 比例: {ratio:.2f}x")
+
+    if ratio > 3.0:  # More than 3x difference between p90 and p10
+        print(f"  ⚠️  效能波動較大")
         return False
 
-    print(f"  ✅ 性能穩定")
+    print(f"  ✅ 效能穩定")
     return True
 
 
@@ -671,23 +680,23 @@ def get_memory_usage() -> float:
 def run_all_stress_tests():
     """Run all stress tests and report results."""
     print("\n" + "="*70)
-    print("台灣時間電價計算器 - 極限壓力測試套件")
+    print("臺灣時間電價計算器 - 極限壓力測試套件")
     print("Taiwan TOU Calculator - Extreme Stress Test Suite")
     print("="*70)
 
     tests = [
-        ("極限數據量", test_extreme_data_volumes),
+        ("極限資料量", test_extreme_data_volumes),
         ("極限數值", test_extreme_values),
         ("並發訪問", test_concurrent_access),
         ("記憶體穩定性", test_memory_stability),
         ("所有方案", test_all_plans_stress),
         ("時間邊界", test_boundary_times),
         ("假日邊界", test_holiday_edge_cases),
-        ("重複創建對象", test_repeated_object_creation),
+        ("重複建立物件", test_repeated_object_creation),
         ("大時間跨度", test_large_date_range),
         ("計費壓力", test_billing_stress),
         ("無效輸入處理", test_invalid_input_handling),
-        ("性能一致性", test_performance_consistency),
+        ("效能一致性", test_performance_consistency),
     ]
 
     results = {}
@@ -708,13 +717,13 @@ def run_all_stress_tests():
     total = len(results)
 
     for name, result in results.items():
-        status = "✅ 通過" if result else "❌ 失敗"
+        status = "✅ 透過" if result else "❌ 失敗"
         print(f"  {status}: {name}")
 
-    print(f"\n總計: {passed}/{total} 測試套件通過")
+    print(f"\n總計: {passed}/{total} 測試套件透過")
 
     if passed == total:
-        print("\n🎉 所有壓力測試通過！Package 準備發布！")
+        print("\n🎉 所有壓力測試透過！Package 準備發布！")
     else:
         print(f"\n⚠️  {total - passed} 個測試失敗，請修復後再發布。")
 
