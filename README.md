@@ -1,3 +1,8 @@
+[![PyPI Version](https://img.shields.io/pypi/v/tou-calculator)](https://pypi.org/project/tou-calculator/)
+[![Python](https://img.shields.io/pypi/pyversions/tou-calculator)](https://pypi.org/project/tou-calculator/)
+[![License](https://img.shields.io/github/license/JUN-WEI-DING/tou_calculator)](https://github.com/JUN-WEI-DING/tou_calculator/blob/main/LICENSE)
+[![Tests](https://github.com/JUN-WEI-DING/tou_calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/JUN-WEI-DING/tou_calculator/actions)
+
 # Taiwan TOU Calculator
 
 A specialized tool for calculating electricity costs based on Taiwan Power Company's (Taipower) Time-of-Use (TOU) tariffs.

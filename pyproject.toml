@@ -10,10 +10,10 @@ readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{name = "Gary"}]
+authors = [{name = "Gary", email = "d13521023@ntu.edu.tw"}]
 keywords = ["taiwan", "tariff", "electricity", "time-of-use", "tou", "energy"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
