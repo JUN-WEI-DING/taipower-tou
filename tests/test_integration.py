@@ -1,4 +1,4 @@
-"""Integration tests for tou_calculator package.
+"""Integration tests for taipower_tou package.
 
 These tests verify that multiple components work together correctly:
 - Calendar + Tariff integration
@@ -12,8 +12,8 @@ from datetime import date, datetime
 import pandas as pd
 import pytest
 
-import tou_calculator as tou
-from tou_calculator import BillingInputs, calculate_bill
+import taipower_tou as tou
+from taipower_tou import BillingInputs, calculate_bill
 
 # =============================================================================
 # Integration: Calendar + Tariff

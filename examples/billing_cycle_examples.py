@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import pandas as pd
 
-import tou_calculator as tou
-from tou_calculator.models import BillingCycleType
-from tou_calculator.tariff import _billing_period_group_index
+import taipower_tou as tou
+from taipower_tou.models import BillingCycleType
+from taipower_tou.tariff import _billing_period_group_index
 
 
 def print_section(title: str) -> None:

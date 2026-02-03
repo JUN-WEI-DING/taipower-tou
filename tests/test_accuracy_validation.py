@@ -13,8 +13,8 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-import tou_calculator as tou
-from tou_calculator import BillingInputs, calculate_bill
+import taipower_tou as tou
+from taipower_tou import BillingInputs, calculate_bill
 
 # =============================================================================
 # Residential Simple 2-Tier Plan (簡易型二段式) Accuracy Tests

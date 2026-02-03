@@ -2,14 +2,14 @@ from datetime import date, datetime
 
 import pandas as pd
 
-from tou_calculator.custom import (
+from taipower_tou.custom import (
     CustomCalendar,
     WeekdayDayTypeStrategy,
     build_tariff_plan,
     build_tariff_profile,
     build_tariff_rate,
 )
-from tou_calculator.tariff import TaiwanSeasonStrategy, get_period
+from taipower_tou.tariff import TaiwanSeasonStrategy, get_period
 
 
 def test_custom_calendar_weekend_and_holiday() -> None:

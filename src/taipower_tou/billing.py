@@ -10,19 +10,19 @@ from typing import Any
 
 import pandas as pd
 
-from tou_calculator.calendar import TaiwanCalendar, taiwan_calendar
-from tou_calculator.errors import (
+from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar
+from taipower_tou.errors import (
     InvalidBasicFeeInput,
     InvalidUsageInput,
     MissingRequiredInput,
 )
-from tou_calculator.factory import (
+from taipower_tou.factory import (
     PlanRequirements,
     PlanStore,
     _build_tariff_plan_from_data,
     _season_strategy,
 )
-from tou_calculator.models import BillingCycleType
+from taipower_tou.models import BillingCycleType
 
 
 @dataclass

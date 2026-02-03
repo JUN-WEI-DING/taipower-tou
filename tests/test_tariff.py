@@ -3,7 +3,7 @@ from datetime import date, datetime
 import pandas as pd
 import pytest
 
-from tou_calculator import (
+from taipower_tou import (
     InvalidUsageInput,
     monthly_breakdown,
     period_context,
@@ -11,8 +11,8 @@ from tou_calculator import (
     plan_details,
     pricing_context,
 )
-from tou_calculator.calendar import TaiwanCalendar
-from tou_calculator.tariff import PeriodType, SeasonType, get_period
+from taipower_tou.calendar import TaiwanCalendar
+from taipower_tou.tariff import PeriodType, SeasonType, get_period
 
 
 def _calendar_with_cache(tmp_path) -> TaiwanCalendar:

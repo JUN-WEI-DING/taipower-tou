@@ -15,8 +15,8 @@ except ImportError:
     npt: Any = None  # type: ignore
     pd: Any = None  # type: ignore
 
-from tou_calculator.errors import InvalidUsageInput, TariffError
-from tou_calculator.models import (
+from taipower_tou.errors import InvalidUsageInput, TariffError
+from taipower_tou.models import (
     BillingCycleType,
     ConsumptionTier,
     DaySchedule,

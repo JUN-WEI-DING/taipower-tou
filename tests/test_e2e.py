@@ -6,8 +6,8 @@ covering typical use cases for different customer types.
 
 import pandas as pd
 
-import tou_calculator as tou
-from tou_calculator import BillingInputs, calculate_bill
+import taipower_tou as tou
+from taipower_tou import BillingInputs, calculate_bill
 
 # =============================================================================
 # E2E Scenario 1: Household with Smart Meter Data

@@ -1,4 +1,4 @@
-"""Production Readiness Test Suite for tou_calculator.
+"""Production Readiness Test Suite for taipower_tou.
 
 This is the FINAL comprehensive test suite before release, testing from
 multiple perspectives, roles, scenarios, and data types.
@@ -38,8 +38,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import tou_calculator as tou
-from tou_calculator import (
+import taipower_tou as tou
+from taipower_tou import (
     BillingInputs,
     InvalidUsageInput,
     TariffError,
@@ -636,7 +636,7 @@ class TestConcurrencyAndRaceConditions:
         """Test plan creation in multiple processes."""
 
         def create_and_use(plan_id):
-            import tou_calculator as tou_mp
+            import taipower_tou as tou_mp
 
             plan = tou_mp.plan(plan_id)
             dates = pd.date_range("2024-01-01", periods=100, freq="h")
@@ -829,9 +829,9 @@ class TestDocumentationExamples:
 
     def test_basic_import(self):
         """Test basic import patterns."""
-        import tou_calculator
+        import taipower_tou
 
-        assert tou_calculator.__version__ is not None
+        assert taipower_tou.__version__ is not None
 
     def test_available_plans_example(self):
         """Test the available_plans example."""
@@ -1458,9 +1458,9 @@ class TestInstallationAndIntegration:
     def test_entry_points(self):
         """Test that entry points are accessible."""
         # Should be able to import main module
-        import tou_calculator
+        import taipower_tou
 
-        assert tou_calculator is not None
+        assert taipower_tou is not None
 
     def test_data_files_accessible(self):
         """Test that data files are accessible."""
@@ -1468,13 +1468,13 @@ class TestInstallationAndIntegration:
 
         try:
             # Try to access data directory
-            data_files = importlib.resources.files("tou_calculator") / "data"
+            data_files = importlib.resources.files("taipower_tou") / "data"
             assert data_files.is_dir()
         except Exception:
             # Fallback: check package path
-            import tou_calculator
+            import taipower_tou
 
-            pkg_path = Path(tou_calculator.__file__).parent
+            pkg_path = Path(taipower_tou.__file__).parent
             data_path = pkg_path / "data"
             assert data_path.exists()
 
@@ -1510,12 +1510,12 @@ class TestInstallationAndIntegration:
     def test_import_submodules(self):
         """Test that all submodules can be imported."""
         submodules = [
-            "tou_calculator.billing",
-            "tou_calculator.tariff",
-            "tou_calculator.calendar",
-            "tou_calculator.factory",
-            "tou_calculator.custom",
-            "tou_calculator.models",
+            "taipower_tou.billing",
+            "taipower_tou.tariff",
+            "taipower_tou.calendar",
+            "taipower_tou.factory",
+            "taipower_tou.custom",
+            "taipower_tou.models",
         ]
 
         for submodule in submodules:
@@ -1536,10 +1536,10 @@ class TestInstallationAndIntegration:
     def test_no_runtime_dependencies_on_dev_tools(self):
         """Test that package doesn't require dev tools at runtime."""
         # These imports should work without dev dependencies
-        import tou_calculator
+        import taipower_tou
 
         # Package should work without pytest, mypy, etc.
-        assert tou_calculator.__version__ is not None
+        assert taipower_tou.__version__ is not None
 
     def test_optional_lunar_dependency(self):
         """Test that lunar calendar is optional."""

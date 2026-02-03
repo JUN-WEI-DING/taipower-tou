@@ -1,11 +1,11 @@
 [![PyPI Version](https://img.shields.io/pypi/v/tou-calculator)](https://pypi.org/project/tou-calculator/)
 [![Python](https://img.shields.io/pypi/pyversions/tou-calculator)](https://pypi.org/project/tou-calculator/)
-[![License](https://img.shields.io/github/license/JUN-WEI-DING/tou_calculator)](https://github.com/JUN-WEI-DING/tou_calculator/blob/main/LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/JUN-WEI-DING/tou_calculator/ci.yml?branch=main)](https://github.com/JUN-WEI-DING/tou_calculator/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/JUN-WEI-DING/taipower_tou)](https://github.com/JUN-WEI-DING/taipower_tou/blob/main/LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/JUN-WEI-DING/taipower_tou/ci.yml?branch=main)](https://github.com/JUN-WEI-DING/taipower_tou/actions/workflows/ci.yml)
 
 # Taiwan Electricity Tariff Calculator
 
-**Confused by Taipower's complex rates? / 台電費率複雜，每次都搞不清楚嗎？**
+**Confused by Taipower's complex rates? / 臺電費率複雜，每次都搞不清楚嗎？**
 A comprehensive tool for calculating electricity costs based on Taiwan Power Company's (Taipower) pricing schemes.
 
 This library supports **both** major tariff types used by Taipower:
@@ -83,7 +83,7 @@ Summer (夏月，6-9月):
 
 ```python
 import pandas as pd
-import tou_calculator as tou
+import taipower_tou as tou
 
 # Your monthly usage data (one value per month)
 # 你的每月用電資料（每個月一個值）
@@ -131,7 +131,7 @@ print(report)
 # For tiered rates, use plan.calculate_costs() with pandas Series
 # 累進費率建議使用 pandas Series + plan.calculate_costs()
 import pandas as pd
-import tou_calculator as tou
+import taipower_tou as tou
 
 usage = [280, 320, 250, 310]  # Monthly kWh readings
 dates = pd.date_range("2025-01-01", periods=len(usage), freq="MS")
@@ -146,7 +146,7 @@ If you prefer using list/dict for tiered rates, specify `billing_cycle_months=1`
 如果一定要用 list/dict 計算累進費率，需要指定 `billing_cycle_months=1`：
 
 ```python
-from tou_calculator import calculate_bill, BillingInputs
+from taipower_tou import calculate_bill, BillingInputs
 
 dates = pd.date_range("2025-01-01", periods=4, freq="MS")
 series = pd.Series([280, 320, 250, 310], index=dates)
@@ -229,8 +229,8 @@ This **day-ratio apportionment method** is commonly adopted by power companies w
 
 ```python
 import pandas as pd
-import tou_calculator as tou
-from tou_calculator import BillingCycleType
+import taipower_tou as tou
+from taipower_tou import BillingCycleType
 
 # Usage for June-July (2 months)
 dates = pd.date_range("2025-06-01", "2025-07-31", freq="D")
@@ -352,7 +352,7 @@ usage_series = df["usage"]
 #### Example C: No-Pandas Functions (無需 Pandas 的便利函式)
 
 ```python
-import tou_calculator as tou
+import taipower_tou as tou
 
 # Using list (for regularly-spaced data)
 # 使用 list（適用於固定間隔資料）
@@ -384,7 +384,7 @@ Before calculating, you can check what rate period applies at a specific time.
 
 ```python
 from datetime import datetime
-import tou_calculator as tou
+import taipower_tou as tou
 
 dt = datetime(2025, 7, 15, 14, 0)  # July 15, 2025, 2:00 PM (summer weekday afternoon)
 
@@ -464,7 +464,7 @@ For industrial users with contract capacity, basic fees, and penalties:
 適合有契約容量的工業使用者（含基本費和違約金）：
 
 ```python
-from tou_calculator import calculate_bill, BillingInputs
+from taipower_tou import calculate_bill, BillingInputs
 
 # Configure billing parameters
 # 設定計費引數
@@ -488,7 +488,7 @@ print(bill)
 
 ```python
 import pandas as pd
-import tou_calculator as tou
+import taipower_tou as tou
 
 # 1. Load hourly usage data
 # 1. 讀取每小時用電資料
@@ -723,7 +723,7 @@ This guide covers the primary functions for querying plans, checking rates, and 
 **List Available Plans:**
 
 ```python
-import tou_calculator as tou
+import taipower_tou as tou
 
 plans = tou.available_plans()
 for plan_id, chinese_name in plans.items():
@@ -863,7 +863,7 @@ Penalty Impact (assuming 200 kW contract, 2x rate for over-contract):
 **Recommended Usage**
 
 ```python
-from tou_calculator import calculate_bill, BillingInputs
+from taipower_tou import calculate_bill, BillingInputs
 
 # Best practice: Use 15-minute demand data
 inputs = BillingInputs(
@@ -885,7 +885,7 @@ inputs = BillingInputs(
 **Calculate Total Bill:**
 
 ```python
-from tou_calculator import calculate_bill, BillingInputs
+from taipower_tou import calculate_bill, BillingInputs
 
 # Configure billing parameters (contracts, power factor, etc.)
 inputs = BillingInputs(
@@ -904,7 +904,7 @@ If you need to know exactly how the bill was composed (e.g., how much was the Po
 若您需要了解帳單的詳細組成（例如力率折扣金額）：
 
 ```python
-from tou_calculator import calculate_bill_breakdown
+from taipower_tou import calculate_bill_breakdown
 
 result = calculate_bill_breakdown(usage, "high_voltage_2_tier", inputs=inputs)
 
@@ -918,7 +918,7 @@ print(result["adjustment_details"])  # Specific adjustments (e.g., PF discount a
 
 ## Public API Index (公開 API 總覽)
 
-Quick index of all public entry points exported by `tou_calculator`.
+Quick index of all public entry points exported by `taipower_tou`.
 
 ### Core helpers (核心入口)
 - `available_plans()` returns dict of {plan_id: chinese_name}
@@ -963,10 +963,10 @@ Quick index of all public entry points exported by `tou_calculator`.
 Short examples for each public entry point. Imports are shown once to keep this section compact.
 
 ```python
-import tou_calculator as tou
+import taipower_tou as tou
 import pandas as pd
 from datetime import datetime
-from tou_calculator import (
+from taipower_tou import (
     BillingInputs,
     TariffFactory,
     TariffPlan,
@@ -1059,7 +1059,7 @@ plan = factory.create("residential_simple_2_tier", calendar=calendar)
 ### Custom plan builders (自定義方案)
 
 ```python
-from tou_calculator import (
+from taipower_tou import (
     build_tariff_profile,
     build_tariff_rate,
     build_day_schedule,
@@ -1200,7 +1200,7 @@ costs = plan.calculate_costs(usage_data)  # Will use cached holidays
 
 ## Custom Plans (自定義費率)
 
-You can also define custom calendars and rate schedules if the built-in Taipower plans don't fit your needs. (See `src/tou_calculator/custom.py` or the tests for advanced examples).
+You can also define custom calendars and rate schedules if the built-in Taipower plans don't fit your needs. (See `src/taipower_tou/custom.py` or the tests for advanced examples).
 
 ---
 
@@ -1236,7 +1236,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Links (相關連結)
 
-- **Repository:** https://github.com/JUN-WEI-DING/tou_calculator
-- **Issues:** https://github.com/JUN-WEI-DING/tou_calculator/issues
+- **Repository:** https://github.com/JUN-WEI-DING/taipower_tou
+- **Issues:** https://github.com/JUN-WEI-DING/taipower_tou/issues
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 - **License:** [MIT](LICENSE)

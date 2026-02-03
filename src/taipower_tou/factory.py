@@ -6,15 +6,15 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
 
-from tou_calculator.calendar import TaiwanCalendar, taiwan_calendar
-from tou_calculator.custom import (
+from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar
+from taipower_tou.custom import (
     build_tariff_plan,
     build_tariff_profile,
     build_tariff_rate,
 )
-from tou_calculator.models import BillingCycleType
-from tou_calculator.rates import TariffJSONLoader
-from tou_calculator.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
+from taipower_tou.models import BillingCycleType
+from taipower_tou.rates import TariffJSONLoader
+from taipower_tou.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
 
 # Shared plan ID to Chinese name mapping
 # Used by both PlanStore.resolve_plan() and available_plans()

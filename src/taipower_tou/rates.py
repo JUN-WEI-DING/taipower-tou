@@ -11,7 +11,7 @@ class TariffJSONLoader:
     def __init__(
         self,
         filename: str = "plans.json",
-        package: str = "tou_calculator.data",
+        package: str = "taipower_tou.data",
     ) -> None:
         self._filename = filename
         self._package = package

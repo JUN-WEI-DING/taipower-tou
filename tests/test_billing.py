@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-import tou_calculator as tou
+import taipower_tou as tou
 
 
 @pytest.fixture

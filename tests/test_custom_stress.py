@@ -1,4 +1,4 @@
-"""Comprehensive stress testing for tou_calculator custom functionality.
+"""Comprehensive stress testing for taipower_tou custom functionality.
 
 This module performs aggressive stress tests to ensure custom plan robustness
 before release. Tests include:
@@ -20,15 +20,15 @@ from datetime import date, datetime, time
 
 import pandas as pd
 
-from tou_calculator.custom import (
+from taipower_tou.custom import (
     CustomCalendar,
     WeekdayDayTypeStrategy,
     build_tariff_plan,
     build_tariff_profile,
     build_tariff_rate,
 )
-from tou_calculator.errors import TariffError
-from tou_calculator.tariff import TaiwanSeasonStrategy
+from taipower_tou.errors import TariffError
+from taipower_tou.tariff import TaiwanSeasonStrategy
 
 # =============================================================================
 # TEST 1: Extreme Calendar Configurations

@@ -1,4 +1,4 @@
-# tou_calculator API 中文說明
+# taipower_tou API 中文說明
 
 本檔案列出目前公開 API 的功能、常用設定與回傳內容。所有範例請參考
 `examples/usage_examples.py`。
@@ -82,7 +82,7 @@
 
 ```python
 from datetime import datetime
-import tou_calculator as tou
+import taipower_tou as tou
 
 calendar = tou.custom_calendar()
 day_types = tou.WeekdayDayTypeStrategy(calendar)

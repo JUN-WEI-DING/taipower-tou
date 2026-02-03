@@ -9,7 +9,7 @@ from datetime import datetime
 
 import pandas as pd
 
-import tou_calculator as tou
+import taipower_tou as tou
 
 
 def main():

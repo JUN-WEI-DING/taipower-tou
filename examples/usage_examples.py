@@ -1,4 +1,4 @@
-"""tou_calculator API usage examples with Chinese annotations."""
+"""taipower_tou API usage examples with Chinese annotations."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-import tou_calculator as tou
+import taipower_tou as tou
 
 
 def _sample_usage(start: datetime, periods: int, freq_minutes: int) -> pd.Series:

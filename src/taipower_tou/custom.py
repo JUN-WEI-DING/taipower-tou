@@ -12,8 +12,8 @@ try:
 except ImportError:
     pd = None
 
-from tou_calculator.errors import CalendarError, TariffError
-from tou_calculator.models import (
+from taipower_tou.errors import CalendarError, TariffError
+from taipower_tou.models import (
     BillingCycleType,
     ConsumptionTier,
     DaySchedule,
@@ -23,7 +23,7 @@ from tou_calculator.models import (
     TimeSlot,
     _label_value,
 )
-from tou_calculator.tariff import (
+from taipower_tou.tariff import (
     DayTypeStrategy,
     SeasonStrategy,
     TariffPlan,

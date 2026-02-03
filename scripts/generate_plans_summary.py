@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PLANS_PATH = ROOT / "src" / "tou_calculator" / "data" / "plans.json"
-SUMMARY_PATH = ROOT / "src" / "tou_calculator" / "data" / "plans_summary.md"
+PLANS_PATH = ROOT / "src" / "taipower_tou" / "data" / "plans.json"
+SUMMARY_PATH = ROOT / "src" / "taipower_tou" / "data" / "plans_summary.md"
 
 
 def _format_definitions(definitions: dict) -> list[str]:

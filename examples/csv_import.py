@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pandas as pd
 
-import tou_calculator as tou
+import taipower_tou as tou
 
 
 def create_sample_csv(filename: str = "sample_usage.csv") -> None:

@@ -1,4 +1,4 @@
-"""Comprehensive stress testing for tou_calculator package.
+"""Comprehensive stress testing for taipower_tou package.
 
 This module performs aggressive stress tests to ensure package robustness
 before release. Tests include:
@@ -21,8 +21,8 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-import tou_calculator as tou
-from tou_calculator.errors import InvalidUsageInput, TariffError
+import taipower_tou as tou
+from taipower_tou.errors import InvalidUsageInput, TariffError
 
 # =============================================================================
 # TEST 1: Extreme Data Volumes
@@ -533,7 +533,7 @@ def test_billing_stress():
     print("STRESS TEST 10: Billing Calculations (計費壓力測試)")
     print("=" * 70)
 
-    from tou_calculator import BillingInputs, calculate_bill
+    from taipower_tou import BillingInputs, calculate_bill
 
     plans_to_test = [
         "residential_simple_2_tier",

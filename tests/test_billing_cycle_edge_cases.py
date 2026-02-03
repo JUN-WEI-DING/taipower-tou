@@ -5,8 +5,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-import tou_calculator as tou
-from tou_calculator.models import BillingCycleType
+import taipower_tou as tou
+from taipower_tou.models import BillingCycleType
 
 
 class TestBillingCycleEdgeCases:

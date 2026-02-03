@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from tou_calculator import BillingInputs, calculate_bill
+from taipower_tou import BillingInputs, calculate_bill
 
 
 def create_realistic_household_usage(

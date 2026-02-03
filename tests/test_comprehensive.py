@@ -5,7 +5,7 @@ from datetime import datetime
 
 import pandas as pd
 
-import tou_calculator as tou
+import taipower_tou as tou
 
 
 def test_different_data_sizes():
@@ -287,7 +287,7 @@ def test_billing_accuracy():
     print("TEST 11: 完整帳單計算準確度 (Billing Calculation)")
     print("=" * 60)
 
-    from tou_calculator import BillingInputs, calculate_bill
+    from taipower_tou import BillingInputs, calculate_bill
 
     # 場景：高壓使用者，契約容量200kW，實際用電
     dates = pd.date_range("2025-07-01 00:00", periods=48, freq="30min")

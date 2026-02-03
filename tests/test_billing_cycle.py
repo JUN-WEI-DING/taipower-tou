@@ -13,9 +13,9 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-import tou_calculator as tou
-from tou_calculator.models import BillingCycleType
-from tou_calculator.tariff import _billing_period_group_index
+import taipower_tou as tou
+from taipower_tou.models import BillingCycleType
+from taipower_tou.tariff import _billing_period_group_index
 
 
 @pytest.fixture
@@ -190,8 +190,8 @@ class TestTierDoubling:
         assert plan.billing_cycle_type == BillingCycleType.MONTHLY
 
         # Create a new plan with ODD_MONTH billing
-        from tou_calculator.models import TariffRate
-        from tou_calculator.tariff import TariffPlan
+        from taipower_tou.models import TariffRate
+        from taipower_tou.tariff import TariffPlan
 
         rates = TariffRate(tiered_rates=plan.rates.tiered_rates)
 
@@ -226,7 +226,7 @@ class TestTierDoubling:
 
     def test_tariff_plan_tier_doubling_second_tier(self):
         """Test tier doubling into second tier."""
-        from tou_calculator.models import TariffRate
+        from taipower_tou.models import TariffRate
 
         plan = tou.plan("residential_non_tou")
         rates = TariffRate(tiered_rates=plan.rates.tiered_rates)
@@ -253,7 +253,7 @@ class TestTierDoubling:
 
     def test_billing_period_grouping_with_calculation(self):
         """Test that billing period grouping works with TariffPlan costs."""
-        from tou_calculator.models import TariffRate
+        from taipower_tou.models import TariffRate
 
         plan = tou.plan("residential_non_tou")
         rates = TariffRate(tiered_rates=plan.rates.tiered_rates)
@@ -458,7 +458,7 @@ class TestComparison:
         """Test TariffPlan with different cycle types produces different results."""
         # Compare MONTHLY vs ODD_MONTH billing for same usage
 
-        from tou_calculator.models import TariffRate
+        from taipower_tou.models import TariffRate
 
         plan = tou.plan("residential_non_tou")
         rates = TariffRate(tiered_rates=plan.rates.tiered_rates)

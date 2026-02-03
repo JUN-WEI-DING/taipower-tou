@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tou_calculator.billing import (
+from taipower_tou.billing import (
     BillingInputs,
     calculate_bill,
     calculate_bill_breakdown,
@@ -13,8 +13,8 @@ from tou_calculator.billing import (
     calculate_bill_from_list,
     calculate_bill_simple,
 )
-from tou_calculator.calendar import TaiwanCalendar, taiwan_calendar
-from tou_calculator.custom import (
+from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar
+from taipower_tou.custom import (
     CustomCalendar,
     WeekdayDayTypeStrategy,
     build_day_schedule,
@@ -23,7 +23,7 @@ from tou_calculator.custom import (
     build_tariff_rate,
     custom_calendar,
 )
-from tou_calculator.errors import (
+from taipower_tou.errors import (
     CalendarError,
     InvalidBasicFeeInput,
     InvalidUsageInput,
@@ -31,9 +31,9 @@ from tou_calculator.errors import (
     PowerKitError,
     TariffError,
 )
-from tou_calculator.factory import PlanRequirements, PlanStore, TariffFactory
-from tou_calculator.models import BillingCycleType
-from tou_calculator.tariff import (
+from taipower_tou.factory import PlanRequirements, PlanStore, TariffFactory
+from taipower_tou.models import BillingCycleType
+from taipower_tou.tariff import (
     PeriodType,
     SeasonType,
     TaiwanDayTypeStrategy,
@@ -108,7 +108,7 @@ def available_plans() -> dict[str, str]:
     Returns:
         {plan_id: chinese_name} mapping
     """
-    from tou_calculator.factory import _PLAN_NAME_MAP
+    from taipower_tou.factory import _PLAN_NAME_MAP
 
     return dict(_PLAN_NAME_MAP)
 

@@ -3,10 +3,10 @@ from datetime import date, datetime, time
 
 import pandas as pd
 
-import tou_calculator as tou
-from tou_calculator.calendar import TaiwanCalendar
-from tou_calculator.errors import InvalidUsageInput, PowerKitError, TariffError
-from tou_calculator.tariff import (
+import taipower_tou as tou
+from taipower_tou.calendar import TaiwanCalendar
+from taipower_tou.errors import InvalidUsageInput, PowerKitError, TariffError
+from taipower_tou.tariff import (
     DaySchedule,
     PeriodType,
     SeasonType,

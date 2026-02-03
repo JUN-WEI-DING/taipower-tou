@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tou_calculator.calendar import TaiwanCalendar
+from taipower_tou.calendar import TaiwanCalendar
 
 
 @pytest.fixture
@@ -14,7 +14,7 @@ def offline_calendar(tmp_path):
     Prevents network calls during testing.
     """
     with patch(
-        "tou_calculator.calendar._HolidayFetcher.fetch",
+        "taipower_tou.calendar._HolidayFetcher.fetch",
         side_effect=RuntimeError("Offline mode"),
     ):
         yield TaiwanCalendar(cache_dir=tmp_path)

@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tou-calculator"
+name = "taipower-tou"
 version = "0.1.0"
 description = "Taiwan time-of-use electricity tariff calculator"
 readme = {file = "README.md", content-type = "text/markdown"}
@@ -48,7 +48,7 @@ lunar = ["zhdate>=0.1.0"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-"tou_calculator" = ["data/*.json", "data/*.md", "data/*.pdf", "data/*.txt"]
+"taipower_tou" = ["data/*.json", "data/*.md", "data/*.pdf", "data/*.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

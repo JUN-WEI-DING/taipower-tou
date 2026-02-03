@@ -25,7 +25,7 @@ try:
 except ImportError:
     LUNAR_AVAILABLE = False
 
-from tou_calculator.errors import CalendarError
+from taipower_tou.errors import CalendarError
 
 HOLIDAY_API_URL = (
     "https://raw.githubusercontent.com/ruyut/TaiwanCalendar/master/data/{year}.json"
@@ -47,7 +47,7 @@ class _HolidayCache:
             self._cache_dir.mkdir(parents=True, exist_ok=True)
         except PermissionError:
             fallback_dir = (
-                Path.cwd() / ".cache" / "tou_calculator" / "calendar" / "taiwan"
+                Path.cwd() / ".cache" / "taipower_tou" / "calendar" / "taiwan"
             )
             fallback_dir.mkdir(parents=True, exist_ok=True)
             self._cache_dir = fallback_dir
@@ -259,7 +259,7 @@ class TaiwanCalendar:
     """Taiwan calendar with holiday rules."""
 
     def __init__(self, cache_dir: Path | None = None, api_timeout: int = 10) -> None:
-        cache_dir = Path(cache_dir) if cache_dir else user_cache_path("tou_calculator")
+        cache_dir = Path(cache_dir) if cache_dir else user_cache_path("taipower_tou")
         cache_dir = cache_dir / "calendar" / "taiwan"
         self._loader = _HolidayLoader(cache_dir, api_timeout)
 
