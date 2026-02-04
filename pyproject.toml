@@ -33,11 +33,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/JUN-WEI-DING/tou_calculator"
-Repository = "https://github.com/JUN-WEI-DING/tou_calculator"
-Issues = "https://github.com/JUN-WEI-DING/tou_calculator/issues"
-Changelog = "https://github.com/JUN-WEI-DING/tou_calculator/blob/main/CHANGELOG.md"
-Documentation = "https://github.com/JUN-WEI-DING/tou_calculator#readme"
+Homepage = "https://github.com/JUN-WEI-DING/taipower-tou"
+Repository = "https://github.com/JUN-WEI-DING/taipower-tou"
+Issues = "https://github.com/JUN-WEI-DING/taipower-tou/issues"
+Changelog = "https://github.com/JUN-WEI-DING/taipower-tou/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/JUN-WEI-DING/taipower-tou#readme"
 
 [project.optional-dependencies]
 test = ["pytest"]
