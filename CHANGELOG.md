@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-02-06
+
 ### Added
 - Initial release of Taiwan TOU Calculator
 - Support for all 20 Taipower tariff plans
@@ -55,8 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pre-commit hooks for code quality (ruff, mypy)
 - MIT License
 
-## [0.1.0] - TBD
-
 ### Release Notes
 - First stable release
-- PyPI publication pending
+- Published to PyPI
