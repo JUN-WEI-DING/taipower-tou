@@ -1,0 +1,324 @@
+{
+ "chapter": "第八章 契約容量之決定",
+ "lines": [
+  1508,
+  1599
+ ],
+ "clauses": [
+  {
+   "id": "八",
+   "lines": [
+    1508,
+    1508
+   ],
+   "kind": "not_billing",
+   "summary": "第八章 契約容量之決定",
+   "reason": "chapter heading"
+  },
+  {
+   "id": "八-一",
+   "lines": [
+    1509,
+    1512
+   ],
+   "kind": "not_billing",
+   "summary": "裝置契約容量：照用電器具總入力千伏安數訂定，尾數不及1千伏安者進整，每1千伏安視作1瓩",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(一)",
+   "lines": [
+    1513,
+    1514
+   ],
+   "kind": "not_billing",
+   "summary": "以千伏安為單位者，以其標示之千伏安數為準",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(二)",
+   "lines": [
+    1515,
+    1517
+   ],
+   "kind": "not_billing",
+   "summary": "電動機以馬力數為準；以瓩為單位者以0.75除其標示之瓩數",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(三)",
+   "lines": [
+    1518,
+    1519
+   ],
+   "kind": "not_billing",
+   "summary": "功率因數特高之用電器具以其標示之瓩數為準",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(四)",
+   "lines": [
+    1520,
+    1522
+   ],
+   "kind": "not_billing",
+   "summary": "電氣爐以專用變壓器千伏安數，軋鋼馬達以最大入力千伏安數；電焊機入力千伏安乘0.7",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(五)",
+   "lines": [
+    1523,
+    1524
+   ],
+   "kind": "not_billing",
+   "summary": "電動發電機或整流器以其入力千伏安為準",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(六)",
+   "lines": [
+    1525,
+    1526
+   ],
+   "kind": "not_billing",
+   "summary": "電力用電（只限既設）之電燈、小型器具及附帶電燈，契約容量依下列規定計算",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(六)-1",
+   "lines": [
+    1527,
+    1527
+   ],
+   "kind": "not_billing",
+   "summary": "日光燈每一燈管按50瓦計算",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(六)-2",
+   "lines": [
+    1528,
+    1529
+   ],
+   "kind": "not_billing",
+   "summary": "其他電燈及小型器具每具未滿500瓦者按100瓦計算",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(六)-3",
+   "lines": [
+    1530,
+    1531
+   ],
+   "kind": "not_billing",
+   "summary": "每具500瓦以上者按實際容量計算",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(六)-4",
+   "lines": [
+    1532,
+    1532
+   ],
+   "kind": "not_billing",
+   "summary": "未註明用電器具之普通插座每一插口按50瓦計算",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-一-(六)-5",
+   "lines": [
+    1533,
+    1535
+   ],
+   "kind": "not_billing",
+   "summary": "裝有專用變壓器者得按專用變壓器之容量計算",
+   "reason": "how Taipower sets the 裝置契約容量 from the appliances when the contract is signed; the library takes the contract kW as an input"
+  },
+  {
+   "id": "八-二",
+   "lines": [
+    1536,
+    1540
+   ],
+   "kind": "billing",
+   "summary": "需量契約容量：以雙方約定最高需量（15分鐘平均）為契約容量",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "八-二-(一)-1",
+   "lines": [
+    1541,
+    1546
+   ],
+   "kind": "billing",
+   "summary": "非時間電價：經常契約容量以夏月最高需量訂定，非夏月契約容量於非夏月期間併同經常契約容量使用",
+   "tests": [
+    "test_clauses_ch8.py::test_non_tou_non_summer_contract_joins_the_regular_one"
+   ]
+  },
+  {
+   "id": "八-二-(一)-2",
+   "lines": [
+    1547,
+    1551
+   ],
+   "kind": "billing",
+   "summary": "二段式：經常契約容量以夏月尖峰時間最高需量訂定，非夏月契約容量於非夏月尖峰時間併同使用",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "八-二-(一)-3-(1)",
+   "lines": [
+    1552,
+    1556
+   ],
+   "kind": "billing",
+   "summary": "三段式尖峰時間固定：半尖峰契約容量於半尖峰時間併同經常契約容量使用",
+   "tests": [
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "八-二-(一)-3-(2)",
+   "lines": [
+    1557,
+    1558
+   ],
+   "kind": "billing",
+   "summary": "尖峰時間可變動時間電價：比照尖峰時間固定之時間電價",
+   "tests": [
+    "test_clauses_ch5.py::test_variable_peak_bills_peak_only_on_the_designated_days"
+   ]
+  },
+  {
+   "id": "八-二-(一)-4",
+   "lines": [
+    1559,
+    1560
+   ],
+   "kind": "billing",
+   "summary": "批次生產時間電價：比照二段式時間電價用電規定",
+   "tests": [
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "八-二-(一)-5",
+   "lines": [
+    1561,
+    1562
+   ],
+   "kind": "billing",
+   "summary": "電動車：經常契約容量係以雙方約定之用電最高需量訂定",
+   "tests": [
+    "test_clauses_ch5.py::test_ev_over_contract_is_the_months_highest_demand"
+   ]
+  },
+  {
+   "id": "八-二-(一)-6",
+   "lines": [
+    1563,
+    1569
+   ],
+   "kind": "billing",
+   "summary": "週六半尖峰契約容量於週六半尖峰時間及離峰時間併同經常與非夏月(或半尖峰)契約容量使用",
+   "tests": [
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "八-二-(一)-7",
+   "lines": [
+    1570,
+    1574
+   ],
+   "kind": "billing",
+   "summary": "離峰契約容量於離峰時間併同經常、非夏月(或半尖峰)與週六半尖峰契約容量使用",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "八-二-(一)-8",
+   "lines": [
+    1575,
+    1578
+   ],
+   "kind": "billing",
+   "summary": "僅在週六半尖峰或離峰時間用電者，週六半尖峰契約容量於週六半尖峰及離峰時間使用，離峰契約容量於離峰時間使用",
+   "tests": [
+    "test_clauses_ch8.py::test_weekend_only_contract_is_the_contract_for_its_times"
+   ]
+  },
+  {
+   "id": "八-二-(二)-1",
+   "lines": [
+    1579,
+    1581
+   ],
+   "kind": "not_billing",
+   "summary": "最低契約容量：低壓電力非時間電價經常與非夏月契約容量之和不低於1瓩",
+   "reason": "the smallest contract Taipower will sign; a bill is computed from the signed contract, and no amount uses this minimum"
+  },
+  {
+   "id": "八-二-(二)-2",
+   "lines": [
+    1582,
+    1584
+   ],
+   "kind": "not_billing",
+   "summary": "表燈及低壓電力二段式各契約容量之和不低於1瓩",
+   "reason": "the smallest contract Taipower will sign; a bill is computed from the signed contract, and no amount uses this minimum"
+  },
+  {
+   "id": "八-二-(二)-3",
+   "lines": [
+    1585,
+    1587
+   ],
+   "kind": "not_billing",
+   "summary": "表燈及低壓電力三段式各契約容量之和不低於1瓩",
+   "reason": "the smallest contract Taipower will sign; a bill is computed from the signed contract, and no amount uses this minimum"
+  },
+  {
+   "id": "八-二-(二)-4",
+   "lines": [
+    1588,
+    1588
+   ],
+   "kind": "not_billing",
+   "summary": "電動車充換電設施電價經常契約容量不低於1瓩",
+   "reason": "the smallest contract Taipower will sign; a bill is computed from the signed contract, and no amount uses this minimum"
+  },
+  {
+   "id": "八-二-(二)-5",
+   "lines": [
+    1589,
+    1591
+   ],
+   "kind": "not_billing",
+   "summary": "高壓以上二段式及批次生產各契約容量之和不低於100瓩",
+   "reason": "the smallest contract Taipower will sign; a bill is computed from the signed contract, and no amount uses this minimum"
+  },
+  {
+   "id": "八-二-(二)-6",
+   "lines": [
+    1592,
+    1599
+   ],
+   "kind": "not_billing",
+   "summary": "高壓以上三段式各契約容量之和不低於100瓩",
+   "reason": "the smallest contract Taipower will sign; a bill is computed from the signed contract, and no amount uses this minimum"
+  }
+ ]
+}
