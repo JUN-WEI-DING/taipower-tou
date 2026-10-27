@@ -207,3 +207,54 @@ def test_simple_tou_idle_month_pays_the_full_basic_fee():
     """第三章 五(二)4: 簡易型 未用電者，基本電費按核定電價計算."""
     bill = _bill("residential_simple_2_tier", JULY, kwh=0.0)
     assert bill["total"] == pytest.approx(75.0)
+
+
+LV_INSTALLED_HOUSEHOLD = 105.00
+LV_INSTALLED_PER_KW = 137.50
+LV_DEMAND_HOUSEHOLD = 262.50
+LV_REGULAR_SUMMER = 236.20
+
+
+@pytest.mark.parametrize(
+    ("inputs", "expected"),
+    [
+        (
+            {"contract_capacities": {"regular": 10}},
+            LV_DEMAND_HOUSEHOLD + LV_REGULAR_SUMMER * 10,
+        ),
+        (
+            {"basic_fee_inputs": {"裝置契約": 10}},
+            LV_INSTALLED_HOUSEHOLD + LV_INSTALLED_PER_KW * 10,
+        ),
+    ],
+    ids=["demand-contract", "installed-contract"],
+)
+def test_low_voltage_two_stage_charges_one_household_fee(inputs, expected):
+    """第四章 四(二)1: 裝置契約 pays 按戶 105.00, 需量契約 pays 按戶 262.50."""
+    bill = _bill("low_voltage_2_tier", JULY, **inputs)
+    assert bill["basic_cost"] == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("phase", "household"), [("single", 129.10), ("three", 262.50)]
+)
+def test_standard_tou_household_fee_follows_the_meter_phase(phase, household):
+    bill = _bill(
+        "lighting_standard_2_tier",
+        JULY,
+        contract_capacities={"regular": 10},
+        meter_phase=phase,
+    )
+    assert bill["basic_cost"] == pytest.approx(household + LS_REGULAR_SUMMER * 10)
+
+
+def test_installed_tou_month_without_peak_usage_pays_half():
+    """第四章 五(五): 按裝置契約容量計費之用戶，當月份抄見度數（「時間電價」
+    用戶為尖峰時間用電）為0度 → 基本電費按核定電價50%."""
+    usage = pd.Series(0.25, index=JULY)
+    usage[(JULY.dayofweek < 5) & (JULY.hour >= 9)] = 0.0
+    inputs = tou.BillingInputs(basic_fee_inputs={"裝置契約": 10})
+    bill = tou.calculate_bill(usage, "low_voltage_2_tier", inputs).iloc[0]
+    assert bill["basic_cost"] == pytest.approx(
+        0.5 * (LV_INSTALLED_HOUSEHOLD + LV_INSTALLED_PER_KW * 10)
+    )
