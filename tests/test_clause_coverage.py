@@ -1,7 +1,8 @@
-"""Every line of the 電價表 chapters this package bills is a clause with a test.
+"""Every line of the rules this package bills by is a clause with a test.
 
 tests/data/clauses/*.json split each chapter of
-src/taipower_tou/data/詳細電價表.md into clauses by line range. A clause of
+src/taipower_tou/data/詳細電價表.md, or the file a chapter names as its
+"source", such as 營業規章 第四章, into clauses by line range. A clause of
 kind "billing" names the tests that check it. A clause of kind
 "not_billing" says why no bill depends on it, such as a heading, a page
 number or a rule about applying for a contract. A new or changed clause
@@ -46,7 +47,11 @@ def _test_functions():
 
 def test_chapters_and_not_billed_parts_cover_the_whole_tariff():
     ranges = sorted(
-        [tuple(chapter["lines"]) for chapter in CHAPTERS.values()]
+        [
+            tuple(chapter["lines"])
+            for chapter in CHAPTERS.values()
+            if "source" not in chapter
+        ]
         + list(NOT_BILLED.values())
     )
     assert ranges[0][0] == 1
@@ -57,6 +62,15 @@ def test_chapters_and_not_billed_parts_cover_the_whole_tariff():
         if start != end + 1
     ]
     assert gaps == []
+
+
+@pytest.mark.parametrize(
+    "name", [name for name, chapter in CHAPTERS.items() if "source" in chapter]
+)
+def test_chapter_from_another_source_covers_the_whole_file(name):
+    chapter = CHAPTERS[name]
+    source = TESTS.parent / chapter["source"]
+    assert chapter["lines"] == [1, source.read_text("utf-8").count("\n")]
 
 
 @pytest.mark.parametrize("name", CHAPTERS)

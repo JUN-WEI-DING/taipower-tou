@@ -62,3 +62,32 @@ def test_bill_items_are_cut_to_the_jiao_and_the_total_rounded_to_the_yuan():
     energy cost with 分, so the total is a whole number of 元."""
     bill = _bill(kwh=1.0)
     assert bill["total"] == round(bill["total"])
+
+
+@pytest.mark.xfail(strict=True, reason="not supported: no input for 農業動力用電")
+def test_agricultural_power_with_no_load_pays_no_basic_fee():
+    """第四十條: 農業動力用電...用電負載率為零者，基本電費免收, where other users
+    pay half (第四章 五(五))."""
+    usage = pd.Series(0.0, index=JULY)
+    inputs = tou.BillingInputs(
+        basic_fee_inputs={"裝置契約": 10}, agricultural_power=True
+    )
+    bill = tou.calculate_bill(usage, "low_voltage_power", inputs).iloc[0]
+    assert bill["total"] == pytest.approx(0.0)
+
+
+@pytest.mark.xfail(strict=True, reason="not supported: no input for 優待付費 users")
+@pytest.mark.parametrize(
+    ("discount", "kwh"), [("military_family", 300), ("retiree_family", 250)]
+)
+def test_family_discounts_halve_the_first_kwh(discount, kwh):
+    """第四十二條: 現役軍人家屬...每月用電在三百度以下部分...補助半數. 第四十四條:
+    支領退休俸...人員家屬...二百五十度以下部分...補助半數. A month at the limit pays
+    half its 非時間 energy cost."""
+    usage = pd.Series(kwh / len(JULY), index=JULY)
+    full = tou.calculate_bill(
+        usage, "residential_non_tou", tou.BillingInputs(billing_cycle_months=1)
+    ).iloc[0]
+    inputs = tou.BillingInputs(billing_cycle_months=1, **{discount: True})
+    bill = tou.calculate_bill(usage, "residential_non_tou", inputs).iloc[0]
+    assert bill["energy_cost"] == pytest.approx(0.5 * full["energy_cost"])
