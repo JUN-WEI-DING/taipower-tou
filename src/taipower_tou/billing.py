@@ -424,7 +424,7 @@ def calculate_bill(
     monthly_usage = usage_for_billing.groupby(billing_periods).sum()
     monthly_usage.index = monthly_usage.index.to_timestamp()
 
-    basic_costs, _ = _calculate_basic_fees(
+    basic_costs, basic_details = _calculate_basic_fees(
         plan_data,
         inputs,
         month_index,
@@ -432,10 +432,11 @@ def calculate_bill(
         _idle_months(usage_for_billing, inputs, billing_periods),
     )
     surcharge = _calculate_surcharges(plan_data, inputs, monthly_usage)
-    adjustment = _calculate_adjustments(
+    adjustment, _ = _calculate_adjustments(
         plan_data,
         inputs,
         basic_costs,
+        basic_details,
         month_index,
         store,
         context,
@@ -554,10 +555,11 @@ def calculate_bill_breakdown(
         _idle_months(usage_for_billing, inputs, billing_periods),
     )
     surcharge = _calculate_surcharges(plan_data, inputs, monthly_usage)
-    adjustment, adjustment_details = _calculate_adjustments_breakdown(
+    adjustment, adjustment_details = _calculate_adjustments(
         plan_data,
         inputs,
         basic_costs,
+        basic_details,
         month_index,
         store,
         context,
@@ -733,34 +735,28 @@ def _calculate_surcharges(
     return surcharge
 
 
+def _household_costs(
+    plan_data: dict[str, Any], basic_details: pd.DataFrame, month_index: pd.Index
+) -> pd.Series:
+    """The 按戶計收 part of each bill's basic fee."""
+    labels = {"basic_fee"} | {
+        entry["label"]
+        for entry in plan_data.get("basic_fees", [])
+        if entry.get("unit") == "per_household_month"
+    }
+    if basic_details.empty:
+        return pd.Series(0.0, index=month_index)
+    household = basic_details[basic_details["label"].isin(labels)]
+    return (
+        household.groupby("period")["cost"].sum().reindex(month_index, fill_value=0.0)
+    )
+
+
 def _calculate_adjustments(
     plan_data: dict[str, Any],
     inputs: BillingInputs,
     basic_costs: pd.Series,
-    month_index: pd.Index,
-    store: PlanStore,
-    context_df: pd.DataFrame,
-    billing_periods: pd.PeriodIndex,
-    energy_costs: pd.Series,
-    surcharge: pd.Series,
-) -> pd.Series:
-    return _calculate_adjustments_breakdown(
-        plan_data,
-        inputs,
-        basic_costs,
-        month_index,
-        store,
-        context_df,
-        billing_periods,
-        energy_costs,
-        surcharge,
-    )[0]
-
-
-def _calculate_adjustments_breakdown(
-    plan_data: dict[str, Any],
-    inputs: BillingInputs,
-    basic_costs: pd.Series,
+    basic_details: pd.DataFrame,
     month_index: pd.Index,
     store: PlanStore,
     context_df: pd.DataFrame,
@@ -777,14 +773,14 @@ def _calculate_adjustments_breakdown(
         base = pf_rule.get("base_percent", 80)
         max_discount = pf_rule.get("max_discount_percent", 95)
         step = pf_rule.get("step_percent", 0.1)
-        apply_to = pf_rule.get("apply_to", "basic")
         pf = float(inputs.power_factor)
-        if apply_to == "total":
-            target = basic_costs + energy_costs + surcharge
-        elif apply_to == "energy":
-            target = energy_costs
-        else:
-            target = basic_costs
+        # 功率因數 adjusts 該月份電費, but 按戶計收之基本電費，不列計功率因數調整費.
+        target = (
+            basic_costs
+            - _household_costs(plan_data, basic_details, month_index)
+            + energy_costs
+            + surcharge
+        )
         if pf < base:
             delta = base - pf
             delta_cost = target * (delta * step / 100.0)

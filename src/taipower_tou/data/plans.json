@@ -144,7 +144,12 @@
       "billing_rules": {
         "min_monthly_fee": 100,
         "minimum_usage_rules_ref": "lighting_minimum_usage",
-        "billing_cycle_months": 2
+        "billing_cycle_months": 2,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
+        }
       }
     },
     {
@@ -194,7 +199,12 @@
       "billing_rules": {
         "min_monthly_fee": 100,
         "minimum_usage_rules_ref": "lighting_minimum_usage",
-        "billing_cycle_months": 2
+        "billing_cycle_months": 2,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
+        }
       }
     },
     {
@@ -238,7 +248,12 @@
       "billing_rules": {
         "min_monthly_fee": 100,
         "minimum_usage_rules_ref": "lighting_minimum_usage",
-        "billing_cycle_months": 2
+        "billing_cycle_months": 2,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
+        }
       }
     },
     {
@@ -347,6 +362,11 @@
         "over_2000_kwh_surcharge": {
           "threshold_kwh": 2000,
           "cost_per_kwh": 1.04
+        },
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
         }
       }
     },
@@ -475,6 +495,11 @@
         "over_2000_kwh_surcharge": {
           "threshold_kwh": 2000,
           "cost_per_kwh": 1.04
+        },
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
         }
       }
     },
@@ -691,7 +716,9 @@
           "tier": "two_stage"
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -941,7 +968,9 @@
           "tier": "three_stage"
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -994,7 +1023,12 @@
         }
       ],
       "billing_rules": {
-        "zero_usage_basic_fee_ratio": 0.5
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
+        }
       }
     },
     {
@@ -1214,7 +1248,9 @@
           "tier": "two_stage"
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -1456,7 +1492,9 @@
           "tier": "three_stage"
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -1620,7 +1658,9 @@
           "tier": "two_stage"
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "regular_only",
@@ -1835,8 +1875,7 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -2054,8 +2093,7 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -2294,8 +2332,7 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -2513,8 +2550,7 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -2677,7 +2713,9 @@
           "tier": "two_stage"
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "regular_only",
@@ -2892,8 +2930,7 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -3111,8 +3148,7 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -3351,8 +3387,7 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -3570,8 +3605,7 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
