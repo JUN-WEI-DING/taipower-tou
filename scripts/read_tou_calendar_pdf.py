@@ -64,13 +64,17 @@ def _rgb(color: Any) -> tuple[float, float, float]:
     raise CalendarPdfError(f"unsupported fill colour {color!r}")
 
 
+def _is_white(color: Any) -> bool:
+    return min(_rgb(color)) > 0.9
+
+
 def _fill_day_type(color: Any) -> str:
     r, g, b = _rgb(color)
     if r > 0.8 and g < 0.2 and b < 0.2:
         return "sunday_holiday"
     if r > 0.8 and g > 0.8 and b < 0.2:
         return "saturday"
-    if min(r, g, b) > 0.9:
+    if _is_white(color):
         return "weekday"
     raise CalendarPdfError(f"day cell has unexpected fill colour {color!r}")
 
@@ -141,13 +145,24 @@ def _violations(year: int, days: dict[date, str]) -> list[str]:
 
 def read_page(page: Any) -> tuple[int, dict[date, str]]:
     year = _year(page)
-    words = page.extract_words()
+    # Older layouts put a neighbouring cell's space on top of some digits,
+    # which would split "29" into "2" and "9".
+    words = page.filter(
+        lambda obj: obj["object_type"] != "char" or not obj["text"].isspace()
+    ).extract_words(extra_attrs=["non_stroking_color"])
     labels = _month_labels(words)
     fills = [r for r in page.rects if r.get("fill")]
     first_row = min(top for _, top in labels.values())
+    notes = [w["top"] for w in words if w["text"].startswith("註")]
+    notes_top = min(notes, default=page.height)
     days: dict[date, str] = {}
     for word in words:
-        if not DAY_NUMBER.fullmatch(word["text"]) or word["top"] <= first_row:
+        in_grid = first_row < word["top"] < notes_top
+        if not DAY_NUMBER.fullmatch(word["text"]) or not in_grid:
+            continue
+        kind = _day_type(word, fills)
+        # White text on a white cell is invisible, left over from an older template.
+        if kind == "weekday" and _is_white(word["non_stroking_color"]):
             continue
         month = _month_of(word, labels)
         try:
@@ -156,7 +171,7 @@ def read_page(page: Any) -> tuple[int, dict[date, str]]:
             raise CalendarPdfError(f"{month}/{word['text']} is not a date") from None
         if day in days:
             raise CalendarPdfError(f"{day} appears twice")
-        days[day] = _day_type(word, fills)
+        days[day] = kind
     problems = _violations(year, days)
     if problems:
         raise CalendarPdfError(f"{year}: " + "; ".join(problems))
