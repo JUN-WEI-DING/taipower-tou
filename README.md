@@ -27,6 +27,32 @@ uv pip install taipower-tou
 uv add taipower-tou  # add to a project
 ```
 
+## Prices and Their Dates (電價版本與適用範圍)
+
+The bundled prices are Taipower's 電價表 effective 2025-10-01 (114/10/1). Taipower's 電價費率審議會 kept them unchanged through 2026-12-31. Usage dated before 2025-10-01, or after 2026-12-31, raises `UncheckedPriceWarning` once per process, because Taipower billed or may bill those days at other prices.
+
+The prices are the main tables only. Customers in the 電價表's 附錄一 (適用電價調整係數行業或用戶, such as industries with frozen or halved increases, companies using 500 million kWh (5億度) or more a year, and data centers (IDC)) and 附錄二 (農漁業、學校、社福團體) pay other prices, and this package does not cover them. Plans you build with `build_tariff_plan` use your own prices and never raise `UncheckedPriceWarning`.
+
+內建電價是台電 114/10/1 生效的電價表，電價費率審議會決議維持到 2026-12-31。用電日期早於 2025-10-01 或晚於 2026-12-31 時，每個程式只會發出一次 `UncheckedPriceWarning`，因為那些日子台電用的是（或可能是）別的電價。
+
+內建的只有電價表主表。適用附錄一（電價調整係數行業或用戶，例如凍漲或調幅減半的行業、年用電 5 億度以上的公司、網路資料中心 IDC）或附錄二（農漁業、學校、社福團體）的用戶電價不同，本套件不含這些電價。用 `build_tariff_plan` 自訂的方案用的是您自己的電價，不會發出 `UncheckedPriceWarning`。
+
+When Taipower's 電價費率審議會 meets, a new release of this package moves 2026-12-31 forward if prices stay the same, or adds the new prices if they change. Upgrade after each meeting.
+
+審議會開會後，若電價不變，新版會延後 2026-12-31 這個日期；若電價調整，新版會加入新電價。每次審議會後請升級。
+
+If you have checked the prices or the off-peak days yourself, you can silence the warnings:
+若您已自行核對電價或離峰日，可以關閉警告：
+
+```python
+import warnings
+
+import taipower_tou as tou
+
+warnings.simplefilter("ignore", tou.UncheckedPriceWarning)
+warnings.simplefilter("ignore", tou.UncheckedYearWarning)
+```
+
 ## Quick Start Guide (快速入門)
 
 Choose the section that matches your tariff type:
@@ -86,7 +112,7 @@ import taipower_tou as tou
 # 你的每月用電資料（每個月一個值）
 monthly_usage = pd.Series(
     [280, 320, 250, 310, 290, 280, 350, 380, 360, 300, 270, 260],
-    index=pd.date_range("2025-01-01", periods=12, freq="MS"),
+    index=pd.date_range("2026-01-01", periods=12, freq="MS"),
 )
 
 # Calculate with tiered rate plan
@@ -101,8 +127,8 @@ print(f"Annual Total: {costs.sum():.2f} TWD")
 # 檢視每月明細
 for month, cost in costs.items():
     print(f"{month.strftime('%Y-%m')}: {cost:.2f} TWD")
-# 2025-01: 575.20 TWD
-# 2025-02: 665.60 TWD
+# 2026-01: 575.20 TWD
+# 2026-02: 665.60 TWD
 # ...
 ```
 
@@ -114,8 +140,8 @@ for month, cost in costs.items():
 report = plan.monthly_breakdown(monthly_usage)
 print(report)
 #         month    season period  usage_kwh   cost
-# 0  2025-01-01  non_summer  tiered      280.0  575.2
-# 1  2025-02-01  non_summer  tiered      320.0  665.6
+# 0  2026-01-01  non_summer  tiered      280.0  575.2
+# 1  2026-02-01  non_summer  tiered      320.0  665.6
 # ...
 ```
 
@@ -131,7 +157,7 @@ import pandas as pd
 import taipower_tou as tou
 
 usage = [280, 320, 250, 310]  # Monthly kWh readings
-dates = pd.date_range("2025-01-01", periods=len(usage), freq="MS")
+dates = pd.date_range("2026-01-01", periods=len(usage), freq="MS")
 series = pd.Series(usage, index=dates)
 
 plan = tou.plan("residential_non_tou")
@@ -145,7 +171,7 @@ If you prefer using list/dict for tiered rates, specify `billing_cycle_months=1`
 ```python
 from taipower_tou import calculate_bill, BillingInputs
 
-dates = pd.date_range("2025-01-01", periods=4, freq="MS")
+dates = pd.date_range("2026-01-01", periods=4, freq="MS")
 series = pd.Series([280, 320, 250, 310], index=dates)
 
 inputs = BillingInputs(billing_cycle_months=1)
@@ -163,7 +189,7 @@ monthly_kwh = 350  # Total kWh for the month
 
 # Create a single-entry series
 usage = pd.Series(
-    [monthly_kwh], index=pd.date_range("2025-07-01", periods=1, freq="MS")
+    [monthly_kwh], index=pd.date_range("2026-07-01", periods=1, freq="MS")
 )
 cost = plan.calculate_costs(usage).iloc[0]
 
@@ -217,12 +243,17 @@ For example, for residential customers:
 
 ##### Rate Change Apportionment (電價異動分攤)
 
-> **Official Taipower Policy**: When usage crosses different rate periods (e.g., seasonal price changes or rate adjustments), usage is apportioned by the ratio of days before/after the change date.
-> **臺電官方說明**：用電橫跨不同電價期間時，將抄表期間的用電度數，按照電價異動前後日數佔全期用電日數之比例分攤。
+When a billing period spans 夏月 (6/1–9/30) and 非夏月, Taipower's FAQ 請問電費如何計算 prices all of the period's kWh at each season's tiered rates, then weights each total by that season's share of the period's days. For 350 kWh over a 60-day period with 18 summer days:
 
-This **day-ratio apportionment method** is commonly adopted by power companies worldwide during rate adjustments and has been implemented in Taiwan for many years.
+當計費期間橫跨夏月（6/1–9/30）與非夏月時，台電「請問電費如何計算」FAQ 的算法是：整期度數分別用夏月和非夏月的累進電價各算一次，再依各季天數占全期天數的比例加權。例如 60 天用 350 度，其中 18 天是夏月：
 
-此種 **按日數比例分攤度數方式** 向為各國電力公司在調整電價時所普遍採行，我國亦已實施多年。
+```
+[1.78×240 + 2.55×110] × 18/60 + [1.78×240 + 2.26×110] × 42/60
+```
+
+`calculate_costs`, `calculate_bill`, and `calculate_bill_breakdown` all use this formula. The breakdown lists one tiered row per season.
+
+`calculate_costs`、`calculate_bill`、`calculate_bill_breakdown` 都用這個算法，明細會分季各列一行。
 
 #### Using Bimonthly Billing
 
@@ -232,7 +263,7 @@ import taipower_tou as tou
 from taipower_tou import BillingCycleType
 
 # Usage for June-July (2 months)
-dates = pd.date_range("2025-06-01", "2025-07-31", freq="D")
+dates = pd.date_range("2026-06-01", "2026-07-31", freq="D")
 usage = pd.Series([5] * len(dates), index=dates)  # ~305 kWh total
 
 # Odd-month billing (meter read in July for June-July period)
@@ -259,7 +290,7 @@ print(f"Tier limit for 2-month period: 240 kWh (doubled from 120 kWh)")
 
 ```python
 # Example: 240 kWh over 2 months
-usage_240 = pd.Series([4] * 60, index=pd.date_range("2025-06-01", periods=60, freq="D"))
+usage_240 = pd.Series([4] * 60, index=pd.date_range("2026-06-01", periods=60, freq="D"))
 
 # Monthly: 120 kWh/month, each in tier 1 (0-120 kWh)
 plan_monthly = tou.plan("residential_non_tou")
@@ -317,10 +348,10 @@ import pandas as pd
 # Method 1: Using list
 # 方法 1：用 list 建立
 timestamps = [
-    "2025-07-15 06:00",  # July 15, 2025, 6:00 AM (summer weekday - off-peak)
-    "2025-07-15 09:00",  # July 15, 2025, 9:00 AM (summer weekday - peak)
-    "2025-07-15 10:00",
-    "2025-07-15 11:00",
+    "2026-07-15 06:00",  # July 15, 2026, 6:00 AM (summer weekday - off-peak)
+    "2026-07-15 09:00",  # July 15, 2026, 9:00 AM (summer weekday - peak)
+    "2026-07-15 10:00",
+    "2026-07-15 11:00",
 ]
 usage_kwh = [2.4, 1.5, 2.3, 1.8]  # kWh used per hour
 
@@ -329,10 +360,10 @@ usage_kwh = [2.4, 1.5, 2.3, 1.8]  # kWh used per hour
 dates = pd.to_datetime(timestamps)
 usage_series = pd.Series(usage_kwh, index=dates)
 print(usage_series)
-# 2025-07-15 06:00:00    2.4
-# 2025-07-15 09:00:00    1.5
-# 2025-07-15 10:00:00    2.3
-# 2025-07-15 11:00:00    1.8
+# 2026-07-15 06:00:00    2.4
+# 2026-07-15 09:00:00    1.5
+# 2026-07-15 10:00:00    2.3
+# 2026-07-15 11:00:00    1.8
 ```
 
 #### Example B: Read from CSV (範例 B：從 CSV 檔案讀取)
@@ -342,9 +373,9 @@ Assume you have an `electricity.csv` file:
 
 ```csv
 timestamp,usage
-2025-07-15 09:00,1.5
-2025-07-15 10:00,2.3
-2025-07-15 11:00,1.8
+2026-07-15 09:00,1.5
+2026-07-15 10:00,2.3
+2026-07-15 11:00,1.8
 ```
 
 ```python
@@ -366,7 +397,7 @@ import taipower_tou as tou
 result = tou.calculate_bill_from_list(
     usage=[1.5, 2.3, 1.8, 2.0, 1.6],
     plan_id="簡易型二段式",
-    start="2025-07-15 09:00",
+    start="2026-07-15 09:00",
     freq="1h",  # 1-hour interval
 )
 print(f"Total: {result['total'].iloc[0]:.2f} TWD")
@@ -375,9 +406,9 @@ print(f"Total: {result['total'].iloc[0]:.2f} TWD")
 # 使用 dict（適用於不規則間隔資料）
 result = tou.calculate_bill_from_dict(
     usage={
-        "2025-07-15 09:00": 1.5,
-        "2025-07-15 10:00": 2.3,
-        "2025-07-15 14:30": 2.0,  # Different interval OK
+        "2026-07-15 09:00": 1.5,
+        "2026-07-15 10:00": 2.3,
+        "2026-07-15 14:30": 2.0,  # Different interval OK
     },
     plan_id="residential_simple_2_tier",
 )
@@ -393,7 +424,7 @@ Before calculating, you can check what rate period applies at a specific time.
 from datetime import datetime
 import taipower_tou as tou
 
-dt = datetime(2025, 7, 15, 14, 0)  # July 15, 2025, 2:00 PM (summer weekday afternoon)
+dt = datetime(2026, 7, 15, 14, 0)  # July 15, 2026, 2:00 PM (summer weekday afternoon)
 
 # Check period type
 # 查詢時段型別
@@ -447,7 +478,7 @@ print(f"Total Cost: {costs.iloc[0]:.2f} TWD")
 result = tou.calculate_bill_from_list(
     usage=[1.2, 1.5, 1.8, 2.1, 1.6, 1.4, 1.3, 1.7],
     plan_id="residential_simple_2_tier",
-    start="2025-07-15 09:00",
+    start="2026-07-15 09:00",
     freq="1h",
 )
 print(f"Total: {result['total'].iloc[0]:.2f} TWD")
@@ -461,8 +492,8 @@ print(f"Total: {result['total'].iloc[0]:.2f} TWD")
 report = plan.monthly_breakdown(usage_series)
 print(report)
 #        month  season period  usage_kwh    cost
-# 0 2025-07-01  summer   peak        5.6  28.896
-# 1 2025-07-01  summer off_peak       2.4   4.944
+# 0 2026-07-01  summer   peak        5.6  28.896
+# 1 2026-07-01  summer off_peak       2.4   4.944
 ```
 
 ### Step 5: Advanced Calculation (進階計算)
@@ -501,7 +532,7 @@ import taipower_tou as tou
 # 1. 讀取每小時用電資料
 df = pd.DataFrame(
     {
-        "timestamp": pd.date_range("2025-07-01 00:00", periods=24, freq="h"),
+        "timestamp": pd.date_range("2026-07-01 00:00", periods=24, freq="h"),
         "usage": [1.2] * 24,
     }
 ).set_index("timestamp")
@@ -786,7 +817,7 @@ Taipower publishes these calendars about a year ahead, so 2014–2027 are checke
 **Check Period Type (Peak/Off-Peak):**
 
 ```python
-dt = datetime(2025, 7, 15, 14, 0)
+dt = datetime(2026, 7, 15, 14, 0)
 plan = "residential_simple_2_tier"
 
 # Returns enum (e.g., PeriodType.PEAK)
@@ -826,7 +857,7 @@ Calculate pure energy costs (Consumption × Rate) for time-series data.
 import pandas as pd
 
 # Create sample usage data (index must be DatetimeIndex)
-dates = pd.date_range("2025-07-15 14:00", periods=3, freq="h")
+dates = pd.date_range("2026-07-15 14:00", periods=3, freq="h")
 usage = pd.Series([1.5, 2.0, 1.8], index=dates)
 
 # Get plan and calculate costs
@@ -892,7 +923,7 @@ from taipower_tou import calculate_bill, BillingInputs
 # Best practice: Use 15-minute demand data
 demand_15min = pd.Series(
     [180.0, 190.0, 210.0, 175.0],
-    index=pd.date_range("2025-07-01 14:00", periods=4, freq="15min"),
+    index=pd.date_range("2026-07-01 14:00", periods=4, freq="15min"),
 )
 inputs = BillingInputs(
     contract_capacities={
@@ -908,7 +939,7 @@ inputs = BillingInputs(
 # If only hourly data is available: apply conservative adjustment
 demand_hourly = pd.Series(
     [190.0, 175.0],
-    index=pd.date_range("2025-07-01 14:00", periods=2, freq="h"),
+    index=pd.date_range("2026-07-01 14:00", periods=2, freq="h"),
 )
 inputs = BillingInputs(
     contract_capacities={
@@ -1030,7 +1061,7 @@ plan = tou.plan("residential_simple_2_tier")
 details = tou.plan_details("residential_simple_2_tier")
 
 # period_at + period_context
-dt = datetime(2025, 7, 15, 14, 0)
+dt = datetime(2026, 7, 15, 14, 0)
 print(tou.period_at(dt, "residential_simple_2_tier"))
 print(tou.period_context(dt, "residential_simple_2_tier"))
 
@@ -1044,7 +1075,7 @@ print(
 
 # costs + monthly_breakdown
 usage = pd.Series(
-    [1.5, 2.0, 1.8], index=pd.date_range("2025-07-15 14:00", periods=3, freq="h")
+    [1.5, 2.0, 1.8], index=pd.date_range("2026-07-15 14:00", periods=3, freq="h")
 )
 print(tou.costs(usage, "residential_simple_2_tier"))
 print(tou.monthly_breakdown(usage, "residential_simple_2_tier"))
@@ -1076,7 +1107,7 @@ print(tou.calculate_bill_simple(usage, "residential_simple_2_tier"))
 result_list = tou.calculate_bill_from_list(
     usage=[1.0, 1.5, 2.0, 1.8],
     plan_id="residential_simple_2_tier",
-    start="2025-07-15 09:00",
+    start="2026-07-15 09:00",
     freq="1h",
 )
 print(result_list)
@@ -1086,9 +1117,9 @@ print(result_list)
 # calculate_bill_from_dict: 適用於不規則間隔資料
 result_dict = tou.calculate_bill_from_dict(
     usage={
-        "2025-07-15 09:00": 1.0,
-        "2025-07-15 10:30": 1.5,  # Different interval OK
-        "2025-07-15 14:00": 2.0,
+        "2026-07-15 09:00": 1.0,
+        "2026-07-15 10:30": 1.5,  # Different interval OK
+        "2026-07-15 14:00": 2.0,
     },
     plan_id="residential_simple_2_tier",
 )
@@ -1100,14 +1131,14 @@ print(result_dict)
 ```python
 # taiwan_calendar + is_holiday
 calendar = tou.taiwan_calendar()
-print(calendar.is_holiday(datetime(2025, 1, 1)))
-print(tou.is_holiday(datetime(2025, 1, 1)))
+print(calendar.is_holiday(datetime(2026, 1, 1)))
+print(tou.is_holiday(datetime(2026, 1, 1)))
 
 # custom_calendar (requires date objects, not strings)
 from datetime import date
 
-custom = tou.custom_calendar(holidays=[date(2025, 1, 2)])
-print(custom.is_holiday(datetime(2025, 1, 2)))
+custom = tou.custom_calendar(holidays=[date(2026, 1, 2)])
+print(custom.is_holiday(datetime(2026, 1, 2)))
 
 # TariffFactory
 factory = TariffFactory()
@@ -1271,13 +1302,13 @@ import pandas as pd
 
 # For very large datasets, preload years in advance
 calendar = tou.taiwan_calendar()
-calendar.preload_years({2024, 2025, 2026})  # Preload multiple years
+calendar.preload_years({2025, 2026, 2027})  # Preload multiple years
 
 # Then use the preloaded calendar
 plan = tou.plan("residential_simple_2_tier", calendar_instance=calendar)
 usage_data = pd.Series(
     [1.0] * 24,
-    index=pd.date_range("2025-07-01 00:00", periods=24, freq="h"),
+    index=pd.date_range("2026-07-01 00:00", periods=24, freq="h"),
 )
 costs = plan.calculate_costs(usage_data)
 ```

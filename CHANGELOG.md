@@ -23,6 +23,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   6–10%. This bug was present in 0.1.0.
 - `DatetimeIndex.dayofweek` and string `inferred_freq`, which pandas 4
   removes, are no longer used.
+- `calculate_bill` doubles each tier's kWh for two-month bills, as the
+  電價表 says. It used one-month tiers before.
+- A tiered billing period that spans 夏月 and 非夏月 is priced as Taipower's
+  FAQ 請問電費如何計算 does: all of the period's kWh at each season's tiered
+  rates, weighted by each season's share of the days. For 610 kWh over
+  May–June 2026 on `residential_non_tou` billed every two months, the energy
+  cost is now 1316.2 TWD. 0.1.0 gave 1686.7 TWD from `calculate_bill` and
+  1263.4 TWD (all at 非夏月 rates) from `TariffPlan.calculate_costs`.
+- `calculate_bill_breakdown` no longer fails on usage that spans two seasons,
+  and its tiered rows now have costs, one row per season.
+- An empty usage series raises `InvalidUsageInput`.
 
 ### Changed
 - Off-peak days use the list in force on each date. From 2014 the list is
@@ -33,11 +44,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests compare every day of 2014–2027 with Taipower's official
   時間電價日曆表 (`tests/data/taipower_calendar/`).
   Years after 2027 assume the current list stays in force.
+- Examples use 2026 dates, which the bundled prices cover.
 
 ### Added
 - `UncheckedYearWarning`, raised once per year for years after the last
   Taipower calendar this version was checked against (2027). Taipower can
   change the off-peak list, as it did on 2025-09-01.
+- `UncheckedPriceWarning`, raised once per process when usage falls before
+  2025-10-01, when the bundled 電價表 took effect, or after 2026-12-31, the
+  last day Taipower's 電價費率審議會 has decided. Plans built with
+  `build_tariff_plan` use the caller's prices and do not raise it.
 
 ### Deprecated
 - `cache_dir` and `api_timeout` have no effect and raise a
