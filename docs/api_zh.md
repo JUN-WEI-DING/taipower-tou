@@ -7,6 +7,7 @@
 - `taiwan_calendar()`
   - 功能：建立台電離峰日行事曆。離峰日為週日加上電價表所列日期，補假與彈性放假不算。
   - 範圍：支援 2014–2100 年，其他年份會拋出 `CalendarError`，請改用 `custom_calendar(...)`。
+  - 2014–2027 年已和台電官方時間電價日曆表逐日核對；2028 年以後假設現行離峰日清單不變。
   - `cache_dir`、`api_timeout` 已無作用，傳入時會發出 `DeprecationWarning`，之後的版本會移除。
 - `is_holiday(target, calendar=None)`
   - 功能：判斷 `date` 或 `datetime` 是否為全日離峰日（週日或電價表所列離峰日）。

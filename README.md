@@ -766,6 +766,7 @@ print(tou.is_holiday(datetime(2025, 1, 27)))  # False
 ```
 
 `tests/data/taipower_calendar/` holds Taipower's official 時間電價日曆表 day by day, and the tests compare every listed year with them.
+Taipower publishes these calendars about a year ahead, so 2014–2027 are checked against official calendars. Later years assume the current list stays in force.
 
 **Check Period Type (Peak/Off-Peak):**
 

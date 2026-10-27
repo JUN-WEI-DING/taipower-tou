@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `calendar_instance=custom_calendar(...)` for them.
 - Tests compare every day of 2014–2027 with Taipower's official
   時間電價日曆表 (`tests/data/taipower_calendar/`).
+  Years after 2027 assume the current list stays in force.
 
 ### Deprecated
 - `cache_dir` and `api_timeout` have no effect and raise a
