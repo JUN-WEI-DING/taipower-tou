@@ -1,0 +1,12 @@
+{
+  "chapter": "營業規章施行細則 第十章 附則",
+  "source": "docs/references/營業規章施行細則第十章.txt",
+  "lines": [1, 2],
+  "clauses": [
+    {"id": "第十章", "lines": [1, 1], "kind": "not_billing",
+     "summary": "第十章 附則",
+     "reason": "chapter heading"},
+    {"id": "第一百卅八條", "lines": [2, 2], "kind": "not_billing",
+     "reason": "when the 施行細則 takes effect"}
+  ]
+}

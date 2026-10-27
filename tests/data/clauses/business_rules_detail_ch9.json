@@ -1,0 +1,21 @@
+{
+  "chapter": "營業規章施行細則 第九章 設備之租用與賠償",
+  "source": "docs/references/營業規章施行細則第九章.txt",
+  "lines": [1, 29],
+  "clauses": [
+    {"id": "第九章", "lines": [1, 1], "kind": "not_billing",
+     "summary": "第九章 設備之租用與賠償",
+     "reason": "chapter heading"},
+    {"id": "第一百卅三條", "lines": [2, 4], "kind": "not_billing",
+     "reason": "rent for Taipower's equipment, collected apart from the electricity charges; calculate_bill has no rented equipment"},
+    {"id": "第一百卅四條", "lines": [5, 6], "kind": "not_billing",
+     "summary": "按月繳納之租費併於當月份電費內繳付",
+     "reason": "rent paid monthly is collected with that month's bill, but it is not an electricity charge; calculate_bill has no rented equipment"},
+    {"id": "第一百卅五條", "lines": [7, 12], "kind": "not_billing",
+     "reason": "damages for Taipower's equipment, not part of the electricity bill"},
+    {"id": "第一百卅六條", "lines": [13, 25], "kind": "not_billing",
+     "reason": "damages for Taipower's equipment, not part of the electricity bill"},
+    {"id": "第一百卅七條", "lines": [26, 29], "kind": "not_billing",
+     "reason": "damages for Taipower's equipment, not part of the electricity bill"}
+  ]
+}

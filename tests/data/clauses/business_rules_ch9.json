@@ -1,0 +1,17 @@
+{
+  "chapter": "營業規章 第九章 用電設備租用 (植根法律網 transcription of 111/9/7)",
+  "source": "docs/references/secondary/營業規章第九章_植根法律網_1110907.txt",
+  "lines": [1, 10],
+  "clauses": [
+    {"id": "第九章", "lines": [1, 1], "kind": "not_billing",
+     "summary": "第九章 用電設備租用",
+     "reason": "chapter heading"},
+    {"id": "第一百零三條", "lines": [2, 4], "kind": "not_billing",
+     "reason": "rent for Taipower's equipment, collected apart from the electricity charges; calculate_bill has no rented equipment"},
+    {"id": "第一百零四條", "lines": [5, 8], "kind": "not_billing",
+     "summary": "租費按月計收，起租或退租月份按實際租用日數每日三十分之一計算",
+     "reason": "rent for Taipower's equipment, collected apart from the electricity charges; calculate_bill has no rented equipment"},
+    {"id": "第一百零五條", "lines": [9, 10], "kind": "not_billing",
+     "reason": "rent for Taipower's equipment, collected apart from the electricity charges; calculate_bill has no rented equipment"}
+  ]
+}

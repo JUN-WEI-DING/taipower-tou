@@ -1,0 +1,32 @@
+{
+  "chapter": "營業規章 第三章 契約變更及終止 (植根法律網 transcription of 111/9/7)",
+  "source": "docs/references/secondary/營業規章第三章_植根法律網_1110907.txt",
+  "lines": [1, 82],
+  "clauses": [
+    {"id": "第三章", "lines": [1, 2], "kind": "not_billing",
+     "summary": "第三章 契約變更及終止 第一節 過戶",
+     "reason": "chapter and section headings"},
+    {"id": "第十四條", "lines": [3, 7], "kind": "not_billing",
+     "reason": "a rule on 過戶 or on who the customer is; the bill is the same"},
+    {"id": "第十五條", "lines": [8, 20], "kind": "not_billing",
+     "reason": "a rule on 過戶 or on who the customer is; the bill is the same"},
+    {"id": "第十六條", "lines": [21, 25], "kind": "not_billing",
+     "reason": "a rule on 過戶 or on who the customer is; the bill is the same"},
+    {"id": "第二節", "lines": [26, 26], "kind": "not_billing",
+     "summary": "第二節 廢止及暫停全部用電",
+     "reason": "section heading"},
+    {"id": "第十七條", "lines": [27, 31], "kind": "not_billing",
+     "reason": "a rule on 暫停用電, 廢止用電 or 終止契約; a bill covers only the usage passed in"},
+    {"id": "第十八條", "lines": [32, 42], "kind": "not_billing",
+     "reason": "a rule on 暫停用電, 廢止用電 or 終止契約; a bill covers only the usage passed in"},
+    {"id": "第三節", "lines": [43, 43], "kind": "not_billing",
+     "summary": "第三節 停止供電及終止契約",
+     "reason": "section heading"},
+    {"id": "第十九條", "lines": [44, 55], "kind": "not_billing",
+     "reason": "when Taipower may stop supply; the deductions for it are 營業規章 第三十九、四十條"},
+    {"id": "第二十條", "lines": [56, 70], "kind": "not_billing",
+     "reason": "when Taipower may stop supply for 違章用電, including a 需量契約 customer who keeps passing its contract; the 超約 fee itself is the 電價表's"},
+    {"id": "第二十一條", "lines": [71, 82], "kind": "not_billing",
+     "reason": "when Taipower may end the supply contract"}
+  ]
+}
