@@ -424,7 +424,7 @@ def calculate_bill(
     monthly_usage = usage_for_billing.groupby(billing_periods).sum()
     monthly_usage.index = monthly_usage.index.to_timestamp()
 
-    basic_costs = _calculate_basic_fees(plan_data, inputs, month_index, store)
+    basic_costs, _ = _calculate_basic_fees(plan_data, inputs, month_index, store)
     surcharge = _calculate_surcharges(plan_data, inputs, monthly_usage)
     adjustment = _calculate_adjustments(
         plan_data,
@@ -540,7 +540,7 @@ def calculate_bill_breakdown(
     monthly_usage = usage_for_billing.groupby(billing_periods).sum()
     monthly_usage.index = monthly_usage.index.to_timestamp()
 
-    basic_costs, basic_details = _calculate_basic_fees_breakdown(
+    basic_costs, basic_details = _calculate_basic_fees(
         plan_data,
         inputs,
         month_index,
@@ -609,60 +609,6 @@ def _month_season_label(
 
 
 def _calculate_basic_fees(
-    plan_data: dict[str, Any],
-    inputs: BillingInputs,
-    month_index: pd.Index,
-    store: PlanStore,
-) -> pd.Series:
-    rules = plan_data.get("billing_rules", {})
-    formula = rules.get("basic_fee_formula")
-    season_labels = _month_season_label(month_index, plan_data, store)
-    monthly = pd.Series(0.0, index=month_index)
-    if formula and inputs.contract_capacities:
-        basic_fee_result = _basic_fee_from_formula(
-            plan_data, inputs, month_index, store, formula, detailed=False
-        )
-        # _basic_fee_from_formula always returns (monthly, details) tuple
-        monthly = (
-            basic_fee_result[0]
-            if isinstance(basic_fee_result, tuple)
-            else basic_fee_result
-        )
-    else:
-        basic_fee = plan_data.get("basic_fee")
-        if basic_fee is not None:
-            count = inputs.basic_fee_inputs.get("basic_fee", 1.0)
-            monthly += float(basic_fee) * count
-
-        for entry in plan_data.get("basic_fees", []):
-            label = entry.get("label", "")
-            unit = entry.get("unit", "")
-            if unit == "per_household_month":
-                quantity = inputs.basic_fee_inputs.get(label, 1.0)
-            else:
-                quantity = inputs.basic_fee_inputs.get(label, 0.0)
-            if quantity == 0:
-                continue
-            for idx, season_label in enumerate(season_labels):
-                if "summer" in entry or "non_summer" in entry:
-                    rate = (
-                        entry.get("summer")
-                        if season_label == "summer"
-                        else entry.get("non_summer")
-                    )
-                else:
-                    rate = entry.get("cost")
-                if rate is None:
-                    continue
-                monthly.iloc[idx] += float(rate) * quantity
-
-    if inputs.billing_cycle_months and inputs.billing_cycle_months > 1:
-        monthly = monthly * inputs.billing_cycle_months
-
-    return monthly
-
-
-def _calculate_basic_fees_breakdown(
     plan_data: dict[str, Any],
     inputs: BillingInputs,
     month_index: pd.Index,
