@@ -820,51 +820,9 @@ def _calculate_adjustments(
     rates: TariffRate,
 ) -> tuple[pd.Series, pd.DataFrame]:
     rules = plan_data.get("billing_rules", {})
-    adjustment = pd.Series(0.0, index=month_index)
     details: list[dict[str, Any]] = []
-
-    pf_rule = rules.get("power_factor_adjustment")
-    if (
-        pf_rule
-        and inputs.power_factor is not None
-        and _power_factor_applies(pf_rule.get("eligible", {}), inputs)
-    ):
-        base = pf_rule.get("base_percent", 80)
-        max_discount = pf_rule.get("max_discount_percent", 95)
-        step = pf_rule.get("step_percent", 0.1)
-        pf = float(inputs.power_factor)
-        # 功率因數 adjusts 該月份電費, but 按戶計收之基本電費，不列計功率因數調整費.
-        target = (
-            basic_costs
-            - _household_costs(plan_data, basic_details, month_index)
-            + energy_costs
-            + surcharge
-        )
-        if pf < base:
-            delta = base - pf
-            delta_cost = target * (delta * step / 100.0)
-            adjustment += delta_cost
-            for idx, value in delta_cost.items():
-                details.append(
-                    {
-                        "period": idx,
-                        "type": "power_factor",
-                        "amount": float(value),
-                    }
-                )
-        elif pf > base:
-            cap = min(pf, max_discount)
-            delta = cap - base
-            delta_cost = -target * (delta * step / 100.0)
-            adjustment += delta_cost
-            for idx, value in delta_cost.items():
-                details.append(
-                    {
-                        "period": idx,
-                        "type": "power_factor",
-                        "amount": float(value),
-                    }
-                )
+    over_costs = pd.Series(0.0, index=month_index)
+    outside_energy = pd.Series(0.0, index=month_index)
 
     oc_rule = rules.get("over_contract_penalty")
     installed_only = "裝置契約" in inputs.basic_fee_inputs and not (
@@ -910,7 +868,7 @@ def _calculate_adjustments(
                 low = min(kw, max(0.0, base * ratio - counted))
                 counted += kw
                 amount += rate.loc[idx] * (low * rate_low + (kw - low) * rate_high)
-            adjustment.loc[idx] += amount
+            over_costs.loc[idx] = amount
             details.append(
                 {"period": idx, "type": "over_contract", "amount": float(amount)}
             )
@@ -924,12 +882,46 @@ def _calculate_adjustments(
                 oc_rule["outside_contract_energy_ratio"] - 1
             )
             extra.index = extra.index.to_timestamp()
-            adjustment += extra
+            outside_energy = extra.reindex(month_index, fill_value=0.0)
             details.extend(
                 {"period": idx, "type": "outside_contract_energy", "amount": float(v)}
-                for idx, v in extra.items()
+                for idx, v in outside_energy.items()
             )
 
+    pf_rule = rules.get("power_factor_adjustment")
+    pf_cost = pd.Series(0.0, index=month_index)
+    if (
+        pf_rule
+        and inputs.power_factor is not None
+        and _power_factor_applies(pf_rule.get("eligible", {}), inputs)
+    ):
+        base = pf_rule.get("base_percent", 80)
+        step = pf_rule.get("step_percent", 0.1)
+        pf = min(float(inputs.power_factor), pf_rule.get("max_discount_percent", 95))
+        # 功率因數 adjusts 該月份電費, but 按戶計收之基本電費，不列計功率因數調整費.
+        target = (
+            basic_costs
+            - _household_costs(plan_data, basic_details, month_index)
+            + energy_costs
+            + outside_energy
+            + surcharge
+        )
+        # 營業規章 第三十條: the 非約定基本電費 is adjusted too, except for 80%
+        # and above, where 超約 gets no 功率因數扣減.
+        if pf < base:
+            target = target + over_costs
+        pf_cost = target * ((base - pf) * step / 100.0)
+        # 營業規章 第三十八條: 全月均無用電之用戶，當月功率因數按80％計算.
+        used = usage.groupby(billing_periods).sum() > 0
+        used.index = used.index.to_timestamp()
+        pf_cost = pf_cost.where(used.reindex(month_index, fill_value=False), 0.0)
+        if pf != base:
+            details.extend(
+                {"period": idx, "type": "power_factor", "amount": float(value)}
+                for idx, value in pf_cost.items()
+            )
+
+    adjustment = over_costs + outside_energy + pf_cost
     return adjustment, pd.DataFrame(details)
 
 
@@ -1363,7 +1355,8 @@ def _compute_over_contract_kw(
         },
         index=context_df.index,
     )
-    max_by_cat = (
+    # 營業規章 第二十八條: 用電最高需量以瓩為計量單位，小數以下捨棄.
+    max_by_cat = np.floor(
         combined.groupby(["period", "category"], sort=False)["demand"].max().fillna(0.0)
     )
     results = {}
