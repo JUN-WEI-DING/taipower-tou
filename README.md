@@ -51,6 +51,7 @@ import taipower_tou as tou
 
 warnings.simplefilter("ignore", tou.UncheckedPriceWarning)
 warnings.simplefilter("ignore", tou.UncheckedYearWarning)
+warnings.simplefilter("ignore", tou.PartialPeriodWarning)
 ```
 
 ## Quick Start Guide (快速入門)
@@ -254,6 +255,18 @@ When a billing period spans 夏月 (6/1–9/30) and 非夏月, Taipower's FAQ �
 `calculate_costs`, `calculate_bill`, and `calculate_bill_breakdown` all use this formula. The breakdown lists one tiered row per season.
 
 `calculate_costs`、`calculate_bill`、`calculate_bill_breakdown` 都用這個算法，明細會分季各列一行。
+
+##### Billing Periods Are Calendar Months (計費期間以日曆月份計算)
+
+`calculate_bill` and `calculate_bill_breakdown` split usage into bills of `billing_cycle_months` calendar months, counted from the first month of usage. A Taipower bill runs from one meter reading to the next, and the reading is often mid-month. Usage that starts or ends mid-month leaves part of a bill's months empty and raises `PartialPeriodWarning`; those bills do not match Taipower's. Compare with a real bill only by passing usage for whole calendar months. `TariffPlan.calculate_costs` groups months into the odd- or even-month pairs in the table above and does not warn.
+
+`calculate_bill` 與 `calculate_bill_breakdown` 依日曆月份切帳單，從用電資料的第一個月起，每 `billing_cycle_months` 個月一張。台電帳單的計費期間是從上次抄表日到這次抄表日，抄表日常在月中。用電資料從月中開始或在月中結束時，帳單有幾天沒有資料，會發出 `PartialPeriodWarning`，算出的帳單和台電的對不上。要和實際帳單比對，請提供完整日曆月份的用電資料。`TariffPlan.calculate_costs` 依上表的奇數月或偶數月分組，不會發出這個警告。
+
+##### Minimum Usage and Minimum Fee (底度與最低電費)
+
+For `residential_non_tou` and the `lighting_*_tiered` plans with meter details in `BillingInputs`, a month is billed at least 2 kWh per ampere for a single-phase low-voltage meter or 6 kWh per ampere for a three-phase one, and a meter over 10 A counts as 10 A. A bill under 100 TWD a month is charged 100 TWD a month, so a two-month bill is at least 200 TWD.
+
+表燈非時間電價方案若在 `BillingInputs` 提供電表規格，每月至少以底度計費：單相低壓電表每安培 2 度、三相每安培 6 度，超過 10 安培的電表以 10 安培計。每月電費未滿 100 元以 100 元計，兩個月一期至少 200 元。
 
 #### Using Bimonthly Billing
 

@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `calculate_bill_breakdown` no longer fails on usage that spans two seasons,
   and its tiered rows now have costs, one row per season.
 - An empty usage series raises `InvalidUsageInput`.
+- 底度 for a low-voltage meter over 10 A counts the meter as 10 A, as the
+  電價表 says. It multiplied the ampere by 20 (single-phase) or 60
+  (three-phase), so an empty house with a 30 A single-phase meter was billed
+  1644.3 TWD a month instead of 100 TWD.
+- The 100 TWD minimum applies per month, so a two-month bill is at least
+  200 TWD. It was 100 TWD for any bill.
 
 ### Changed
 - Off-peak days use the list in force on each date. From 2014 the list is
@@ -54,6 +60,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   2025-10-01, when the bundled 電價表 took effect, or after 2026-12-31, the
   last day Taipower's 電價費率審議會 has decided. Plans built with
   `build_tariff_plan` use the caller's prices and do not raise it.
+- `PartialPeriodWarning`, raised by `calculate_bill` and
+  `calculate_bill_breakdown` when usage starts or ends mid-month. Bills are
+  whole calendar months counted from the first month of usage, while
+  Taipower bills from one meter reading to the next, so such bills do not
+  match Taipower's.
 
 ### Deprecated
 - `cache_dir` and `api_timeout` have no effect and raise a
