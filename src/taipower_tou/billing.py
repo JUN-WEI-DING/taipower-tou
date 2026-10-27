@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import warnings
 from dataclasses import dataclass, field
 from datetime import date
@@ -1119,15 +1120,9 @@ def _apply_minimum_usage(
     if not target:
         return usage
 
-    ampere = float(inputs.meter_ampere)
-    if "ampere_threshold" in target:
-        threshold = target["ampere_threshold"]
-        if ampere <= threshold:
-            min_kwh = ampere * target["kwh_per_ampere"]
-        else:
-            min_kwh = ampere * target["kwh_per_ampere_over"]
-    else:
-        min_kwh = ampere * target["kwh_per_ampere"]
+    # A low-voltage meter over its ampere_threshold counts as the threshold.
+    ampere = min(float(inputs.meter_ampere), target.get("ampere_threshold", math.inf))
+    min_kwh = ampere * target["kwh_per_ampere"]
 
     if min_kwh <= 0:
         return usage

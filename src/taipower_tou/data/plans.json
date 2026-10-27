@@ -47,24 +47,21 @@
           "phase": "single",
           "voltage_v": 110,
           "ampere_threshold": 10,
-          "kwh_per_ampere": 2,
-          "kwh_per_ampere_over": 20
+          "kwh_per_ampere": 2
         },
         {
           "label": "single_low_voltage",
           "phase": "single",
           "voltage_v": 220,
           "ampere_threshold": 10,
-          "kwh_per_ampere": 2,
-          "kwh_per_ampere_over": 20
+          "kwh_per_ampere": 2
         },
         {
           "label": "three_low_voltage",
           "phase": "three",
           "voltage_v": 220,
           "ampere_threshold": 10,
-          "kwh_per_ampere": 6,
-          "kwh_per_ampere_over": 60
+          "kwh_per_ampere": 6
         },
         {
           "label": "single_high_voltage_3300",
