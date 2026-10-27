@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import re
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
@@ -148,3 +151,78 @@ class TestTariffFactory:
 
         plan = TariffFactory.create("residential_simple_2_tier")
         assert plan is not None
+
+
+README_PLAN_ROWS = re.findall(
+    r"^\|(?: \*\*[^|]+\*\* \|)? `(\w+)` \| ([^|]+?) \|",
+    (Path(__file__).resolve().parents[1] / "README.md").read_text("utf-8"),
+    re.MULTILINE,
+)
+JULY_USAGE = pd.Series(
+    0.25, index=pd.date_range("2026-07-01", "2026-07-31 23:45", freq="15min")
+)
+
+
+def test_readme_plan_tables_name_plans_as_available_plans_does() -> None:
+    """README's plan tables give each plan the name available_plans() gives."""
+    names = tou.available_plans()
+    rows = [(plan_id, name) for plan_id, name in README_PLAN_ROWS if plan_id in names]
+    assert {plan_id for plan_id, _ in rows} == set(names)
+    assert rows == [(plan_id, names[plan_id]) for plan_id, _ in rows]
+
+
+@pytest.mark.parametrize(
+    ("alias", "plan_id"),
+    [
+        ("表燈非營業（累進）", "lighting_non_business_tiered"),
+        ("表燈營業（累進）", "lighting_business_tiered"),
+        ("表燈標準二段式", "lighting_standard_2_tier"),
+        ("表燈標準三段式", "lighting_standard_3_tier"),
+        ("低壓電動車充電", "low_voltage_ev"),
+        ("高壓電動車充電", "high_voltage_ev"),
+    ],
+)
+def test_names_the_readme_used_to_give_still_resolve(alias, plan_id) -> None:
+    assert tou.plan(alias).name == tou.plan(plan_id).name
+
+
+@pytest.mark.parametrize("plan_id", list(tou.available_plans()))
+def test_a_plans_own_name_resolves_to_it(plan_id) -> None:
+    """An exact name wins over a part of a longer one, so 高壓電力-二段式時間電價
+    is not also part of 特高壓電力-二段式時間電價."""
+    name = tou.plan(plan_id).name
+    assert tou.plan(name).name == name
+
+
+@pytest.mark.parametrize(
+    "query", [" High_Voltage_2_Tier ", "HIGH_VOLTAGE_2_TIER", " 高壓電力二段式 "]
+)
+def test_ids_and_names_ignore_case_and_surrounding_spaces(query) -> None:
+    assert tou.plan(query).name == tou.plan("high_voltage_2_tier").name
+
+
+def test_removed_plan_hint_ignores_case_and_surrounding_spaces() -> None:
+    """CHANGELOG 0.2.0 Removed: the error names the 二段式 plan to use."""
+    with pytest.raises(tou.UnknownPlanError, match="high_voltage_2_tier"):
+        tou.plan(" HIGH_VOLTAGE_POWER ")
+
+
+@pytest.mark.parametrize("query", ["unknown_plan", "二段式", "", None, 3])
+@pytest.mark.parametrize(
+    "entry",
+    [
+        tou.plan,
+        lambda query: tou.calculate_bill(JULY_USAGE, query),
+        tou.get_plan_requirements,
+    ],
+    ids=["plan", "calculate_bill", "get_plan_requirements"],
+)
+def test_a_plan_no_name_finds_raises_one_error_everywhere(entry, query) -> None:
+    """README Errors catches PowerKitError from tou.plan("unknown_plan").
+    tou.plan raised ValueError and calculate_bill KeyError, so the error is
+    both as well."""
+    with pytest.raises(tou.UnknownPlanError) as raised:
+        entry(query)
+    for kind in (tou.PowerKitError, KeyError, ValueError):
+        assert isinstance(raised.value, kind)
+    assert not str(raised.value).startswith("'")

@@ -39,9 +39,26 @@ class MissingRequiredInput(PowerKitError):
     """
 
 
+class InvalidBillingInput(PowerKitError, ValueError):
+    """Raised when a BillingInputs field has a value no bill can have, such as
+    a negative 契約容量 or a 功率因數 above 100."""
+
+
 class InvalidBasicFeeInput(PowerKitError):
     """Raised when basic_fee_inputs contains invalid keys or values.
 
     In strict mode, this ensures users only provide valid fee labels for
     their selected plan.
     """
+
+
+class UnknownPlanError(PowerKitError, KeyError, ValueError):
+    """Raised when a plan name matches no plan, more than one, or a removed one.
+
+    It is also a KeyError and a ValueError, the types calculate_bill and
+    tou.plan raised for an unknown plan before, so code that catches those
+    keeps working.
+    """
+
+    # KeyError's str() quotes the message.
+    __str__ = Exception.__str__

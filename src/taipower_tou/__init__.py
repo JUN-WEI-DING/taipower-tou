@@ -26,6 +26,7 @@ from taipower_tou.custom import (
 from taipower_tou.errors import (
     CalendarError,
     InvalidBasicFeeInput,
+    InvalidBillingInput,
     InvalidUsageInput,
     MissingRequiredInput,
     PartialPeriodWarning,
@@ -33,6 +34,7 @@ from taipower_tou.errors import (
     TariffError,
     UncheckedPriceWarning,
     UncheckedYearWarning,
+    UnknownPlanError,
 )
 from taipower_tou.factory import PlanRequirements, PlanStore, TariffFactory
 from taipower_tou.models import BillingCycleType
@@ -141,7 +143,8 @@ def plan(
         A TariffPlan instance
 
     Raises:
-        ValueError: If plan name is not found
+        UnknownPlanError: If no plan or more than one matches name. It is
+            also a ValueError.
 
     Example:
         >>> plan = tou.plan("residential_simple_2_tier")
@@ -152,12 +155,9 @@ def plan(
     calendar = calendar_instance or taiwan_calendar(
         cache_dir=cache_dir, api_timeout=api_timeout
     )
-    try:
-        return TariffFactory.create(
-            name, calendar=calendar, billing_cycle_type=billing_cycle_type
-        )
-    except KeyError as exc:
-        raise ValueError(f"Unsupported plan name: {name}. {exc.args[0]}") from exc
+    return TariffFactory.create(
+        name, calendar=calendar, billing_cycle_type=billing_cycle_type
+    )
 
 
 def period_at(
@@ -303,12 +303,14 @@ __all__ = [
     "CalendarError",
     "InvalidUsageInput",
     "InvalidBasicFeeInput",
+    "InvalidBillingInput",
     "MissingRequiredInput",
     "PartialPeriodWarning",
     "PowerKitError",
     "TariffError",
     "UncheckedPriceWarning",
     "UncheckedYearWarning",
+    "UnknownPlanError",
     "WeekdayDayTypeStrategy",
     "build_day_schedule",
     "build_tariff_plan",

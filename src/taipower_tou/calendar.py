@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import csv
-import warnings
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
-from functools import cache, singledispatchmethod
+from functools import cache
 from importlib.resources import files
 from pathlib import Path
 from typing import Any
@@ -16,6 +15,7 @@ try:
 except ImportError:
     pd = None
 
+from taipower_tou._warnings import warn
 from taipower_tou.errors import CalendarError, UncheckedYearWarning
 
 # Taipower bills by Taiwan local time, which has been UTC+8 without daylight
@@ -28,6 +28,13 @@ def taiwan_wall_time(index: pd.DatetimeIndex) -> pd.DatetimeIndex:
     if index.tz is None:
         return index
     return index.tz_convert(TAIWAN_TZ).tz_localize(None)
+
+
+def taiwan_wall_datetime(target: datetime) -> datetime:
+    """Return a timezone-aware datetime as naive Taiwan local time."""
+    if target.tzinfo is None:
+        return target
+    return target.astimezone(TAIWAN_TZ).replace(tzinfo=None)
 
 
 @dataclass(frozen=True)
@@ -129,12 +136,11 @@ def _listed_offpeak_days(year: int) -> frozenset[date]:
 # already warned about to warn once per year per process.
 @cache
 def _warn_unchecked_year(year: int) -> None:
-    warnings.warn(
+    warn(
         f"Off-peak days for {year} assume Taipower keeps its current 電價表 "
         f"list. This version was checked against Taipower's calendars up to "
         f"{LAST_CHECKED_YEAR}; check Taipower's 時間電價日曆表 for {year}.",
         UncheckedYearWarning,
-        stacklevel=3,
     )
 
 
@@ -156,11 +162,10 @@ class TaiwanCalendar:
         self, cache_dir: Path | None = None, api_timeout: int | None = None
     ) -> None:
         if cache_dir is not None or api_timeout is not None:
-            warnings.warn(
+            warn(
                 "cache_dir and api_timeout have no effect: off-peak days are "
                 "computed from Taipower's rule without network access.",
                 DeprecationWarning,
-                stacklevel=2,
             )
 
     def preload_years(self, years: set[int]) -> None:
@@ -168,25 +173,9 @@ class TaiwanCalendar:
         for year in years:
             _listed_offpeak_days(year)
 
-    @singledispatchmethod
     def is_holiday(self, target: object) -> Any:
-        raise CalendarError(f"Unsupported type: {type(target)}")
-
-    @is_holiday.register
-    def _(self, target: date) -> bool:
-        listed = _offpeak_days(target.year)
-        return target.weekday() == 6 or target in listed
-
-    @is_holiday.register
-    def _(self, target: datetime) -> bool:
-        if target.tzinfo is not None:
-            target = target.astimezone(TAIWAN_TZ)
-        return self.is_holiday(target.date())
-
-    if pd is not None:
-
-        @is_holiday.register
-        def _(self, target: pd.DatetimeIndex) -> pd.Series:
+        """Whether a day is 離峰日, or a boolean Series for a DatetimeIndex."""
+        if pd is not None and isinstance(target, pd.DatetimeIndex):
             local = taiwan_wall_time(target)
             listed: set[date] = set()
             for year in local.year.unique():
@@ -194,6 +183,11 @@ class TaiwanCalendar:
             is_listed = local.normalize().isin(pd.DatetimeIndex(sorted(listed)))
             is_sunday = local.day_of_week == 6
             return pd.Series(is_sunday | is_listed, index=target, name="is_holiday")
+        if isinstance(target, datetime):
+            target = taiwan_wall_datetime(target).date()
+        if isinstance(target, date):
+            return target.weekday() == 6 or target in _offpeak_days(target.year)
+        raise CalendarError(f"Unsupported type: {type(target)}")
 
 
 def taiwan_calendar(

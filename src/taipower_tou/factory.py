@@ -13,6 +13,7 @@ from taipower_tou.custom import (
     build_tariff_profile,
     build_tariff_rate,
 )
+from taipower_tou.errors import UnknownPlanError
 from taipower_tou.models import BillingCycleType
 from taipower_tou.rates import TariffJSONLoader
 from taipower_tou.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
@@ -40,8 +41,15 @@ _PLAN_NAME_MAP: dict[str, str] = {
     "extra_high_voltage_batch": "特高壓批次生產",
 }
 
-# Reverse mapping for Chinese name to plan ID lookup
-_CHINESE_NAME_MAP: dict[str, str] = {v: k for k, v in _PLAN_NAME_MAP.items()}
+# Names earlier READMEs gave these plans.
+_PLAN_ALIASES: dict[str, str] = {
+    "表燈非營業（累進）": "lighting_non_business_tiered",
+    "表燈營業（累進）": "lighting_business_tiered",
+    "表燈標準二段式": "lighting_standard_2_tier",
+    "表燈標準三段式": "lighting_standard_3_tier",
+    "低壓電動車充電": "low_voltage_ev",
+    "高壓電動車充電": "high_voltage_ev",
+}
 
 # 0.1.0 copied the 二段式 plans under these names. The 電價表 has no 高壓 or
 # 特高壓 非時間電價.
@@ -145,69 +153,57 @@ class PlanStore:
         for plan in self._load().get("plans", []):
             if plan.get("id") == plan_id:
                 return plan
-        raise KeyError(f"Plan not found: {plan_id}")
+        raise UnknownPlanError(f"Plan not found: {plan_id}")
 
     def resolve_plan(self, plan_id: str) -> dict[str, Any]:
-        """Resolve plan ID with flexible matching.
+        """Return a copy of the data of the plan that plan_id names.
 
-        Supports:
-        - Exact plan ID match (e.g., "residential_simple_2_tier")
-        - Chinese name match (e.g., "簡易型二段式")
-        - Partial keyword match (e.g., "二段式" matches any 2-tier plan)
-
-        Args:
-            plan_id: Plan identifier or Chinese name
-
-        Returns:
-            Copy of the plan data dictionary
+        An ID, a name from available_plans() or plans.json, or a name earlier
+        READMEs used matches exactly, ignoring case and surrounding spaces.
+        Otherwise a plan matches when its ID or name is the only one that
+        contains plan_id. "批次" is in two plans' names and matches neither.
 
         Raises:
-            KeyError: If no matching plan is found
+            UnknownPlanError: No plan or more than one matches, the plan was
+                removed, or plan_id is not a string.
         """
-        # Try exact match first
-        try:
-            return dict(self.get_plan(plan_id))
-        except KeyError:
-            pass
+        if not isinstance(plan_id, str):
+            raise UnknownPlanError(
+                f"A plan is named by a string, not {plan_id!r}. "
+                "Use available_plans() to list all valid plan IDs."
+            )
+        query = plan_id.strip()
+        key = query.lower()
+        plans = {plan["id"]: plan for plan in self._load().get("plans", [])}
+        exact = {pid.lower(): pid for pid in plans}
+        exact.update({plan["name"].lower(): pid for pid, plan in plans.items()})
+        exact.update({name.lower(): pid for pid, name in _PLAN_NAME_MAP.items()})
+        exact.update({name.lower(): pid for name, pid in _PLAN_ALIASES.items()})
+        if key in exact:
+            return dict(plans[exact[key]])
 
-        replacement = _REMOVED_PLANS.get(plan_id.strip())
+        replacement = _REMOVED_PLANS.get(key)
         if replacement:
-            raise KeyError(
-                f"Plan {plan_id} was removed in 0.2.0: the 電價表 has no 高壓 or "
+            raise UnknownPlanError(
+                f"Plan {query} was removed in 0.2.0: the 電價表 has no 高壓 or "
                 f"特高壓 非時間電價. It billed exactly as {replacement}; use that."
             )
 
-        # Try Chinese name mapping (using shared map)
-        mapped_id = _CHINESE_NAME_MAP.get(plan_id.strip())
-        if mapped_id:
-            return dict(self.get_plan(mapped_id))
-
-        # Try partial matching by checking plan names in JSON
-        plan_id_lower = plan_id.lower()
-        all_plans = self._load().get("plans", [])
-        matches = []
-
-        for plan in all_plans:
-            pid = plan.get("id", "")
-            name = plan.get("name", "")
-
-            # Check if query is substring of ID or name
-            if plan_id_lower in pid.lower() or plan_id_lower in name:
-                matches.append((pid, plan))
-
+        matches = [
+            pid
+            for pid, plan in plans.items()
+            if key and (key in pid or key in plan["name"].lower())
+        ]
         if len(matches) == 1:
-            return dict(matches[0][1])
-
-        if len(matches) > 1:
-            match_ids = ", ".join(m[0] for m in matches)
-            raise KeyError(
-                f"Ambiguous plan name '{plan_id}'. "
-                f"Multiple matches: {match_ids}. "
+            return dict(plans[matches[0]])
+        if matches:
+            raise UnknownPlanError(
+                f"Ambiguous plan name '{query}'. "
+                f"Multiple matches: {', '.join(matches)}. "
                 f"Please use the exact plan ID."
             )
-
-        raise KeyError(
-            f"Plan not found: {plan_id}. "
+        raise UnknownPlanError(
+            f"Plan not found: {query}. "
             f"Use available_plans() to list all valid plan IDs."
         )
 
@@ -245,7 +241,7 @@ class TariffFactory:
             A TariffPlan instance
 
         Raises:
-            KeyError: If plan_id is not found
+            UnknownPlanError: If no plan or more than one matches plan_id
         """
         plan_data = self._store.resolve_plan(plan_id)
         # 高壓 電動車 pays bill_ratio of its bill, so a kWh costs that share.

@@ -24,6 +24,20 @@ def test_unsupported_year_raises(year) -> None:
         calendar.is_holiday(pd.date_range(f"{year}-01-01", periods=3, freq="D"))
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
+@pytest.mark.parametrize("year", [2013, 2101])
+@pytest.mark.parametrize("plan", ["residential_non_tou", "residential_simple_2_tier"])
+def test_every_entry_point_refuses_unsupported_years(plan, year) -> None:
+    """CHANGELOG 0.2.0: years outside 2014-2100 raise CalendarError, and
+    calendar_instance=custom_calendar(...) bills them. A tiered plan needs no
+    day types but is refused the same way."""
+    usage = pd.Series(1.0, index=pd.date_range(f"{year}-01-01", periods=48, freq="h"))
+    for call in (tou.costs, tou.monthly_breakdown, tou.calculate_bill):
+        with pytest.raises(CalendarError):
+            call(usage, plan)
+    assert len(tou.costs(usage, plan, calendar_instance=tou.custom_calendar())) == 1
+
+
 @pytest.mark.parametrize(
     "kwargs", [{"cache_dir": "unused"}, {"api_timeout": 5}], ids=["cache_dir", "api"]
 )

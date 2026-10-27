@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import functools
-import warnings
 from collections import Counter
 from datetime import date, datetime, time
 from typing import Any, Protocol
@@ -17,7 +16,8 @@ except ImportError:
     npt: Any = None  # type: ignore
     pd: Any = None  # type: ignore
 
-from taipower_tou.calendar import taiwan_wall_time
+from taipower_tou._warnings import warn
+from taipower_tou.calendar import taiwan_wall_datetime, taiwan_wall_time
 from taipower_tou.errors import InvalidUsageInput, TariffError, UncheckedPriceWarning
 from taipower_tou.models import (
     BillingCycleType,
@@ -297,45 +297,27 @@ class _TariffEngine:
         return default_period
 
 
-@functools.singledispatch
 def get_period(target: object, profile: TariffProfile) -> PeriodType | str | pd.Series:
-    raise NotImplementedError(f"Unsupported type: {type(target)}")
-
-
-@get_period.register(datetime)
-def _(target: datetime, profile: TariffProfile) -> PeriodType | str:
-    return profile.engine.get_period_type_scalar(target)
-
-
-if pd is not None:
-
-    @get_period.register(pd.DatetimeIndex)
-    def _(target: pd.DatetimeIndex, profile: TariffProfile) -> pd.Series:
+    """The period at a datetime, or a period Series for a DatetimeIndex."""
+    if pd is not None and isinstance(target, pd.DatetimeIndex):
         return profile.engine.evaluate(target)["period"]
-
-
-@functools.singledispatch
-def get_context(target: object, profile: TariffProfile) -> Any:
+    if isinstance(target, datetime):
+        return profile.engine.get_period_type_scalar(taiwan_wall_datetime(target))
     raise NotImplementedError(f"Unsupported type: {type(target)}")
 
 
-@get_context.register(datetime)
-def _(target: datetime, profile: TariffProfile) -> dict[str, Any]:
-    season = profile.season_strategy.get_season(target.date())
-    day_type = profile.day_type_strategy.get_day_type(target.date())
-    period = profile.engine.get_period_type_scalar(target)
-    return {
-        "season": season,
-        "day_type": day_type,
-        "period": period,
-    }
-
-
-if pd is not None:
-
-    @get_context.register(pd.DatetimeIndex)
-    def _(target: pd.DatetimeIndex, profile: TariffProfile) -> pd.DataFrame:
+def get_context(target: object, profile: TariffProfile) -> Any:
+    """Season, day type and period at a datetime, or a frame for a DatetimeIndex."""
+    if pd is not None and isinstance(target, pd.DatetimeIndex):
         return profile.engine.evaluate(target)
+    if not isinstance(target, datetime):
+        raise NotImplementedError(f"Unsupported type: {type(target)}")
+    local = taiwan_wall_datetime(target)
+    return {
+        "season": profile.season_strategy.get_season(local.date()),
+        "day_type": profile.day_type_strategy.get_day_type(local.date()),
+        "period": profile.engine.get_period_type_scalar(local),
+    }
 
 
 class TariffPlan:
@@ -447,6 +429,10 @@ class TariffPlan:
         check_price_dates(usage_kwh.index, self.rates.price_dates)
 
         if self.rates.tiered_rates:
+            # A tiered plan needs no day types, but its years are checked
+            # against the calendar as calculate_bill checks them.
+            years = taiwan_wall_time(usage_kwh.index).year.unique()
+            self.profile.engine._preload_calendar_years({int(y) for y in years})
             return self._calculate_tiered_costs(usage_kwh)
 
         context = self.profile.evaluate(usage_kwh.index)
@@ -617,7 +603,7 @@ def _warn_outside_price_dates(bound: date, before: bool) -> None:
             f"has kept through {bound}. Check Taipower's 電價表 for prices after "
             "that day."
         )
-    warnings.warn(message, UncheckedPriceWarning, stacklevel=4)
+    warn(message, UncheckedPriceWarning)
 
 
 def season_day_shares(
