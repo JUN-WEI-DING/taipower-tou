@@ -1,0 +1,26 @@
+{
+  "chapter": "營業規章施行細則 第三章 契約變更及終止",
+  "source": "docs/references/營業規章施行細則第三章.txt",
+  "lines": [1, 31],
+  "clauses": [
+    {"id": "第三章", "lines": [1, 1], "kind": "not_billing",
+     "summary": "第三章 契約變更及終止",
+     "reason": "chapter heading"},
+    {"id": "第二十條", "lines": [2, 5], "kind": "not_billing",
+     "reason": "a rule on 過戶 or on who the customer is; the bill is the same"},
+    {"id": "第二十一條", "lines": [6, 8], "kind": "not_billing",
+     "reason": "a rule on 過戶 or on who the customer is; the bill is the same"},
+    {"id": "第二十二條", "lines": [9, 10], "kind": "not_billing",
+     "reason": "a rule on 過戶 or on who the customer is; the bill is the same"},
+    {"id": "第二十三條", "lines": [11, 14], "kind": "not_billing",
+     "reason": "a rule on 過戶 or on who the customer is; the bill is the same"},
+    {"id": "第二十四條", "lines": [15, 17], "kind": "not_billing",
+     "reason": "arrears are paid before 復電; a rule on paying, not on the bill's amount"},
+    {"id": "第二十五條", "lines": [18, 22], "kind": "not_billing",
+     "reason": "waives 復電費 and 新建長度設置費 after a disaster; neither is part of the electricity bill"},
+    {"id": "第二十六條", "lines": [23, 27], "kind": "not_billing",
+     "reason": "a rule on cutting or restoring supply, not on the bill's amount"},
+    {"id": "第二十七條", "lines": [28, 31], "kind": "not_billing",
+     "reason": "a rule on cutting or restoring supply, not on the bill's amount"}
+  ]
+}

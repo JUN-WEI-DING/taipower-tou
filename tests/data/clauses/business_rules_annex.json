@@ -1,0 +1,16 @@
+{
+  "chapter": "營業規章 附表 用電設備複驗及掣發檢驗合格證明之工本費單價表 (111/9/7)",
+  "source": "docs/references/營業規章附表.txt",
+  "lines": [1, 14],
+  "clauses": [
+    {"id": "附表", "lines": [1, 10], "kind": "not_billing",
+     "summary": "用電設備複驗及掣發檢驗合格證明之工本費：每戶580元至950元",
+     "reason": "fees for re-inspecting equipment (營業規章 第五十九條), not part of the electricity bill"},
+    {"id": "備註", "lines": [11, 12], "kind": "not_billing",
+     "summary": "高壓契約容量500瓩以上及特高壓用戶得按實耗工料費收取，不得少於九百五十元",
+     "reason": "a fee for re-inspection, not part of the electricity bill"},
+    {"id": "註", "lines": [13, 14], "kind": "not_billing",
+     "summary": "單價均內含5%營業稅，免計營業稅用戶除以1.05",
+     "reason": "VAT on the fees above; the electricity bill's VAT is 營業規章施行細則 第三十九條"}
+  ]
+}
