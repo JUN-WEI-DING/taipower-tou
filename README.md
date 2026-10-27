@@ -740,8 +740,10 @@ package's reading. 最高需量 counts whole kW, dropping the fraction
 
 A customer may contract for 週六半尖峰 or 離峰 time alone (第八章 二(一)8).
 Use at other times then pays 4.8× that time's basic fee rate on its highest
-demand and 1.6× its energy price, in place of 超約. On 三段式 plans such a
-customer pays no 按戶計收, as the text of 第三章 and 第四章 reads.
+demand and 1.6× its energy price, in place of 超約. Such a customer pays
+按戶計收 on 三段式 plans too. The 三段式 sentence leaves 按戶 out, but its rule
+is 按戶及按契約容量計算 and its table lists 按戶計收 with no exception; no
+Taipower example settles it.
 
 A 裝置契約 customer with `demand_kw` pays no 超約. When the demand passes the
 裝置契約 kW, Taipower moves the bill to 需量契約電價, at a contract the tariff

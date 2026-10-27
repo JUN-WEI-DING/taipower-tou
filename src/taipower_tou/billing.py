@@ -1021,11 +1021,7 @@ def _basic_fee_from_formula(
     weekend_ratio = float(formula.get("weekend_ratio", 0.5))
 
     entry = _household_fee(plan_data, inputs, "demand")
-    # 三段式: 僅在週六半尖峰時間或離峰時間用電 users pay 按週六半尖峰契約容量與
-    # 離峰契約容量 only, where 二段式 says 按戶及按 (第三章 五(三)2, 第四章 五(三)2).
-    if entry and not (
-        formula["type"] == "three_stage" and _times_outside_contract(capacities)
-    ):
+    if entry:
         household_label = entry["label"]
         count = inputs.basic_fee_inputs.get(household_label, 1.0)
         if entry.get("cost") is not None:

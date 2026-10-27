@@ -90,8 +90,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it to 需量契約電價 at a contract the 電價表 does not give.
 - Contracts for 週六半尖峰 or 離峰 time alone follow 第八章 二(一)8. Use
   at other times pays 4.8x that time's basic fee and 1.6x its energy
-  price instead of 超約, 三段式 bills leave out 按戶計收, and 10% of the
-  contract is taken of the contract each time's excess is over. 10 kW over
+  price instead of 超約, and 10% of the contract is taken of the contract
+  each time's excess is over. 10 kW over
   a 300 kW 週六半尖峰 contract was 1341 TWD and is now 894 TWD.
 - `high_voltage_ev` uses the 6/1–9/30 夏月 of the 低壓 table it is 95% of.
   It used the 5/16–10/15 of the other 高壓 tables. For 100 kW all day on a
