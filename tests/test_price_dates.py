@@ -9,7 +9,9 @@ import taipower_tou as tou
 from taipower_tou.rates import TariffJSONLoader
 from taipower_tou.tariff import _warn_outside_price_dates
 
-INPUTS = tou.BillingInputs(meter_phase="single", meter_voltage_v=110, meter_ampere=10)
+INPUTS = tou.BillingInputs(
+    taipower_rounding=False, meter_phase="single", meter_voltage_v=110, meter_ampere=10
+)
 
 
 def _usage(start, periods=48, tz=None):

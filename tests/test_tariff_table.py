@@ -106,6 +106,7 @@ def test_tier_limits_and_prices(plan_id, season):
     start, end = MONTHS[season]
     days = pd.date_range(start, end, freq="D")
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         meter_phase="single",
         meter_voltage_v=110,
         meter_ampere=10,

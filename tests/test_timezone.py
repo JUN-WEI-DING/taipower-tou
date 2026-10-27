@@ -46,7 +46,10 @@ def test_costs_use_taiwan_local_time(plan_name, zone):
 @pytest.mark.parametrize("zone", AWARE)
 def test_bill_uses_taiwan_local_time(zone):
     inputs = tou.BillingInputs(
-        meter_phase="single", meter_voltage_v=110, meter_ampere=10
+        taipower_rounding=False,
+        meter_phase="single",
+        meter_voltage_v=110,
+        meter_ampere=10,
     )
     naive = tou.calculate_bill(
         _weekday_daytime_load(TAIWAN_JULY) / 100,

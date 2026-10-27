@@ -19,6 +19,7 @@ def _month(start, end, kwh):
 
 def _meter(months=1, phase="single", ampere=10):
     return tou.BillingInputs(
+        taipower_rounding=False,
         meter_phase=phase,
         meter_voltage_v=220 if phase == "three" else 110,
         meter_ampere=ampere,

@@ -79,7 +79,9 @@ def _bill(plan, index, kwh=0.25, demand=None, **inputs):
     usage = pd.Series(kwh, index=index)
     if demand is not None:
         inputs["demand_kw"] = demand
-    return tou.calculate_bill(usage, plan, tou.BillingInputs(**inputs)).iloc[0]
+    return tou.calculate_bill(
+        usage, plan, tou.BillingInputs(taipower_rounding=False, **inputs)
+    ).iloc[0]
 
 
 def _demand(index, peaks, kw=100.0):
@@ -148,6 +150,7 @@ def test_weekend_only_contracts_pay_the_weekend_price_on_both(plan, month):
     index, season = MONTHS[month]
     usage = _night_load(index, {}) / 4
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         contract_capacities={"saturday_semi_peak": 100, "off_peak": 300},
         demand_kw=_night_load(index, {}),
     )
@@ -375,7 +378,9 @@ def test_weekend_only_contract_used_outside_its_times(
     100 kW from 00:00 to 06:00 every July day is 離峰 (line 865), and 50 kW
     for one hour is the use outside the contract's times."""
     demand = _night_load(JULY, {event: 50})
-    inputs = tou.BillingInputs(contract_capacities=capacities, demand_kw=demand)
+    inputs = tou.BillingInputs(
+        taipower_rounding=False, contract_capacities=capacities, demand_kw=demand
+    )
     bill = tou.calculate_bill(demand / 4, "high_voltage_2_tier", inputs).iloc[0]
     night = 31 * 6 * 100 * 2.71
     expected = (
@@ -466,7 +471,9 @@ def test_variable_peak_bills_peak_only_on_the_designated_days(plan):
         for days, rows in ((1, designated), (22, weekday), (4, saturday), (4, sunday))
     )
     inputs = tou.BillingInputs(
-        contract_capacities={"regular": 200}, peak_days=[date(2026, 7, 15)]
+        taipower_rounding=False,
+        contract_capacities={"regular": 200},
+        peak_days=[date(2026, 7, 15)],
     )
     bill = tou.calculate_bill(pd.Series(0.25, index=JULY), plan, inputs).iloc[0]
     assert bill["total"] == pytest.approx(fees["regular"][0] * 200 + energy)
@@ -484,7 +491,9 @@ def test_cold_storage_air_conditioning_pays_60_percent_off_peak():
     usage[JULY.hour == 3] = 2.5
     usage[(JULY.day == 15) & (JULY.hour == 17)] = 2.5
     inputs = tou.BillingInputs(
-        contract_capacities={"regular": 200}, cold_storage_kwh=usage
+        taipower_rounding=False,
+        contract_capacities={"regular": 200},
+        cold_storage_kwh=usage,
     )
     bill = tou.calculate_bill(usage, "high_voltage_2_tier", inputs).iloc[0]
     assert bill["energy_cost"] == pytest.approx(0.6 * 2.71 * 310 + 6.75 * 10)
@@ -553,7 +562,9 @@ def test_low_voltage_meter_adds_transformer_losses():
     0.25 kWh every quarter hour of July is 744 kWh read; a 500 kVA
     transformer adds 3,600 kWh."""
     inputs = tou.BillingInputs(
-        contract_capacities={"regular": 200}, low_voltage_meter_transformer_kva=500
+        taipower_rounding=False,
+        contract_capacities={"regular": 200},
+        low_voltage_meter_transformer_kva=500,
     )
     breakdown = tou.calculate_bill_breakdown(
         pd.Series(0.25, index=JULY), "high_voltage_2_tier", inputs

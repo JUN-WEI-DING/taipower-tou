@@ -26,7 +26,9 @@ def _bill(plan, index, kwh=0.25, demand=None, **inputs):
     usage = pd.Series(kwh, index=index)
     if demand is not None:
         inputs["demand_kw"] = demand
-    return tou.calculate_bill(usage, plan, tou.BillingInputs(**inputs)).iloc[0]
+    return tou.calculate_bill(
+        usage, plan, tou.BillingInputs(taipower_rounding=False, **inputs)
+    ).iloc[0]
 
 
 def _demand(index, peaks):
@@ -254,7 +256,9 @@ def test_installed_tou_month_without_peak_usage_pays_half():
     用戶為尖峰時間用電）為0度 → 基本電費按核定電價50%."""
     usage = pd.Series(0.25, index=JULY)
     usage[(JULY.day_of_week < 5) & (JULY.hour >= 9)] = 0.0
-    inputs = tou.BillingInputs(basic_fee_inputs={"裝置契約": 10})
+    inputs = tou.BillingInputs(
+        taipower_rounding=False, basic_fee_inputs={"裝置契約": 10}
+    )
     bill = tou.calculate_bill(usage, "low_voltage_2_tier", inputs).iloc[0]
     assert bill["basic_cost"] == pytest.approx(
         0.5 * (LV_INSTALLED_HOUSEHOLD + LV_INSTALLED_PER_KW * 10)

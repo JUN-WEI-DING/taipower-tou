@@ -34,6 +34,7 @@ def _hourly(start, end, seed=0):
 
 def _meter(months=None, ampere=30):
     return tou.BillingInputs(
+        taipower_rounding=False,
         meter_phase="single",
         meter_voltage_v=110,
         meter_ampere=ampere,

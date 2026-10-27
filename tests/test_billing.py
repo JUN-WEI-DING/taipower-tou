@@ -23,13 +23,15 @@ def test_calculate_bill_basic_fee() -> None:
         "total",
     ]
     assert result["basic_cost"].iloc[0] == 75.0
-    assert (result["total"] >= result["energy_cost"] + result["basic_cost"]).all()
+    items = result[["energy_cost", "basic_cost", "surcharge", "adjustment"]].sum(axis=1)
+    assert ((result["total"] - items).abs() <= 0.5).all()
 
 
 def test_calculate_bill_minimum_usage_rule() -> None:
     index = pd.to_datetime([datetime(2025, 7, 1, 0, 0)])
     usage = pd.Series([0.0], index=index)
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         meter_phase="single",
         meter_voltage_v=110,
         meter_ampere=10,
@@ -47,6 +49,7 @@ def test_calculate_bill_two_month_cycle() -> None:
     index = pd.to_datetime(["2025-07-01 00:00", "2025-08-01 00:00"])
     usage = pd.Series([10.0, 10.0], index=index)
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         meter_phase="single",
         meter_voltage_v=110,
         meter_ampere=10,
@@ -145,7 +148,10 @@ def test_bimonthly_tiers_are_doubled() -> None:
     """電價表：用戶因2個月抄表、收費一次，計費時各段度數係加倍計算。"""
     usage = pd.Series(200.0, index=pd.to_datetime(["2026-07-10", "2026-08-10"]))
     inputs = tou.BillingInputs(
-        meter_phase="single", meter_voltage_v=110, meter_ampere=10
+        taipower_rounding=False,
+        meter_phase="single",
+        meter_voltage_v=110,
+        meter_ampere=10,
     )
     bill = tou.calculate_bill(usage, "residential_non_tou", inputs=inputs)
     assert bill["energy_cost"].tolist() == pytest.approx([240 * 1.78 + 160 * 2.55])
@@ -154,6 +160,7 @@ def test_bimonthly_tiers_are_doubled() -> None:
 def test_monthly_tiers_are_not_doubled() -> None:
     usage = pd.Series([200.0], index=pd.to_datetime(["2026-07-10"]))
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         meter_phase="single",
         meter_voltage_v=110,
         meter_ampere=10,

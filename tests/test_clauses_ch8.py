@@ -38,6 +38,7 @@ def test_non_tou_non_summer_contract_joins_the_regular_one(index, peak_kw, expec
     經常契約 price. In January 15 kW is the contract."""
     usage = pd.Series(0.25, index=index)
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         contract_capacities={"regular": 10, "non_summer": 5},
         demand_kw=_demand(index, {(14, 10): peak_kw}, kw=5.0),
     )
@@ -65,6 +66,8 @@ def test_weekend_only_contract_is_the_contract_for_its_times(capacities, peak):
     310 kW at those times is 10 kW over the 300 kW contract, within its 10%,
     so 2x the 44.70 週六半尖峰或離峰契約 price (第五章 七(二)1 line 1132)."""
     demand = _demand(JULY, {peak: 310}, kw=100.0 * (JULY.hour < 6))
-    inputs = tou.BillingInputs(contract_capacities=capacities, demand_kw=demand)
+    inputs = tou.BillingInputs(
+        taipower_rounding=False, contract_capacities=capacities, demand_kw=demand
+    )
     bill = tou.calculate_bill(demand / 4, "high_voltage_2_tier", inputs).iloc[0]
     assert bill["adjustment"] == pytest.approx(2 * 10 * 44.70)

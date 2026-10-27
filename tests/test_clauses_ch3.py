@@ -62,6 +62,7 @@ def _days(start, end, kwh):
 
 def _meter(phase="single", ampere=10, voltage=None, months=1, **extra):
     return tou.BillingInputs(
+        taipower_rounding=False,
         meter_phase=phase,
         meter_voltage_v=voltage or (220 if phase == "three" else 110),
         meter_ampere=ampere,
@@ -75,7 +76,9 @@ def _bill(plan, index, kwh=0.25, demand=None, **inputs):
     if demand is not None:
         inputs["demand_kw"] = demand
     inputs.setdefault("billing_cycle_months", 1)
-    return tou.calculate_bill(usage, plan, tou.BillingInputs(**inputs)).iloc[0]
+    return tou.calculate_bill(
+        usage, plan, tou.BillingInputs(taipower_rounding=False, **inputs)
+    ).iloc[0]
 
 
 def _contracts(plan, **kw):

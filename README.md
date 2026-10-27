@@ -790,8 +790,15 @@ a 230 kW peak on a weekday afternoon and 95% power factor.
 | PF Discount | -(44,720 + 121,700) × 1.5% | -2,496.30 |
 | **Total** | 179,575.70 (sum) | **179,575.70** |
 
-`calculate_bill` gives the same total, with the penalty and the discount
-together in `adjustment` (13,155.70).
+`calculate_bill` gives the same items, with the penalty and the discount
+together in `adjustment` (13,155.70). Its total is 179,576, rounded to the
+元 as Taipower bills.
+
+Taipower cuts each bill item (energy, basic fee, 超約, 功率因數) to the 角,
+dropping the 分, and rounds the total half up to the 元 (營業規章
+第二十九條). `calculate_bill` does the same, and works 功率因數 from the cut
+items. Pass `BillingInputs(taipower_rounding=False)` to keep every amount
+unrounded, for example to compare plans or optimize a load.
 
 ### Rules the package does not apply
 

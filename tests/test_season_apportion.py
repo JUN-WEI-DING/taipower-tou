@@ -40,14 +40,18 @@ def test_tariff_plan_weights_seasons_by_days():
 
 def test_calculate_bill_weights_seasons_by_days():
     bill = tou.calculate_bill(
-        _sep_oct_usage(), "residential_non_tou", inputs=tou.BillingInputs(**INPUTS)
+        _sep_oct_usage(),
+        "residential_non_tou",
+        inputs=tou.BillingInputs(taipower_rounding=False, **INPUTS),
     )
     assert bill["energy_cost"].tolist() == pytest.approx([SEP_OCT_350])
 
 
 def test_breakdown_lists_each_season():
     breakdown = tou.calculate_bill_breakdown(
-        _sep_oct_usage(), "residential_non_tou", inputs=tou.BillingInputs(**INPUTS)
+        _sep_oct_usage(),
+        "residential_non_tou",
+        inputs=tou.BillingInputs(taipower_rounding=False, **INPUTS),
     )
     details = breakdown["details"]
     assert sorted(details["season"]) == ["non_summer", "summer"]
@@ -57,7 +61,9 @@ def test_breakdown_lists_each_season():
 def test_breakdown_of_tou_usage_across_seasons():
     usage = pd.Series(1.0, index=pd.date_range("2026-05-31", periods=48, freq="h"))
     breakdown = tou.calculate_bill_breakdown(
-        usage, "residential_simple_2_tier", inputs=tou.BillingInputs(**INPUTS)
+        usage,
+        "residential_simple_2_tier",
+        inputs=tou.BillingInputs(taipower_rounding=False, **INPUTS),
     )
     assert set(breakdown["details"]["season"]) == {"non_summer", "summer"}
     assert breakdown["details"]["energy_cost"].sum() == pytest.approx(

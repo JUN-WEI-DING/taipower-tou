@@ -47,7 +47,9 @@ def _evening(season="summer", kwh=1.0):
 
 
 def _bill(plan, usage, **inputs):
-    inputs = tou.BillingInputs(billing_cycle_months=1, **inputs)
+    inputs = tou.BillingInputs(
+        taipower_rounding=False, billing_cycle_months=1, **inputs
+    )
     return tou.calculate_bill(usage, plan, inputs).iloc[0]
 
 
@@ -610,6 +612,7 @@ def test_thermal_storage_off_peak_energy_is_billed_at_60_percent():
     storage = _at(JULY, {"2026-07-15 03:00": 10.0})
     usage = storage + _evening()
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         contract_capacities={"regular": 20},
         thermal_storage_kwh=storage,
         billing_cycle_months=1,
@@ -626,7 +629,10 @@ def test_thermal_storage_off_peak_energy_is_billed_at_60_percent():
 def test_tax_exempt_customer_pays_the_total_over_1_05():
     """八(一) lines 793-794: 依法免計營業稅用戶每月應繳總金額為電費總金額除以1.05."""
     inputs = tou.BillingInputs(
-        basic_fee_inputs={"裝置契約": 10}, tax_exempt=True, billing_cycle_months=1
+        taipower_rounding=False,
+        basic_fee_inputs={"裝置契約": 10},
+        tax_exempt=True,
+        billing_cycle_months=1,
     )
     bill = tou.calculate_bill(_evening(), "low_voltage_power", inputs).iloc[0]
     expected = INSTALLED_PER_KW * 10 + EVENING_PRICE["low_voltage_power"]
@@ -653,6 +659,7 @@ def test_high_voltage_supply_counts_transformer_losses(
     變壓器容量×720×0.01), the 鐵損 at most 10% of 抄見度數. A 100 kVA
     transformer, 50 kW 裝置契約, at the 非夏月 3.87 (line 526)."""
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         basic_fee_inputs={"裝置契約": 50},
         meter_voltage_v=meter_voltage_v,
         transformer_kva=100,
@@ -672,6 +679,7 @@ def test_ev_use_that_stops_qualifying_is_billed_two_stage():
     起改按低壓電力二段式時間電價計費. 一(二) lines 501-503 needs 充換電設備容量
     超過附屬設備容量; 8 kW of chargers and 12 kW of the rest do not."""
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         contract_capacities={"regular": 20},
         ev_charging_kw=8,
         ev_auxiliary_kw=12,

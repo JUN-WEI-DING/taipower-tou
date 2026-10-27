@@ -8,7 +8,9 @@ import pytest
 import taipower_tou as tou
 from taipower_tou.billing import _warn_partial_period
 
-INPUTS = tou.BillingInputs(meter_phase="single", meter_voltage_v=110, meter_ampere=10)
+INPUTS = tou.BillingInputs(
+    taipower_rounding=False, meter_phase="single", meter_voltage_v=110, meter_ampere=10
+)
 
 
 def _daily(start, end, total):

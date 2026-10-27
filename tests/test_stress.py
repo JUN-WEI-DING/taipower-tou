@@ -571,6 +571,7 @@ def test_billing_stress():
                 contract_capacities = {}
 
             inputs = BillingInputs(
+                taipower_rounding=False,
                 contract_capacities=contract_capacities,
                 demand_kw=demand,
                 power_factor=85.0,

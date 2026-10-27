@@ -99,6 +99,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   October from 336317.6 to 327665.0 TWD.
 
 ### Changed
+- `calculate_bill` and `calculate_bill_breakdown` round as Taipower bills
+  (營業規章 第二十九條). Each item is cut to the 角, 功率因數 is worked from
+  the cut items, and the total is rounded half up to the 元. A
+  `low_voltage_2_tier` July bill with 1.18 kWh at 尖峰 and a 10 kW 裝置契約
+  totals 1487 TWD instead of 1486.5372. `BillingInputs(taipower_rounding=False)`
+  keeps the unrounded amounts. `TariffPlan.calculate_costs` does not round.
 - Off-peak days use the list in force on each date. From 2014 the list is
   1/1, 春節 (除夕 to 初五), 2/28, 4/4, 清明, 5/1, 端午, 中秋 and 10/10. From
   2025-09-01 the list adds 除夕前1日, 9/28, 10/25 and 12/25.

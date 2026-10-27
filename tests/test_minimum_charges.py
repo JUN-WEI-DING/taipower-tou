@@ -17,6 +17,7 @@ def _bill(phase, ampere, months, total_kwh):
     days = pd.date_range("2026-01-01", end, freq="D")
     usage = pd.Series(total_kwh / len(days), index=days)
     inputs = tou.BillingInputs(
+        taipower_rounding=False,
         meter_phase=phase,
         meter_voltage_v=220 if phase == "three" else 110,
         meter_ampere=ampere,

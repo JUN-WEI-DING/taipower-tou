@@ -13,7 +13,9 @@
     {"id": "第二十九條", "lines": [7, 10], "kind": "billing",
      "summary": "應計電費各項計至角位，分位以下捨棄；電費總金額以元為單位，角位四捨五入",
      "tests": [
-       "test_business_rules.py::test_bill_items_are_cut_to_the_jiao_and_the_total_rounded_to_the_yuan"]},
+       "test_business_rules.py::test_bill_items_are_cut_to_the_jiao_and_the_total_rounded_half_up",
+       "test_business_rules.py::test_power_factor_is_worked_from_the_cut_items_and_cut_itself",
+       "test_business_rules.py::test_rounding_can_be_turned_off"]},
     {"id": "第三十條", "lines": [11, 14], "kind": "billing",
      "summary": "功率因數調整費包括流動電費、按契約容量計收之基本電費及非約定基本電費；80%以上之超約用戶不另計算非約定基本電費之調整費",
      "tests": [

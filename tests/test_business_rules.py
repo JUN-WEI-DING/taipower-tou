@@ -20,7 +20,9 @@ def _bill(demand_peak=None, kwh=0.25, **inputs):
         demand = pd.Series(100.0, index=JULY)
         demand[(JULY.day == 15) & (JULY.hour == 17)] = demand_peak
         inputs["demand_kw"] = demand
-    inputs = tou.BillingInputs(contract_capacities={"regular": 200}, **inputs)
+    inputs = tou.BillingInputs(
+        contract_capacities={"regular": 200}, taipower_rounding=False, **inputs
+    )
     return tou.calculate_bill(usage, "high_voltage_2_tier", inputs).iloc[0]
 
 
@@ -52,16 +54,40 @@ def test_month_without_use_counts_power_factor_as_80():
     assert bill["total"] == pytest.approx(0.5 * REGULAR_SUMMER * 200)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="open decision: bills are not rounded to 角 and 元 (第二十九條)",
-)
-def test_bill_items_are_cut_to_the_jiao_and_the_total_rounded_to_the_yuan():
+def _evening_bill(kwh, **inputs):
+    """low_voltage_2_tier for July 2026, with kwh at 17:00 on Wednesday the 15th
+    (尖峰 5.54 TWD, 第四章 line 547) and a 裝置契約 (按戶 105.00, 137.50 per kW,
+    lines 535-537)."""
+    usage = pd.Series(0.0, index=JULY)
+    usage[pd.Timestamp("2026-07-15 17:00")] = kwh
+    inputs = tou.BillingInputs(billing_cycle_months=1, meter_phase="three", **inputs)
+    return tou.calculate_bill(usage, "low_voltage_2_tier", inputs).iloc[0]
+
+
+def test_bill_items_are_cut_to_the_jiao_and_the_total_rounded_half_up():
     """第二十九條: 應計電費各項均計至角位，分位以下捨棄；電費總金額...均以元為
-    單位，角位四捨五入進整. 1 kWh at 6.75 TWD every 15 minutes in July has an
-    energy cost with 分, so the total is a whole number of 元."""
-    bill = _bill(kwh=1.0)
-    assert bill["total"] == round(bill["total"])
+    單位，角位四捨五入進整. 1.18 kWh x 5.54 = 6.5372 is 6.5 TWD, and 1480.0 +
+    6.5 = 1486.5 rounds up to 1487, not to the even 1486."""
+    bill = _evening_bill(1.18, basic_fee_inputs={"裝置契約": 10})
+    assert bill["energy_cost"] == pytest.approx(6.5)
+    assert bill["basic_cost"] == pytest.approx(1480.0)
+    assert bill["total"] == 1487
+
+
+def test_power_factor_is_worked_from_the_cut_items_and_cut_itself():
+    """第二十九條 with 第四章 六: 70% adds 1% of 2750.0 + 6.5 = 27.565, cut to
+    27.5. A 20 kW 裝置契約 bill pays 105.00 + 137.50 x 20 = 2855.0."""
+    bill = _evening_bill(1.18, basic_fee_inputs={"裝置契約": 20}, power_factor=70)
+    assert bill["adjustment"] == pytest.approx(27.5)
+    assert bill["total"] == 2855 + 6.5 + 27.5
+
+
+def test_rounding_can_be_turned_off():
+    bill = _evening_bill(
+        1.18, basic_fee_inputs={"裝置契約": 10}, taipower_rounding=False
+    )
+    assert bill["energy_cost"] == pytest.approx(1.18 * 5.54)
+    assert bill["total"] == pytest.approx(1480 + 1.18 * 5.54)
 
 
 @pytest.mark.xfail(strict=True, reason="not supported: no input for 農業動力用電")

@@ -49,6 +49,9 @@ class BillingInputs:
     meter_ampere: float | None = None
     billing_cycle_months: int | None = None
     demand_adjustment_factor: float = 1.0
+    # 營業規章 第二十九條 rounding. False keeps every amount unrounded, for
+    # callers that compare or optimize bills.
+    taipower_rounding: bool = True
 
     @classmethod
     def for_high_voltage(
@@ -413,12 +416,15 @@ def calculate_bill(
     )
     check_price_dates(usage.index, tariff_plan.rates.price_dates)
     context = tariff_plan.profile.evaluate(usage_for_billing.index)
-    energy_costs = _calculate_energy_costs(
-        usage_for_billing,
-        context,
-        billing_periods,
-        tariff_plan,
-        inputs.billing_cycle_months or 1,
+    energy_costs = _to_jiao(
+        inputs,
+        _calculate_energy_costs(
+            usage_for_billing,
+            context,
+            billing_periods,
+            tariff_plan,
+            inputs.billing_cycle_months or 1,
+        ),
     )
 
     month_index = energy_costs.index
@@ -432,7 +438,10 @@ def calculate_bill(
         store,
         _idle_months(usage_for_billing, inputs, billing_periods, context),
     )
-    surcharge = _calculate_surcharges(plan_data, inputs, monthly_usage)
+    basic_costs = _to_jiao(inputs, basic_costs)
+    surcharge = _to_jiao(
+        inputs, _calculate_surcharges(plan_data, inputs, monthly_usage)
+    )
     adjustment, _ = _calculate_adjustments(
         plan_data,
         inputs,
@@ -448,7 +457,7 @@ def calculate_bill(
         tariff_plan.rates,
     )
 
-    total = energy_costs + basic_costs + surcharge + adjustment
+    total = _to_yuan(inputs, energy_costs + basic_costs + surcharge + adjustment)
     min_fee = _minimum_fee(plan_data, inputs.billing_cycle_months or 1)
     if min_fee is not None:
         total = total.clip(lower=min_fee)
@@ -538,12 +547,15 @@ def calculate_bill_breakdown(
     check_price_dates(usage.index, tariff_plan.rates.price_dates)
     context = tariff_plan.profile.evaluate(usage_for_billing.index)
 
-    energy_costs = _calculate_energy_costs(
-        usage_for_billing,
-        context,
-        billing_periods,
-        tariff_plan,
-        inputs.billing_cycle_months or 1,
+    energy_costs = _to_jiao(
+        inputs,
+        _calculate_energy_costs(
+            usage_for_billing,
+            context,
+            billing_periods,
+            tariff_plan,
+            inputs.billing_cycle_months or 1,
+        ),
     )
     month_index = energy_costs.index
 
@@ -557,7 +569,10 @@ def calculate_bill_breakdown(
         store,
         _idle_months(usage_for_billing, inputs, billing_periods, context),
     )
-    surcharge = _calculate_surcharges(plan_data, inputs, monthly_usage)
+    basic_costs = _to_jiao(inputs, basic_costs)
+    surcharge = _to_jiao(
+        inputs, _calculate_surcharges(plan_data, inputs, monthly_usage)
+    )
     adjustment, adjustment_details = _calculate_adjustments(
         plan_data,
         inputs,
@@ -573,7 +588,7 @@ def calculate_bill_breakdown(
         tariff_plan.rates,
     )
 
-    total = energy_costs + basic_costs + surcharge + adjustment
+    total = _to_yuan(inputs, energy_costs + basic_costs + surcharge + adjustment)
     min_fee = _minimum_fee(plan_data, inputs.billing_cycle_months or 1)
     if min_fee is not None:
         min_adjustment = (min_fee - total).clip(lower=0.0)
@@ -748,6 +763,20 @@ def _calculate_basic_fees(
     return monthly, pd.DataFrame(details)
 
 
+def _to_jiao(inputs: BillingInputs, amount: Any) -> Any:
+    """營業規章 第二十九條: 應計電費各項均計至角位，分位以下捨棄."""
+    if not inputs.taipower_rounding:
+        return amount
+    return np.trunc(np.round(amount * 10, 6)) / 10
+
+
+def _to_yuan(inputs: BillingInputs, amount: Any) -> Any:
+    """營業規章 第二十九條: 電費總金額...均以元為單位，角位四捨五入進整."""
+    if not inputs.taipower_rounding:
+        return amount
+    return np.sign(amount) * np.floor(np.abs(np.round(amount, 6)) + 0.5)
+
+
 def _calculate_surcharges(
     plan_data: dict[str, Any],
     inputs: BillingInputs,
@@ -868,7 +897,7 @@ def _calculate_adjustments(
                 low = min(kw, max(0.0, base * ratio - counted))
                 counted += kw
                 amount += rate.loc[idx] * (low * rate_low + (kw - low) * rate_high)
-            over_costs.loc[idx] = amount
+            over_costs.loc[idx] = _to_jiao(inputs, amount)
             details.append(
                 {"period": idx, "type": "over_contract", "amount": float(amount)}
             )
@@ -882,7 +911,9 @@ def _calculate_adjustments(
                 oc_rule["outside_contract_energy_ratio"] - 1
             )
             extra.index = extra.index.to_timestamp()
-            outside_energy = extra.reindex(month_index, fill_value=0.0)
+            outside_energy = _to_jiao(
+                inputs, extra.reindex(month_index, fill_value=0.0)
+            )
             details.extend(
                 {"period": idx, "type": "outside_contract_energy", "amount": float(v)}
                 for idx, v in outside_energy.items()
@@ -910,7 +941,7 @@ def _calculate_adjustments(
         # and above, where 超約 gets no 功率因數扣減.
         if pf < base:
             target = target + over_costs
-        pf_cost = target * ((base - pf) * step / 100.0)
+        pf_cost = _to_jiao(inputs, target * ((base - pf) * step / 100.0))
         # 營業規章 第三十八條: 全月均無用電之用戶，當月功率因數按80％計算.
         used = usage.groupby(billing_periods).sum() > 0
         used.index = used.index.to_timestamp()
