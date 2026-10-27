@@ -916,6 +916,10 @@ def _basic_fee_from_formula(
     weekend_ratio = float(formula.get("weekend_ratio", 0.5))
 
     household_label = formula.get("household_label")
+    if isinstance(household_label, dict):
+        household_label = household_label[
+            "three" if inputs.meter_phase == "three" else "single"
+        ]
     if household_label:
         count = inputs.basic_fee_inputs.get(household_label, 1.0)
         entry = rates.get(household_label)

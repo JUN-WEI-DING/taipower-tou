@@ -700,7 +700,7 @@
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
           "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "household_label": {"single": "按戶計收-單相", "three": "按戶計收-三相"}
         }
       }
     },
@@ -947,7 +947,7 @@
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
           "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "household_label": {"single": "按戶計收-單相", "three": "按戶計收-三相"}
         }
       }
     },
