@@ -836,6 +836,7 @@ documents behind them are in `docs/references/`.
 **Critical for Industrial Users:**
 Taipower calculates demand penalties based on **15-minute average demand** (臺電詳細電價表：最高需量以15分鐘平均計算).
 Using hourly or coarser data for `demand_kw` may significantly underestimate peak demand and penalty charges. See Section 4 for detailed guidance.
+Finer readings, such as every 5 minutes, are averaged over each quarter hour before the month's highest is taken (營業規章 第三條).
 
 ## API Quickstart (API 使用範例)
 

@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2026-10-27
 
 ### Fixed
+- `demand_kw` finer than 15 minutes is averaged over each quarter hour, as
+  營業規章 第三條 defines 需量. The highest 5-minute reading was billed as
+  the month's demand before. Readings of 230, 200 and 200 kW on a 200 kW
+  contract paid 15652 TWD of 超約 instead of 4472.
 - Off-peak days (離峰日) now follow the list in Taipower's 電價表 instead of
   the government office calendar. 補假 and 彈性放假 days are no longer
   off-peak, and listed days that fall on a Saturday are now off-peak. The

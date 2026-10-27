@@ -967,7 +967,8 @@ def _warn_installed_demand_over_capacity(
     if inputs.demand_kw is None:
         return
     installed = inputs.basic_fee_inputs["裝置契約"]
-    demand = inputs.demand_kw.reindex(context_df.index).fillna(0.0)
+    demand = _quarter_hour_demand(inputs.demand_kw)
+    demand = demand.reindex(context_df.index).fillna(0.0)
     peaks = demand.groupby(billing_periods).max()
     over = peaks[peaks > installed]
     if not over.empty:
@@ -1303,6 +1304,16 @@ def _warn_partial_period(first_day: date, last_day: date, cycle_months: int) -> 
     )
 
 
+def _quarter_hour_demand(demand: pd.Series) -> pd.Series:
+    """營業規章 第三條: 需量 is the 十五分鐘平均瓩數, so readings finer than 15
+    minutes are averaged over each quarter hour."""
+    if len(demand) < 2:
+        return demand
+    if demand.index.to_series().diff().median() >= pd.Timedelta("15min"):
+        return demand
+    return demand.resample("15min").mean().dropna()
+
+
 def _check_demand_resolution(demand: pd.Series) -> None:
     """Check demand data resolution and warn if coarser than 15 minutes.
 
@@ -1367,6 +1378,7 @@ def _compute_over_contract_kw(
 
     # Detect data resolution and warn if coarser than 15 minutes
     _check_demand_resolution(demand)
+    demand = _quarter_hour_demand(demand)
 
     # Apply adjustment factor if specified (default is 1.0)
     if inputs.demand_adjustment_factor != 1.0:

@@ -4,8 +4,10 @@ worked from their text.
 The 電價表 bills under both. docs/references/營業規章第四章.txt is the 營業規章
 chapter (111/9/7), and docs/references/營業規章施行細則第四章.txt the 施行細則
 chapter (108/9/17). A test cites 營業規章 when the article is from it, and the
-施行細則 otherwise. Prices are from src/taipower_tou/data/詳細電價表.md
-(114/10/1), high_voltage_2_tier line 856.
+施行細則 otherwise. 營業規章 第三條 (docs/references/營業規章第一章.txt) and
+第十二條 (docs/references/secondary/營業規章第二章_植根法律網_1110907.txt) say
+what a 需量 is. Prices are from src/taipower_tou/data/詳細電價表.md (114/10/1),
+high_voltage_2_tier line 856.
 """
 
 import pandas as pd
@@ -34,6 +36,32 @@ def test_highest_demand_drops_the_fraction_of_a_kw():
     200 kW contract is 5 kW over, at 2x within 10%."""
     bill = _bill(demand_peak=205.9)
     assert bill["adjustment"] == pytest.approx(5 * 2 * REGULAR_SUMMER)
+
+
+@pytest.mark.parametrize(
+    ("freq", "readings", "over_kw"),
+    [
+        ("15min", {"17:00": 220.0}, 20),
+        ("5min", {"17:00": 230.0, "17:05": 200.0, "17:10": 200.0}, 10),
+    ],
+    ids=["one-quarter-hour", "5-minute-readings"],
+)
+def test_demand_is_the_highest_15_minute_average(freq, readings, over_kw):
+    """營業規章 第三條: 需量契約容量：契約上得使用之最大用電需量（十五分鐘平均
+    瓩數）, and 第十二條: 需量契約容量以雙方約定最高需量（十五分鐘平均）為契約
+    容量. One quarter hour at 220 kW is 20 kW over a 200 kW contract, though its
+    hour averages 130 kW. Readings of 230, 200 and 200 kW every 5 minutes average
+    210 kW over their quarter hour, 10 kW over. Both are within 10%, at 2x."""
+    index = pd.date_range("2026-07-01", "2026-07-31 23:55", freq=freq)
+    demand = pd.Series(100.0, index=index)
+    for time, kw in readings.items():
+        demand[pd.Timestamp(f"2026-07-15 {time}")] = kw
+    inputs = tou.BillingInputs(
+        contract_capacities={"regular": 200}, demand_kw=demand, taipower_rounding=False
+    )
+    usage = pd.Series(0.1, index=index)
+    bill = tou.calculate_bill(usage, "high_voltage_2_tier", inputs).iloc[0]
+    assert bill["adjustment"] == pytest.approx(over_kw * 2 * REGULAR_SUMMER)
 
 
 @pytest.mark.parametrize(("power_factor", "share"), [(70, 0.01), (90, 0.0)])
