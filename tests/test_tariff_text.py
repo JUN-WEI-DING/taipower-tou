@@ -157,3 +157,24 @@ def test_three_stage_weekday_and_saturday_semi_peak_prices_differ(plan):
     index = pd.DatetimeIndex(sorted(when for when, _ in cases))
     costs = tariff.calculate_costs(pd.Series(1.0, index=index))
     assert costs.sum() == pytest.approx(sum(rate for _, rate in cases))
+
+
+@pytest.mark.parametrize(
+    ("when", "period", "rate"),
+    [
+        (datetime(2026, 7, 15, 8, 0), "off_peak", 2.06),
+        (datetime(2026, 7, 15, 9, 0), "semi_peak", 4.69),
+        (datetime(2026, 7, 15, 17, 0), "peak", 7.13),
+        (datetime(2026, 7, 15, 22, 0), "semi_peak", 4.69),
+        (datetime(2026, 1, 14, 5, 0), "off_peak", 1.99),
+        (datetime(2026, 1, 14, 6, 0), "semi_peak", 4.48),
+        (datetime(2026, 1, 14, 12, 0), "off_peak", 1.99),
+        (datetime(2026, 1, 14, 17, 0), "semi_peak", 4.48),
+        (datetime(2026, 1, 14, 23, 0), "semi_peak", 4.48),
+        (datetime(2026, 1, 17, 17, 0), "off_peak", 1.99),
+    ],
+    ids=str,
+)
+def test_simple_three_tier_has_no_non_summer_peak(when, period, rate):
+    context = tou.plan("residential_simple_3_tier").pricing_context(when)
+    assert (context["period"], context["rate"]) == (period, pytest.approx(rate))
