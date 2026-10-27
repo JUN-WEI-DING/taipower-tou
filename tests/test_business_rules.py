@@ -5,9 +5,9 @@ The 電價表 bills under both. docs/references/營業規章第四章.txt is the
 chapter (111/9/7), and docs/references/營業規章施行細則第四章.txt the 施行細則
 chapter (108/9/17). A test cites 營業規章 when the article is from it, and the
 施行細則 otherwise. 營業規章 第三條 (docs/references/營業規章第一章.txt) and
-第十二條 (docs/references/secondary/營業規章第二章_植根法律網_1110907.txt) say
-what a 需量 is. Prices are from src/taipower_tou/data/詳細電價表.md (114/10/1),
-high_voltage_2_tier line 856.
+第十二條 (docs/references/營業規章第二章.txt) say what a 需量 is. Prices are
+from src/taipower_tou/data/詳細電價表.md (114/10/1), high_voltage_2_tier line
+856.
 """
 
 import pandas as pd

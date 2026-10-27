@@ -4,9 +4,9 @@ The bundled 電價表 (`src/taipower_tou/data/詳細電價表.md`, from
 `docs/詳細電價表.pdf`) leaves some billing rules to other Taipower documents.
 The files here fill those gaps. Tests cite them, and none ship with the package.
 Taipower's files were read from Wayback Machine snapshots of its pages,
-except `營業規章全文_1080218_台電函.pdf`, a Taipower letter reposted by the
-中華民國電機技師公會. The texts in `secondary/` are not Taipower's. See
-Secondary transcriptions below.
+except the 營業規章's 第一至三章 and 第五至十章. The maintainer downloaded
+those on 2026-10-28 from Taipower's 營業規章 page,
+https://www.taipower.com.tw/2289/2484/51434/51760/?mid=158 .
 
 Taipower has two rule books. The 營業規章 is approved by the 經濟部. The
 營業規章施行細則 is Taipower's own detail rules under it. Each has a 第四章
@@ -17,17 +17,28 @@ article.
 
 | File | What it settles | Source | sha256 |
 | --- | --- | --- | --- |
-| `營業規章第四章_電費之計收_1110907.pdf` | The 營業規章 chapter as amended 111/9/7, the latest. 第二十六、二十七條 count days by 30ths. 第三十九、四十條 take 3‰ of the basic fee off per outage or 卸載 hour. Taipower lists a file of the same size (378.2 KB) on its current page, and the 115/2/5 amendment changed only 第51、78條. | https://web.archive.org/web/20240325193352id_/https://www.taipower.com.tw/upload/158/2022113016271085140.pdf | `494ee4ff83bfeaa75645bb8f2e8bff27e70804a7d848477dbfe27def46dfe506` |
+| `營業規章第一章_總則_1150625.pdf` | The 營業規章 chapter with the book's 修正沿革, which ends at 115/6/25. No amendment after 108/2/18 names an article of 第一章. 第三條第十款 makes a 需量契約容量 a 十五分鐘平均瓩數, and 第十二款 makes the 用電最高需量 the month's highest. | Taipower's 營業規章 page, downloaded 2026-10-28 | `8e269512a381a030b37fc8a3b20db68d1cc9df769d52d5d35cce70646c02a625` |
+| `營業規章第一章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `fad3aa22ddd7be74cb2a8f7e293f39aca3b0a352519619f6d785387ca96b2b17` |
+| `營業規章第二章_申請用電_1110907.pdf` | The chapter as amended 111/9/7, which changed 第五條. 第十二條 makes a 需量契約容量 the agreed highest 15-minute demand. No other article sets a bill amount. | Taipower's 營業規章 page, downloaded 2026-10-28 | `74591e7937a91a83450eba8e342a16ee3b9e8afdc9ec354a944f5ad53ea70017` |
+| `營業規章第二章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `db8591dbb1fe5cc5c7a840717753db6911d16d6d83d36eace090d28d7851ec3f` |
+| `營業規章第三章_契約變更及終止_1110907.pdf` | The chapter as amended 108/10/17 (第十五條) and 111/9/7 (第二十一條), on 過戶, 暫停用電 and 停止供電. No article sets a bill amount. | Taipower's 營業規章 page, downloaded 2026-10-28 | `ee8e8eab43d760f28a1e138dcc984b3ffddd96d5ada61a44279fde05327d6419` |
+| `營業規章第三章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `babe1b0ad60a860e37360bb55a8ef514a44fd4635d5db4ebde4081413096d1f1` |
+| `營業規章第四章_電費之計收_1110907.pdf` | The 營業規章 chapter as amended 111/9/7, the latest. 第二十六、二十七條 count days by 30ths. 第三十九、四十條 take 3‰ of the basic fee off per outage or 卸載 hour. The file on Taipower's 營業規章 page on 2026-10-28 is the same, byte for byte. | https://web.archive.org/web/20240325193352id_/https://www.taipower.com.tw/upload/158/2022113016271085140.pdf | `494ee4ff83bfeaa75645bb8f2e8bff27e70804a7d848477dbfe27def46dfe506` |
 | `營業規章第四章.txt` | The text of the PDF above, extracted with `pdfplumber`, for tests to cite by line. | | `80f04c7d8f8fbf0c5d73d1c17e0ca230b52548a6f389a8fce2cc9efda928589a` |
-| `營業規章第六章_供電方式及工程_1110907.pdf` | The 營業規章 chapter as amended 111/9/7. 第四十六條 sets the supply voltage by 契約容量, with 低壓 below 100 kW. No article sets a bill amount. The 115/2/5 amendment added a second paragraph to 第51條, on the 保護電驛 the customer keeps. This file predates it, and page 5 of the notice below has the new text. Taipower listed this file (398.3 KB) until 2025-12-11 and a 227.8 KB 第六章 (`/media/slmh1n33/`) from 2026-03-13. The Wayback Machine has no copy of the newer file. | https://web.archive.org/web/20240718150855id_/https://www.taipower.com.tw/upload/158/2022113016271549811.pdf | `fc0e5718ccbbb5d5b20af1d8ff9d63c5c330c5df120764b0f9fec9c3ee2dbd6e` |
-| `營業規章第六章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `fdde8e00dd546f96d5c9df64e7124488ec3d5e18ad5e5c278ad651840562fea9` |
-| `營業規章附表_工本費單價表_1110907.pdf` | The 營業規章 附表 as amended 111/9/7. It prices a re-inspection of equipment at 580 to 950 元 a customer, VAT included. No bill amount depends on it. Taipower's page listed a file of the same size (357.9 KB) in 2026-04. | https://web.archive.org/web/20240722023934id_/https://www.taipower.com.tw/upload/158/2022113016273431386.pdf | `2b8712e3f5045d11db7b18233aecaa4a77d07dd6d513b7ae1c5290df1d190676` |
+| `營業規章第五章_違規用電_1080218.pdf` | The chapter as revised 108/2/18, not amended since. 違規用電 owes 追償電費 at 臨時電價, apart from a bill. | Taipower's 營業規章 page, downloaded 2026-10-28 | `9cb3368beb075803f8b6c22e642a35f23cec4f311d09a99b00ab898428504cab` |
+| `營業規章第五章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `07cc35400835ceffce75db6588b5412904e33e0a6d2d1b9dbd2d847a03540f60` |
+| `營業規章第六章_供電方式及工程_1150625.pdf` | The chapter as amended 115/6/25. 第四十六條 sets the supply voltage by 契約容量, with 低壓 below 100 kW. Since 115/6/25 one company's branches in one building or neighbouring plants add up their 契約容量 to choose 69, 161 or 345 kV. 115/2/5 added the second paragraph of 第五十一條, on 保護電驛. No article sets a bill amount. | Taipower's 營業規章 page, downloaded 2026-10-28 | `d8d2606a794aaee9e26f019d7b2900ef9abbfaf3c3911f06c201862f896039cd` |
+| `營業規章第六章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `645b1a252f5a0040df3a15a1e4357f054c3957bc9a0c2c34977430b707eca141` |
+| `營業規章第七章_線路設置費_1150205.pdf` | The chapter as amended 115/2/5, which changed 第七十八條. 線路設置費 and 復電費 are paid when applying for supply or restoring it, not in the bill. | Taipower's 營業規章 page, downloaded 2026-10-28 | `9da265aed4bd7a4a9613848ee5a5bc77f081281a46cfcbc7176d419e97cee78c` |
+| `營業規章第七章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `f898582dbb63be43c4bf9174e68adf2b1fca8dd71395bc460eea76724fac53bf` |
+| `營業規章第八章_供電線路遷移工料費_1080218.pdf` | The chapter as revised 108/2/18, not amended since, on 遷移工料費. No article sets a bill amount. | Taipower's 營業規章 page, downloaded 2026-10-28 | `0d2af6981a75646ef66a88b777edf943b528bd8fb1c9397a266bb24562a0b4b2` |
+| `營業規章第八章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `df48c373cb9182eedad9697ac5f20efc4cbbee0f8bec88f1a0d0005fb185d5a3` |
+| `營業規章第九章_用電設備租用_1110907.pdf` | The chapter as amended 111/9/7, which changed 第一百零四條. Rent for Taipower's equipment is not an electricity charge. | Taipower's 營業規章 page, downloaded 2026-10-28 | `0e87c7424912e1266577d219150e08be08b54d9c05c32079eef6605b8bf22cf0` |
+| `營業規章第九章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `6ab756a6b782ae450382acb7a1c50f110e856fc11831ca1c4aa1de6fd52ef252` |
+| `營業規章第十章_附則_1080218.pdf` | The chapter as revised 108/2/18, not amended since. | Taipower's 營業規章 page, downloaded 2026-10-28 | `5a47e8e3ec54245302b4d315fe83b638057c6f3bb16167a0480d87d62f049cc1` |
+| `營業規章第十章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `d4bd3d4b0f7f5c1615ae6dbea1f2f3daab654d1b9a479ddd1f375cbc0a14d439` |
+| `營業規章附表_工本費單價表_1110907.pdf` | The 營業規章 附表 as amended 111/9/7. It prices a re-inspection of equipment at 580 to 950 元 a customer, VAT included. No bill amount depends on it. The file on Taipower's 營業規章 page on 2026-10-28 is the same, byte for byte. | https://web.archive.org/web/20240722023934id_/https://www.taipower.com.tw/upload/158/2022113016273431386.pdf | `2b8712e3f5045d11db7b18233aecaa4a77d07dd6d513b7ae1c5290df1d190676` |
 | `營業規章附表.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `bfdd2036237af94163e76a793164cef39de815d5861c257987f467a75f804c16` |
-| `營業規章全文_1080218_台電函.pdf` | Taipower's letter 電配售部業字第10800032292號 of 108/2/26, with the whole 營業規章 as revised 108/2/18 attached. Since then 108/10/17 amended 第15條, 111/9/7 第5、21、28、29、30、32、39、46、54、57、65、66、72、79、83、84、104條 and the 附表, and 115/2/5 第51、78條 (the 修正沿革 on page 4 of the 115/2/5 notice below). No article of 第一、五、八、十章 is among them, so for those chapters this is the current text. Against the 111/9/7 第四、六章 above, it differs only in the amended articles, in spacing, and in 第二十六條's item numbers, which the newer file corrects from 三、四 to 一、二. The Wayback Machine has none of Taipower's own files for these chapters. | https://www.elecpe.org.tw/wp-content/uploads/groupdownload/OfficalDocument/2-36.pdf | `f8b7797d1dc0b96cb1f4617bfca202a5728c9c8566c78c9f02c1a3302e39449e` |
-| `營業規章第一章.txt` | 第一章 of the PDF above (pages 9 and 10), cut from its `pdfplumber` text. 第三條第十款 makes a 需量契約容量 a 十五分鐘平均瓩數, and 第十二款 makes the 用電最高需量 the month's highest. | | `715185e019fb32daf6e47e1b1286a258514af26edeb2c5f4b66a563e6cca0103` |
-| `營業規章第五章.txt` | 第五章 of the PDF above (pages 22 and 23). 違規用電 owes 追償電費 at 臨時電價, apart from a bill. | | `07cc35400835ceffce75db6588b5412904e33e0a6d2d1b9dbd2d847a03540f60` |
-| `營業規章第八章.txt` | 第八章 of the PDF above (pages 38 to 40), on 遷移工料費. No article sets a bill amount. | | `df48c373cb9182eedad9697ac5f20efc4cbbee0f8bec88f1a0d0005fb185d5a3` |
-| `營業規章第十章.txt` | 第十章 of the PDF above (page 41). | | `d4bd3d4b0f7f5c1615ae6dbea1f2f3daab654d1b9a479ddd1f375cbc0a14d439` |
 | `營業規章施行細則第四章_電費之計收.pdf` | The 施行細則 chapter, 108/9/17. 第二十八條 最高需量 drops its fraction of a kW. 第二十九條 cuts bill items to the 角 and rounds totals to the 元. 第三十條 adjusts the 超約 fee for 功率因數 below 80%. 第三十八條 counts an unused month at 80%. | https://web.archive.org/web/20251201150430id_/https://www.taipower.com.tw/media/bnlf4e4j/%E7%AC%AC%E5%9B%9B%E7%AB%A0%20%E9%9B%BB%E8%B2%BB%E4%B9%8B%E8%A8%88%E6%94%B6.pdf?mediaDL=true | `bd9e0fb3b849070c3eebb01eb22e15979ad12cd3b6ae254963dc41c452e9ea9c` |
 | `營業規章施行細則第四章.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `1a8946880d91e8ada4aceca5775fc1d1a5fdf583946361eb68e0a208df1e6d6d` |
 | `營業規章施行細則第一章_總則.pdf` | Its 修正沿革 ends at 108/9/17, so the 第四章 above is current. Taipower's page listed a file of the same size in 2026-05. | https://web.archive.org/web/20240519011809id_/https://www.taipower.com.tw/upload/159/2020060114421925270.pdf | `701569c671e914f7f0442a07f6fb6f7d5093c006059906af4b615728fd5fb958` |
@@ -54,52 +65,10 @@ article.
 | `各類電價表及計算範例_1130401.pdf` | The 高壓 電動車充換電設施電價 table on page 16 has the 6/1–9/30 夏月 and 95% of every 低壓 price, 基本電費 included. Its worked bills use the 113/4/1 prices. | https://web.archive.org/web/20251115050107id_/https://www.taipower.com.tw/media/mpbjpjgj/%E5%90%84%E9%A1%9E%E9%9B%BB%E5%83%B9%E8%A1%A8%E5%8F%8A%E8%A8%88%E7%AE%97%E7%AF%84%E4%BE%8B_1130401.pdf?mediaDL=true | `4002772d1a45cc7a2f62c4a788822ae6afa5b7fc18d98edf9067db270aa8e6c2` |
 | `電動車充換電設施電價介紹.pdf` | Taipower's slides on the EV tariff at the 114/10 prices. Page 12 gives 高壓 EV 5% off the whole bill. | https://web.archive.org/web/20251206022145/https://www.taipower.com.tw/media/gqzhlwqx/%E9%9B%BB%E5%8B%95%E8%BB%8A%E5%85%85%E6%8F%9B%E9%9B%BB%E8%A8%AD%E6%96%BD%E9%9B%BB%E5%83%B9%E4%BB%8B%E7%B4%B9.pdf | `9b256f71d1e1edcbae595a374a45cf4b88f23fbee445903bc9e47b4ffce21f2e` |
 
-The 115/2/5 amendment of the 營業規章 is in a Taipower notice reposted at
-https://www.aim.org.tw/upload/news/file/1772093229.pdf. Page 4 lists it, and
-page 5 has the new 第51、78條.
-
-## Secondary transcriptions
-
-The Wayback Machine has none of Taipower's files for 營業規章 第二、三、七、九章,
-and each has an article amended after 108/2/18. The files in `secondary/` are
-those chapters from 植根法律網's 111/9/7 transcription, a third party's copy, so
-`tests/data/clauses/` can list their articles. Each is the page's text cut at
-the chapter headings, with indents removed and a space put after each article
-number. Do not cite them as Taipower's words.
-
-Of the 87 articles no amendment has touched since 108/2/18, 植根法律網 reads the
-same as Taipower's 108/2/18 text but for five. It has the newer item numbers in
-第二十六條, ％ for ‰ in 第四十條, a half-width X in 第五十條, the 附表 inside
-第五十九條, and no tables in 第四十條 or 第六十七條. It predates the 115/2/5
-第七十八條.
-
-Source: https://www.rootlaw.com.tw/LawArticle.aspx?LawID=A040100050007900-1110907
-
-| File | Articles | sha256 |
-| --- | --- | --- |
-| `secondary/營業規章第二章_植根法律網_1110907.txt` | 第四至十三條. 111/9/7 amended 第五條. | `49fdfc71aad5ec9465d9d2c222380c7c29383b55873e301042c69a069d9997f3` |
-| `secondary/營業規章第三章_植根法律網_1110907.txt` | 第十四至二十一條. 108/10/17 amended 第十五條, and 111/9/7 第二十一條. | `8bedc1f2b5332ba02d9dc31fdfa983599629e4c8baa55fabdc872b3635dbf5c2` |
-| `secondary/營業規章第七章_植根法律網_1110907.txt` | 第七十一至八十八條. 111/9/7 amended 第七十二、七十九、八十三、八十四條, and 115/2/5 第七十八條. | `0a9cc6b361ed8e53306616538ff334d6490edd404172fb9956964143c609b032` |
-| `secondary/營業規章第九章_植根法律網_1110907.txt` | 第一百零三至一百零五條. 111/9/7 amended 第一百零四條. | `498ff53a1434145af5d098e8eb6c34ab09c6526003244eb163a850f4086736bd` |
-
-## Not found
-
-Taipower's 營業規章 page in its 2026-04-20 snapshot lists these files. None is
-in the Wayback Machine, by CDX or by `id_` fetch, with or without
-`?mediaDL=true`. Neither are the old site's `upload/158/` files for the same
-chapters.
-
-| Chapter | Listed file | Size |
-| --- | --- | --- |
-| 第一章 總則 | `/media/ijqavc04/` (`/media/s2oncuc5/`, 373.2 KB, until 2025-12) | 199.6 KB |
-| 第二章 申請用電 | `/media/frjlhzi5/` | 426.4 KB |
-| 第三章 契約變更及終止 | `/media/xr1n2ym1/` | 366.1 KB |
-| 第五章 違規用電 | `/media/f5ppdw5a/` | 326 KB |
-| 第六章 供電方式及工程 | `/media/slmh1n33/` | 227.8 KB |
-| 第七章 線路設置費 | `/media/0ggdrzos/` (`/media/fn0dgpov/`, 375 KB, until 2025-12) | 205.3 KB |
-| 第八章 供電線路遷移工料費 | `/media/vikdglwb/` | 332.9 KB |
-| 第九章 用電設備租用 | `/media/5tqje0tu/` | 354.6 KB |
-| 第十章 附則 | `/media/vxjlnp4u/` | 324 KB |
+第一章's 修正沿革 lists every amendment of the 營業規章. Since the 108/2/18
+revision, 108/10/17 amended 第15條, 111/9/7 第5、21、28、29、30、32、39、46、
+54、57、65、66、72、79、83、84、104條 and the 附表, 115/2/5 第51、78條, and
+115/6/25 第46條.
 
 ## Open questions
 

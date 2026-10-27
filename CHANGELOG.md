@@ -129,7 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the others say why no bill depends on them. Rules with no input in
   this package, such as 免計營業稅 or 儲冷式空調, are expected failures.
 - `docs/references/` keeps the Taipower documents the tests cite beyond
-  the 電價表, with their archive URLs and sha256.
+  the 電價表, with their sources and sha256.
 - The README's over-contract, power factor and bill example sections
   follow the 電價表.
 - Examples use 2026 dates, which the bundled prices cover.
