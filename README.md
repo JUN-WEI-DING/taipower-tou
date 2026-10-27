@@ -22,9 +22,6 @@ It encapsulates complex rules—including seasonal variations, holiday logic, an
 # Basic installation
 pip install taipower-tou
 
-# With lunar calendar support (recommended for accurate holiday calculation)
-pip install taipower-tou[lunar]
-
 # Alternatively, using uv (faster)
 uv pip install taipower-tou
 uv add taipower-tou  # add to a project
@@ -296,7 +293,7 @@ In TOU plans, rates vary based on **when** you use electricity:
 | Factor | Options | Impact on Rate |
 |--------|---------|----------------|
 | **季節 Season** | 夏月 Summer (6-9月) / 非夏月 Non-Summer | Summer rates ≈ 20-40% higher |
-| **日期 Day Type** | 週日+國定假日 / 週六 Saturday / 平日 Weekday | Holidays get off-peak rates |
+| **日期 Day Type** | 週日+離峰日 / 週六 Saturday / 平日 Weekday | Off-peak days are off-peak all day |
 | **時段 Period** | 尖峰 Peak / 半尖峰 Semi-Peak / 離峰 Off-Peak | Peak most expensive, off-peak cheapest |
 
 ### Step 1: Prepare Your Time-Series Data (準備時間序列資料)
@@ -598,7 +595,7 @@ Energy Cost = Σ(Period_Usage_kWh × Period_Rate) for each time period
 | Factor | Options | Impact on Rate |
 |--------|---------|----------------|
 | **季節 Season** | 夏月 Summer (6-9月) / 非夏月 Non-Summer | Summer rates ≈ 20-40% higher |
-| **日期 Day Type** | 週日+國定假日 Sunday+Holidays / 週六 Saturday / 平日 Weekday | Holidays get off-peak rates |
+| **日期 Day Type** | 週日+離峰日 Sunday+Off-peak days / 週六 Saturday / 平日 Weekday | Off-peak days are off-peak all day |
 | **時段 Period** | 尖峰 Peak / 半尖峰 Semi-Peak / 離峰 Off-Peak | Peak most expensive, off-peak cheapest |
 
 **Sample TOU Schedule (簡易型二段式):**
@@ -750,18 +747,25 @@ print(f"Plan Name: {details['profile']['name']}")
 
 ### 2. Time & Rate Queries (查詢時間與費率)
 
-**Check Holiday Status:**
-The library automatically handles Taiwan's national holidays (e.g., New Year, Moon Festival).
-Holiday data is loaded with fallback priority: API → lunar calendar calculation → static preset.
+**Check Off-Peak Days (離峰日):**
+`is_holiday` follows the 離峰日 list in Taipower's 電價表, not the government office calendar.
+An off-peak day is a Sunday or a listed day: 1/1, 春節 (除夕 to 初五), 2/28, 4/4, 清明, 5/1, 端午, 中秋 and 10/10.
+From 2025-09-01 the list also has 除夕前1日, 9/28, 10/25 and 12/25.
+補假 and 彈性放假 days are not off-peak days, and a listed day that falls on a Saturday is still one.
+The calculation runs offline. Years outside 2014–2100 raise `CalendarError`; use `custom_calendar(...)` for them.
+
+離峰日依台電電價表所列日期計算（週日與表列節日），補假與彈性放假不算離峰日。不需連網，支援 2014–2100 年。
 
 ```python
 from datetime import datetime
 
-# 2025-01-01 is a holiday
+# 2025-01-01 is an off-peak day
 print(tou.is_holiday(datetime(2025, 1, 1)))  # True
-# 2025-01-02 is a weekday
-print(tou.is_holiday(datetime(2025, 1, 2)))  # False
+# 2025-01-27 is a 彈性放假 day for government offices, but not an off-peak day
+print(tou.is_holiday(datetime(2025, 1, 27)))  # False
 ```
+
+`tests/data/taipower_calendar/` holds Taipower's official 時間電價日曆表 day by day, and the tests compare every listed year with them.
 
 **Check Period Type (Peak/Off-Peak):**
 
@@ -963,7 +967,7 @@ Quick index of all public entry points exported by `taipower_tou`.
 - `calculate_bill_from_dict(usage, plan_id, ...)` calculate from timestamp dict (no pandas needed)
 
 ### Calendar & tariff access (日曆與費率)
-- `taiwan_calendar(...)` cached Taiwan holiday calendar
+- `taiwan_calendar()` Taipower off-peak day calendar (Sundays plus the 電價表 list)
 - `custom_calendar(...)` create a custom calendar instance
 - `is_holiday(target, ...)` holiday check
 - `TariffFactory` data-driven plan loader
@@ -1215,7 +1219,7 @@ Rates vary by time period, season, and day type.
 
 ## Performance (效能)
 
-The library is optimized for processing large time-series datasets efficiently through vectorized calendar queries and intelligent caching.
+The library processes large time series with vectorized calendar queries.
 
 ### Benchmark Results (基準測試結果)
 
@@ -1226,26 +1230,15 @@ The library is optimized for processing large time-series datasets efficiently t
 | 100,000 records | ~0.4s | ~240K records/s | Large analysis (10+ years hourly) |
 | 1,000,000 records | ~4s | ~250K records/s | Industrial scale analysis |
 
-*First run may take longer due to API calls and cache generation. Subsequent runs use cached data and are significantly faster.*
-
 ### Optimization Features (最佳化特性)
 
 1. **Vectorized Calendar Queries (向量化日曆查詢)**
    - Batch processing of unique dates instead of individual lookups
-   - Reduces calendar API calls from O(n) to O(unique dates)
+   - Reduces calendar lookups from O(n) to O(unique dates)
 
-2. **Smart API Handling (智慧 API 處理)**
-   - Skips API fetch for future years (beyond current year + 1)
-   - Prevents timeout delays for non-existent calendar data
-   - Falls back to lunar calendar calculation when needed
-
-3. **Memory Caching (記憶體快取)**
-   - Holiday data cached per year in memory
+2. **Memory Caching (記憶體快取)**
+   - Off-peak days are computed once per year and kept in memory
    - Subsequent queries for same year are O(1) lookups
-
-4. **Efficient Sunday Calculation (高效週日計算)**
-   - Direct calculation without iteration through all days
-   - ~50x faster than naive date-by-date iteration
 
 ### Tips for Best Performance (效能最佳化建議)
 
@@ -1256,13 +1249,13 @@ import pandas as pd
 calendar = tou.taiwan_calendar()
 calendar.preload_years({2024, 2025, 2026})  # Preload multiple years
 
-# Then use the cached calendar
+# Then use the preloaded calendar
 plan = tou.plan("residential_simple_2_tier", calendar_instance=calendar)
 usage_data = pd.Series(
     [1.0] * 24,
     index=pd.date_range("2025-07-01 00:00", periods=24, freq="h"),
 )
-costs = plan.calculate_costs(usage_data)  # Will use cached holidays
+costs = plan.calculate_costs(usage_data)
 ```
 
 ## Custom Plans (自定義費率)

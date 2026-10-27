@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-27
+
+### Fixed
+- Off-peak days (離峰日) now follow the list in Taipower's 電價表 instead of
+  the government office calendar. 補假 and 彈性放假 days are no longer
+  off-peak, and listed days that fall on a Saturday are now off-peak. The
+  old calendar was wrong on about six days per year, for example
+  2026-02-21, 2026-02-27 and 2027-03-01.
+- Results no longer depend on network access, the local cache, or whether
+  `zhdate` is installed.
+
+### Changed
+- Off-peak days use the list in force on each date. From 2014 the list is
+  1/1, 春節 (除夕 to 初五), 2/28, 4/4, 清明, 5/1, 端午, 中秋 and 10/10. From
+  2025-09-01 the list adds 除夕前1日, 9/28, 10/25 and 12/25.
+- Supported years are 2014–2100. Other years raise `CalendarError`; pass
+  `calendar_instance=custom_calendar(...)` for them.
+- Tests compare every day of 2014–2027 with Taipower's official
+  時間電價日曆表 (`tests/data/taipower_calendar/`).
+
+### Deprecated
+- `cache_dir` and `api_timeout` have no effect and raise a
+  `DeprecationWarning`. They will be removed in a future release.
+
+### Removed
+- Holiday downloads from the ruyut/TaiwanCalendar API and the local cache.
+- The `platformdirs` dependency and the `lunar` extra (`zhdate`).
+
 ## [0.1.0] - 2026-02-06
 
 ### Added

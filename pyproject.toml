@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "taipower-tou"
-version = "0.1.0"
+version = "0.2.0"
 description = "Taiwan time-of-use electricity tariff calculator"
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9"

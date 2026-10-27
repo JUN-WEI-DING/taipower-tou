@@ -4,17 +4,18 @@
 `examples/usage_examples.py`。
 
 ## 行事曆與假日
-- `taiwan_calendar(cache_dir=None, api_timeout=10)`
-  - 功能：建立臺灣假日行事曆，必要時從公開 API 抓資料並快取。
-  - 設定：`cache_dir` 指定快取資料夾；`api_timeout` 設定請求秒數。
-- `is_holiday(target, calendar=None, cache_dir=None, api_timeout=10)`
-  - 功能：判斷 `date` 或 `datetime` 是否為假日。
-  - 設定：可傳入自訂 `calendar`；或傳 `cache_dir`/`api_timeout` 建立新行事曆。
+- `taiwan_calendar()`
+  - 功能：建立台電離峰日行事曆。離峰日為週日加上電價表所列日期，補假與彈性放假不算。
+  - 範圍：支援 2014–2100 年，其他年份會拋出 `CalendarError`，請改用 `custom_calendar(...)`。
+  - `cache_dir`、`api_timeout` 已無作用，傳入時會發出 `DeprecationWarning`，之後的版本會移除。
+- `is_holiday(target, calendar=None)`
+  - 功能：判斷 `date` 或 `datetime` 是否為全日離峰日（週日或電價表所列離峰日）。
+  - 設定：可傳入自訂 `calendar`。
 
 ## 方案
 - `available_plans()`
   - 功能：列出支援的方案名稱。
-- `plan(name, calendar_instance=None, cache_dir=None, api_timeout=10)`
+- `plan(name, calendar_instance=None)`
   - 功能：用方案名稱取得 `TariffPlan`。
 - `residential_simple_2_tier_plan(...)`
 - `high_voltage_2_tier_plan(...)`
