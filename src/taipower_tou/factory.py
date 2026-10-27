@@ -328,13 +328,17 @@ def _build_tariff_plan_from_data(
     season_strategy = _season_strategy(plan_data, store)
     day_type_strategy = TaiwanDayTypeStrategy(calendar)
 
+    # A plan without schedules has one period all day, such as the flat
+    # period of low_voltage_power's 非時間電價.
+    rate_periods = {item["period"] for item in plan_data.get("rates", [])}
+    default_period = rate_periods.pop() if len(rate_periods) == 1 else "off_peak"
     schedules = _normalize_schedules(plan_data.get("schedules", []))
     if not schedules:
         schedules = [
             {
                 "season": "summer",
                 "day_type": "weekday",
-                "slots": [{"start": "00:00", "end": "24:00", "period": "off_peak"}],
+                "slots": [{"start": "00:00", "end": "24:00", "period": default_period}],
             }
         ]
 
@@ -343,7 +347,7 @@ def _build_tariff_plan_from_data(
         season_strategy=season_strategy,
         day_type_strategy=day_type_strategy,
         schedules=schedules,
-        default_period="off_peak",
+        default_period=default_period,
     )
 
     rates = plan_data.get("rates", [])
