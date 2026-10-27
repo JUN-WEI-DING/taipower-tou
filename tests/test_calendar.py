@@ -38,3 +38,8 @@ def test_default_calendar_does_not_warn() -> None:
         tou.period_context(
             pd.date_range("2026-01-01", periods=2), "high_voltage_2_tier"
         )
+
+
+def test_timezone_aware_index_uses_local_dates() -> None:
+    index = pd.date_range("2026-02-20 12:00", periods=3, freq="D", tz="Asia/Taipei")
+    assert TaiwanCalendar().is_holiday(index).tolist() == [True, True, True]
