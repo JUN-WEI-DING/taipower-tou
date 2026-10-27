@@ -355,7 +355,7 @@ def calculate_bill(
     inputs: BillingInputs | None = None,
     calendar_instance: TaiwanCalendar | None = None,
     cache_dir: Path | None = None,
-    api_timeout: int = 10,
+    api_timeout: int | None = None,
     strict: bool = False,
 ) -> pd.DataFrame:
     if not isinstance(usage, pd.Series):
@@ -447,7 +447,7 @@ def calculate_bill_simple(
     plan_id: str,
     calendar_instance: TaiwanCalendar | None = None,
     cache_dir: Path | None = None,
-    api_timeout: int = 10,
+    api_timeout: int | None = None,
     strict: bool = False,
 ) -> pd.DataFrame:
     return calculate_bill(
@@ -467,7 +467,7 @@ def calculate_bill_breakdown(
     inputs: BillingInputs | None = None,
     calendar_instance: TaiwanCalendar | None = None,
     cache_dir: Path | None = None,
-    api_timeout: int = 10,
+    api_timeout: int | None = None,
     strict: bool = False,
 ) -> dict[str, pd.DataFrame]:
     if not isinstance(usage, pd.Series):
@@ -1512,7 +1512,7 @@ def calculate_bill_from_list(
     inputs: BillingInputs | None = None,
     calendar_instance: TaiwanCalendar | None = None,
     cache_dir: Path | None = None,
-    api_timeout: int = 10,
+    api_timeout: int | None = None,
     strict: bool = False,
 ) -> pd.DataFrame:
     """Calculate bill from a list of usage values.
@@ -1526,8 +1526,8 @@ def calculate_bill_from_list(
         freq: Frequency of the data (e.g., "15min", "1h", "1D")
         inputs: Optional billing inputs
         calendar_instance: Optional calendar instance
-        cache_dir: Optional cache directory for calendar
-        api_timeout: API timeout for calendar
+        cache_dir: Deprecated, has no effect
+        api_timeout: Deprecated, has no effect
         strict: If True, raise errors on invalid/missing inputs
 
     Returns:
@@ -1559,7 +1559,7 @@ def calculate_bill_from_dict(
     inputs: BillingInputs | None = None,
     calendar_instance: TaiwanCalendar | None = None,
     cache_dir: Path | None = None,
-    api_timeout: int = 10,
+    api_timeout: int | None = None,
     strict: bool = False,
 ) -> pd.DataFrame:
     """Calculate bill from a dictionary of timestamp -> usage values.
@@ -1573,8 +1573,8 @@ def calculate_bill_from_dict(
         plan_id: The plan identifier (flexible matching supported)
         inputs: Optional billing inputs
         calendar_instance: Optional calendar instance
-        cache_dir: Optional cache directory for calendar
-        api_timeout: API timeout for calendar
+        cache_dir: Deprecated, has no effect
+        api_timeout: Deprecated, has no effect
         strict: If True, raise errors on invalid/missing inputs
 
     Returns:

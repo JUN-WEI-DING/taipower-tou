@@ -1,44 +1,40 @@
-import json
+import warnings
 from datetime import date
-from unittest.mock import patch
 
+import pandas as pd
 import pytest
 
+import taipower_tou as tou
 from taipower_tou.calendar import TaiwanCalendar
+from taipower_tou.errors import CalendarError
 
 
-@pytest.fixture
-def offline_calendar(tmp_path):
-    """
-    Returns a TaiwanCalendar instance that is forced offline.
-    Prevents network calls during testing.
-    """
-    with patch(
-        "taipower_tou.calendar._HolidayFetcher.fetch",
-        side_effect=RuntimeError("Offline mode"),
-    ):
-        yield TaiwanCalendar(cache_dir=tmp_path)
+def test_taiwan_calendar_weekend_rules() -> None:
+    calendar = TaiwanCalendar()
+    assert calendar.is_holiday(date(2025, 7, 12)) is False
+    assert calendar.is_holiday(date(2025, 7, 13)) is True
 
 
-def test_taiwan_calendar_weekend_rules(offline_calendar) -> None:
-    # Saturday is not a holiday by default if not in list
-    assert offline_calendar.is_holiday(date(2025, 7, 12)) is False
-    # Sunday is always a holiday
-    assert offline_calendar.is_holiday(date(2025, 7, 13)) is True
+@pytest.mark.parametrize("year", [1999, 2101])
+def test_unsupported_year_raises(year) -> None:
+    calendar = TaiwanCalendar()
+    with pytest.raises(CalendarError):
+        calendar.is_holiday(date(year, 1, 4))
+    with pytest.raises(CalendarError):
+        calendar.is_holiday(pd.date_range(f"{year}-01-01", periods=3, freq="D"))
 
 
-def test_taiwan_calendar_cached_holiday(tmp_path) -> None:
-    data = [
-        {
-            "date": "20251010",
-            "description": "National Day",
-            "isHoliday": True,
-        }
-    ]
+@pytest.mark.parametrize(
+    "kwargs", [{"cache_dir": "unused"}, {"api_timeout": 5}], ids=["cache_dir", "api"]
+)
+def test_removed_download_options_warn(kwargs) -> None:
+    with pytest.warns(DeprecationWarning):
+        tou.taiwan_calendar(**kwargs)
 
-    # Write cache file directly
-    cache_file = tmp_path / "2025.json"
-    cache_file.write_text(json.dumps(data), encoding="utf-8")
 
-    cal = TaiwanCalendar(cache_dir=tmp_path)
-    assert cal.is_holiday(date(2025, 10, 10)) is True
+def test_default_calendar_does_not_warn() -> None:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        tou.period_context(
+            pd.date_range("2026-01-01", periods=2), "high_voltage_2_tier"
+        )

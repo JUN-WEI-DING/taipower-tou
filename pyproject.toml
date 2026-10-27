@@ -29,7 +29,6 @@ classifiers = [
 dependencies = [
     "numpy>=1.21.0",
     "pandas>=1.5.0",
-    "platformdirs>=4.0.0",
 ]
 
 [project.urls]
@@ -45,13 +44,12 @@ test = [
     "tomli>=1.1.0; python_version < '3.11'",
 ]
 dev = ["pre-commit", "ruff", "mypy"]
-lunar = ["zhdate>=0.1.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-"taipower_tou" = ["data/*.json", "data/*.md", "data/*.pdf", "data/*.txt"]
+"taipower_tou" = ["data/*.csv", "data/*.json", "data/*.md", "data/*.pdf", "data/*.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

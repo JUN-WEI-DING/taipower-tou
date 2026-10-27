@@ -15,14 +15,8 @@ from taipower_tou.calendar import TaiwanCalendar
 from taipower_tou.tariff import PeriodType, SeasonType, get_period
 
 
-def _calendar_with_cache(tmp_path) -> TaiwanCalendar:
-    cache_file = tmp_path / "2025.json"
-    cache_file.write_text("[]", encoding="utf-8")
-    return TaiwanCalendar(cache_dir=tmp_path)
-
-
-def test_residential_simple_2_tier_periods(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_residential_simple_2_tier_periods() -> None:
+    calendar = TaiwanCalendar()
     tariff_plan = plan("residential_simple_2_tier", calendar_instance=calendar)
 
     dt_peak = datetime(2025, 7, 15, 10, 0)
@@ -35,8 +29,8 @@ def test_residential_simple_2_tier_periods(tmp_path) -> None:
     assert off_peak_result in (PeriodType.OFF_PEAK, PeriodType.OFF_PEAK.value)
 
 
-def test_high_voltage_2_tier_plan_costs(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_high_voltage_2_tier_plan_costs() -> None:
+    calendar = TaiwanCalendar()
     tariff_plan = plan("high_voltage_2_tier", calendar_instance=calendar)
 
     usage = pd.Series(
@@ -48,8 +42,8 @@ def test_high_voltage_2_tier_plan_costs(tmp_path) -> None:
     assert (costs >= 0).all()
 
 
-def test_monthly_breakdown_tou(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_monthly_breakdown_tou() -> None:
+    calendar = TaiwanCalendar()
     index = pd.DatetimeIndex(
         [
             datetime(2025, 7, 15, 10, 0),
@@ -82,8 +76,8 @@ def test_monthly_breakdown_tou(tmp_path) -> None:
     ]
 
 
-def test_monthly_breakdown_tiered(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_monthly_breakdown_tiered() -> None:
+    calendar = TaiwanCalendar()
     index = pd.DatetimeIndex(
         [
             datetime(2025, 7, 1, 10, 0),
@@ -101,8 +95,8 @@ def test_monthly_breakdown_tiered(tmp_path) -> None:
     assert set(result["period"]) == {"tiered"}
 
 
-def test_period_context_details(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_period_context_details() -> None:
+    calendar = TaiwanCalendar()
     dt = datetime(2025, 7, 15, 10, 0)
     context = period_context(
         dt,
@@ -115,8 +109,8 @@ def test_period_context_details(tmp_path) -> None:
     assert context["period"] == PeriodType.PEAK
 
 
-def test_plan_details_schema(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_plan_details_schema() -> None:
+    calendar = TaiwanCalendar()
     details = plan_details(
         "residential_simple_2_tier",
         calendar_instance=calendar,
@@ -128,8 +122,8 @@ def test_plan_details_schema(tmp_path) -> None:
     assert details["rates"]["period_costs"]
 
 
-def test_pricing_context_single_basic(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_pricing_context_single_basic() -> None:
+    calendar = TaiwanCalendar()
     dt = datetime(2025, 7, 15, 10, 0)
     result = pricing_context(
         dt,
@@ -144,8 +138,8 @@ def test_pricing_context_single_basic(tmp_path) -> None:
     assert result["cost"] == result["rate"]
 
 
-def test_pricing_context_holiday_full_day_slot_has_rate(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_pricing_context_holiday_full_day_slot_has_rate() -> None:
+    calendar = TaiwanCalendar()
     dt = datetime(2025, 7, 13, 14, 0)  # Sunday
     result = pricing_context(
         dt,
@@ -160,8 +154,8 @@ def test_pricing_context_holiday_full_day_slot_has_rate(tmp_path) -> None:
     assert result["cost"] == result["rate"]
 
 
-def test_pricing_context_details(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_pricing_context_details() -> None:
+    calendar = TaiwanCalendar()
     dt = datetime(2025, 7, 15, 10, 0)
     result = pricing_context(
         dt,
@@ -175,8 +169,8 @@ def test_pricing_context_details(tmp_path) -> None:
     assert "profile_details" in result
 
 
-def test_pricing_context_index_basic(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_pricing_context_index_basic() -> None:
+    calendar = TaiwanCalendar()
     index = pd.DatetimeIndex(
         [
             datetime(2025, 7, 15, 10, 0),
@@ -195,8 +189,8 @@ def test_pricing_context_index_basic(tmp_path) -> None:
     assert (result["cost"] >= 0).all()
 
 
-def test_pricing_context_tiered_no_usage(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_pricing_context_tiered_no_usage() -> None:
+    calendar = TaiwanCalendar()
     dt = datetime(2025, 7, 1, 10, 0)
     result = pricing_context(
         dt,
@@ -208,8 +202,8 @@ def test_pricing_context_tiered_no_usage(tmp_path) -> None:
     assert result["cost"] is None
 
 
-def test_pricing_context_tiered_with_usage_error(tmp_path) -> None:
-    calendar = _calendar_with_cache(tmp_path)
+def test_pricing_context_tiered_with_usage_error() -> None:
+    calendar = TaiwanCalendar()
     dt = datetime(2025, 7, 1, 10, 0)
     with pytest.raises(InvalidUsageInput):
         pricing_context(

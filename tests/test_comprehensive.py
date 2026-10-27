@@ -34,7 +34,7 @@ def test_different_data_sizes():
         ),
         (
             "超大資料 (1,000,000條)",
-            pd.date_range("2025-01-01", periods=1000000, freq="h"),
+            pd.date_range("2025-01-01", periods=1000000, freq="15min"),
             [1.0] * 1000000,
         ),
     ]

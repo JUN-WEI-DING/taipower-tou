@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import pandas as pd
 
@@ -17,12 +16,9 @@ def _sample_usage(start: datetime, periods: int, freq_minutes: int) -> pd.Series
 
 
 def main() -> None:
-    cache_dir = Path(".cache")
-
-    # taiwan_calendar: 建立臺灣假日行事曆，cache_dir 可指定快取位置
-    # api_timeout 可調整 API 請求超時秒數
-    calendar = tou.taiwan_calendar(cache_dir=cache_dir)
-    # is_holiday: 判斷日期是否為假日（可傳 date 或 datetime）
+    # taiwan_calendar: 依台電電價表規則判斷離峰日（週日及表列節日，不含補假）
+    calendar = tou.taiwan_calendar()
+    # is_holiday: 判斷日期是否為全日離峰日（可傳 date 或 datetime）
     print("is_holiday:", tou.is_holiday(datetime(2025, 7, 13), calendar=calendar))
 
     # available_plans: 取得支援方案名稱列表

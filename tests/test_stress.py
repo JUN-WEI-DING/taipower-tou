@@ -49,7 +49,7 @@ def test_extreme_data_volumes():
         gc.collect()
         start_mem = get_memory_usage()
 
-        dates = pd.date_range("2024-01-01", periods=size, freq="15min")
+        dates = pd.date_range("2024-01-01", periods=size, freq="min")
         usage = pd.Series([1.0] * size, index=dates)
 
         start = time_module.time()
@@ -387,8 +387,8 @@ def test_holiday_edge_cases():
         # 2025 春節連假(含調休): 1/25-1/31，1/27(一)是調休假日
         ("週六1/25", datetime(2025, 1, 25, 12, 0), False),
         ("週日1/26", datetime(2025, 1, 26, 12, 0), True),
-        ("調休1/27", datetime(2025, 1, 27, 12, 0), True),  # 春節調休
-        ("調休1/28", datetime(2025, 1, 28, 12, 0), True),  # 春節調休
+        ("彈性放假1/27", datetime(2025, 1, 27, 12, 0), False),  # 台電不算離峰日
+        ("除夕1/28", datetime(2025, 1, 28, 12, 0), True),
         ("春節初一", datetime(2025, 1, 29, 12, 0), True),
         ("春節初三", datetime(2025, 1, 31, 12, 0), True),
         ("春節後", datetime(2025, 2, 5, 12, 0), False),

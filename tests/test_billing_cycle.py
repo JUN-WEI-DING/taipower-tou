@@ -18,14 +18,6 @@ from taipower_tou.models import BillingCycleType
 from taipower_tou.tariff import _billing_period_group_index
 
 
-@pytest.fixture
-def empty_cache_file(tmp_path):
-    """Create an empty cache file to avoid network calls."""
-    cache_file = tmp_path / "2025.json"
-    cache_file.write_text("[]", encoding="utf-8")
-    return tmp_path
-
-
 class TestBillingCycleGrouping:
     """Test month grouping for ODD_MONTH and EVEN_MONTH billing cycles."""
 
@@ -423,7 +415,7 @@ class TestYearCrossing:
         assert periods[1].month == 2
         assert periods[1].year == 2025
 
-    def test_year_crossing_with_billing(self, empty_cache_file):
+    def test_year_crossing_with_billing(self):
         """Test actual billing calculation across year boundary."""
         # December 2024 (non-summer) + January 2025 (non-summer)
         # Both non-summer, so rates are consistent
@@ -445,7 +437,6 @@ class TestYearCrossing:
             usage,
             "residential_non_tou",
             inputs=inputs,
-            cache_dir=empty_cache_file,
         )
 
         # Should be grouped into single billing period (2-month cycle)
@@ -460,7 +451,7 @@ class TestYearCrossing:
 class TestComparison:
     """Compare monthly vs bimonthly billing results."""
 
-    def test_monthly_bimonthly_rate_difference(self, empty_cache_file):
+    def test_monthly_bimonthly_rate_difference(self):
         """Test TariffPlan with different cycle types produces different results."""
         # Compare MONTHLY vs ODD_MONTH billing for same usage
 
@@ -499,7 +490,7 @@ class TestComparison:
         assert cost_monthly.iloc[0] == pytest.approx(expected_monthly, rel=0.01)
         assert cost_odd.iloc[0] == pytest.approx(expected_odd, rel=0.01)
 
-    def test_billing_period_count_monthly(self, empty_cache_file):
+    def test_billing_period_count_monthly(self):
         """Test that monthly billing produces correct number of periods."""
         index = pd.to_datetime(
             [
@@ -514,13 +505,12 @@ class TestComparison:
         result = tou.calculate_bill_simple(
             usage,
             "residential_simple_2_tier",
-            cache_dir=empty_cache_file,
         )
 
         # Should have 3 separate billing periods
         assert len(result) == 3
 
-    def test_billing_period_count_bimonthly(self, empty_cache_file):
+    def test_billing_period_count_bimonthly(self):
         """Test that bimonthly billing produces correct number of periods."""
         index = pd.to_datetime(
             [
@@ -543,13 +533,12 @@ class TestComparison:
             usage,
             "residential_non_tou",
             inputs=inputs,
-            cache_dir=empty_cache_file,
         )
 
         # Should have 2 billing periods
         assert len(result) == 2
 
-    def test_season_impact_on_bimonthly_billing(self, empty_cache_file):
+    def test_season_impact_on_bimonthly_billing(self):
         """Test that season affects bimonthly billing when periods cross seasons."""
         # Feb (non-summer) + Mar (summer) for ODD_MONTH
         # The period is grouped to March, so summer rates apply
@@ -575,7 +564,6 @@ class TestComparison:
             usage,
             "residential_non_tou",
             inputs=inputs,
-            cache_dir=empty_cache_file,
         )
 
         # Feb-Mar grouped to March (summer)
@@ -587,7 +575,7 @@ class TestComparison:
         expected = 120 * 1.78 + 180 * 2.26
         assert result["energy_cost"].iloc[0] == pytest.approx(expected, rel=0.01)
 
-    def test_bimonthly_non_summer_period(self, empty_cache_file):
+    def test_bimonthly_non_summer_period(self):
         """Test bimonthly billing entirely in non-summer."""
         # Oct (non-summer) + Nov (non-summer) for ODD_MONTH
         # Groups to November (non-summer)
@@ -610,7 +598,6 @@ class TestComparison:
             usage,
             "residential_non_tou",
             inputs=inputs,
-            cache_dir=empty_cache_file,
         )
 
         # Oct-Nov grouped to November (non-summer)

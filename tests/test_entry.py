@@ -1,4 +1,3 @@
-import json
 from datetime import date, datetime, time
 
 import pandas as pd
@@ -53,22 +52,12 @@ def _build_profile() -> TariffProfile:
     )
 
 
-def test_entry_calendar_and_tariffs(tmp_path) -> None:
-    data = [
-        {
-            "date": "20240101",
-            "description": "New Year",
-            "isHoliday": True,
-        }
-    ]
-    cache_file = tmp_path / "2024.json"
-    cache_file.write_text(json.dumps(data), encoding="utf-8")
-
-    calendar = TaiwanCalendar(cache_dir=tmp_path)
+def test_entry_calendar_and_tariffs() -> None:
+    calendar = TaiwanCalendar()
     assert calendar.is_holiday(date(2024, 1, 1))
     assert tou.is_holiday(date(2024, 1, 1), calendar=calendar)
 
-    helper_calendar = tou.taiwan_calendar(cache_dir=tmp_path)
+    helper_calendar = tou.taiwan_calendar()
     assert helper_calendar.is_holiday(date(2024, 1, 1))
 
     helper_plan = tou.residential_simple_2_tier_plan(calendar)
@@ -117,23 +106,19 @@ def test_calculate_costs_rejects_infinite_usage() -> None:
         plan.calculate_costs(usage)
 
 
-def test_entry_named_helpers(tmp_path) -> None:
-    cache_file = tmp_path / "2025.json"
-    cache_file.write_text("[]", encoding="utf-8")
-
+def test_entry_named_helpers() -> None:
     assert "high_voltage_2_tier" in list(tou.available_plans().keys())
     assert len(list(tou.available_plans().keys())) > 0  # Bilingual names
     assert tou.period_at(
         datetime(2025, 7, 15, 10, 0),
         "residential_simple_2_tier",
-        cache_dir=tmp_path,
     ) in {PeriodType.PEAK, PeriodType.OFF_PEAK, PeriodType.SEMI_PEAK}
 
     usage = pd.Series(
         [1.0, 2.0],
         index=pd.to_datetime(["2025-07-15 09:00", "2025-07-15 10:00"]),
     )
-    costs = tou.costs(usage, "high_voltage_2_tier", cache_dir=tmp_path)
+    costs = tou.costs(usage, "high_voltage_2_tier")
     assert (costs >= 0).all()
 
 
