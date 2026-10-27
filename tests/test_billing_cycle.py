@@ -419,7 +419,6 @@ class TestYearCrossing:
         """Test actual billing calculation across year boundary."""
         # December 2024 (non-summer) + January 2025 (non-summer)
         # Both non-summer, so rates are consistent
-        # Note: calculate_bill uses standard tiers (no doubling)
         index = pd.to_datetime(
             [
                 "2024-12-15 00:00",
@@ -442,9 +441,8 @@ class TestYearCrossing:
         # Should be grouped into single billing period (2-month cycle)
         assert len(result) == 1
 
-        # With standard tiers (no doubling in calculate_bill):
-        # 120 * 1.78 + 130 * 2.26 = 213.6 + 293.8 = 507.4
-        expected = 120 * 1.78 + 130 * 2.26
+        # Two-month bill, so tiers double: 240 * 1.78 + 10 * 2.26
+        expected = 240 * 1.78 + 10 * 2.26
         assert result["energy_cost"].iloc[0] == pytest.approx(expected, rel=0.01)
 
 
@@ -540,12 +538,7 @@ class TestComparison:
 
     def test_season_impact_on_bimonthly_billing(self):
         """Test that season affects bimonthly billing when periods cross seasons."""
-        # Feb (non-summer) + Mar (summer) for ODD_MONTH
-        # The period is grouped to March, so summer rates apply
-        # Note: calculate_bill uses standard tiers (no doubling)
-        # However, for bimonthly billing, when the period groups to March (summer),
-        # it uses the non_summer rate since Feb has more usage weight
-        # Let me verify actual behavior...
+        # Feb and Mar are both non-summer (summer is 6/1-9/30)
 
         index = pd.to_datetime(
             [
@@ -566,20 +559,14 @@ class TestComparison:
             inputs=inputs,
         )
 
-        # Feb-Mar grouped to March (summer)
-        # The actual behavior: it uses non_summer rate (2.26) not summer (2.55)
-        # This is because the season is determined from the tiered cost calculation
-        # which may use a different logic
-        # Standard tiers with non-summer rate:
-        # 120*1.78 + 180*2.26 = 213.6 + 406.8 = 620.4
-        expected = 120 * 1.78 + 180 * 2.26
+        # Two-month bill, so tiers double: 240 * 1.78 + 60 * 2.26
+        expected = 240 * 1.78 + 60 * 2.26
         assert result["energy_cost"].iloc[0] == pytest.approx(expected, rel=0.01)
 
     def test_bimonthly_non_summer_period(self):
         """Test bimonthly billing entirely in non-summer."""
         # Oct (non-summer) + Nov (non-summer) for ODD_MONTH
         # Groups to November (non-summer)
-        # Note: calculate_bill uses standard tiers (no doubling)
 
         index = pd.to_datetime(
             [
@@ -600,7 +587,6 @@ class TestComparison:
             inputs=inputs,
         )
 
-        # Oct-Nov grouped to November (non-summer)
-        # Standard tiers: 120*1.78 + 180*2.26 = 213.6 + 406.8 = 620.4
-        expected = 120 * 1.78 + 180 * 2.26
+        # Two-month bill, so tiers double: 240 * 1.78 + 60 * 2.26
+        expected = 240 * 1.78 + 60 * 2.26
         assert result["energy_cost"].iloc[0] == pytest.approx(expected, rel=0.01)

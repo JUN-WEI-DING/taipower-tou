@@ -1311,6 +1311,10 @@ def _calculate_energy_costs(
 ) -> pd.Series:
     rates = tariff_plan.rates
     if rates.tiered_rates:
+        # 電價表: bills that cover two months double every tier's kWh.
+        tier_multiplier = (
+            1 if tariff_plan.billing_cycle_type == BillingCycleType.MONTHLY else 2
+        )
         totals = {}
         for period, group in usage.groupby(billing_periods):
             if group.sum() == 0:
@@ -1322,6 +1326,7 @@ def _calculate_energy_costs(
                 group.sum(),
                 season_label,
                 rates.tiered_rates,
+                tier_multiplier,
             )
         return pd.Series(totals).sort_index()
 
@@ -1343,6 +1348,7 @@ def _tiered_total_cost(
     total_usage_kwh: float,
     season_label: str,
     tiers: list[Any],
+    tier_multiplier: int,
 ) -> float:
     if total_usage_kwh == 0:
         return 0.0
@@ -1353,8 +1359,9 @@ def _tiered_total_cost(
     for tier in sorted_tiers:
         if remaining_kwh <= 0:
             break
+        tier_end_kwh = tier.end_kwh * tier_multiplier
         tier_limit_kwh = (
-            (tier.end_kwh - last_limit_kwh) if tier.end_kwh < 999999 else float("inf")
+            (tier_end_kwh - last_limit_kwh) if tier.end_kwh < 999999 else float("inf")
         )
         usage_in_tier_kwh = min(remaining_kwh, tier_limit_kwh)
         unit_cost = (
@@ -1362,7 +1369,7 @@ def _tiered_total_cost(
         )
         total_cost += usage_in_tier_kwh * unit_cost
         remaining_kwh -= usage_in_tier_kwh
-        last_limit_kwh = tier.end_kwh
+        last_limit_kwh = tier_end_kwh
     return total_cost
 
 

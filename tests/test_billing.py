@@ -139,3 +139,25 @@ def test_for_residential_does_not_warn_unknown_basic_fee() -> None:
             inputs=inputs,
         )
     assert not any("Unknown keys in basic_fee_inputs" in str(w.message) for w in record)
+
+
+def test_bimonthly_tiers_are_doubled() -> None:
+    """電價表：用戶因2個月抄表、收費一次，計費時各段度數係加倍計算。"""
+    usage = pd.Series(200.0, index=pd.to_datetime(["2026-07-10", "2026-08-10"]))
+    inputs = tou.BillingInputs(
+        meter_phase="single", meter_voltage_v=110, meter_ampere=10
+    )
+    bill = tou.calculate_bill(usage, "residential_non_tou", inputs=inputs)
+    assert bill["energy_cost"].tolist() == pytest.approx([240 * 1.78 + 160 * 2.55])
+
+
+def test_monthly_tiers_are_not_doubled() -> None:
+    usage = pd.Series([200.0], index=pd.to_datetime(["2026-07-10"]))
+    inputs = tou.BillingInputs(
+        meter_phase="single",
+        meter_voltage_v=110,
+        meter_ampere=10,
+        billing_cycle_months=1,
+    )
+    bill = tou.calculate_bill(usage, "residential_non_tou", inputs=inputs)
+    assert bill["energy_cost"].tolist() == pytest.approx([120 * 1.78 + 80 * 2.55])
