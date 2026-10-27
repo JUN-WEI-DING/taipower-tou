@@ -148,7 +148,10 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
         }
       }
     },
@@ -203,7 +206,10 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
         }
       }
     },
@@ -252,7 +258,10 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
         }
       }
     },
@@ -366,7 +375,10 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
         }
       }
     },
@@ -499,7 +511,10 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
         }
       }
     },
@@ -720,7 +735,11 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_contract_kw": 20
+          }
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -970,7 +989,11 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_contract_kw": 20
+          }
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -1023,7 +1046,12 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_installed_kw": 20,
+            "min_demand_kw": 30
+          }
         }
       }
     },
@@ -1248,7 +1276,12 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_installed_kw": 20,
+            "min_demand_kw": 30
+          }
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -1491,7 +1524,12 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_installed_kw": 20,
+            "min_demand_kw": 30
+          }
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -1656,7 +1694,12 @@
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_installed_kw": 20,
+            "min_demand_kw": 30
+          }
         },
         "basic_fee_formula": {
           "type": "regular_only",

@@ -16,6 +16,7 @@ HV_REGULAR = {"summer": 223.60, "non_summer": 166.90}
 HV_NON_SUMMER = 166.90
 HV_WEEKEND = {"summer": 44.70, "non_summer": 33.30}
 LS_HOUSEHOLD_SINGLE = 129.10
+LS_HOUSEHOLD_THREE = 262.50
 LS_REGULAR_SUMMER = 236.20
 LS_SEMI_PEAK_SUMMER = 173.20
 LS_WEEKEND_SUMMER = 47.20
@@ -104,8 +105,8 @@ def test_no_usage_pays_half_the_basic_fee():
         ("high_voltage_2_tier", {"contract_capacities": {"regular": 200}}, 0.0),
         (
             "lighting_standard_3_tier",
-            {"contract_capacities": {"regular": 30}, "meter_phase": "single"},
-            LS_HOUSEHOLD_SINGLE,
+            {"contract_capacities": {"regular": 30}, "meter_phase": "three"},
+            LS_HOUSEHOLD_THREE,
         ),
     ],
 )

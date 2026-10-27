@@ -761,6 +761,28 @@ def _calculate_surcharges(
     return surcharge
 
 
+def _power_factor_applies(eligible: dict[str, Any], inputs: BillingInputs) -> bool:
+    """Whether the bill is one the 電價表 adjusts for power factor.
+
+    An unknown meter_phase counts as eligible, since the caller gave a power
+    factor. 用電設備容量 (20 kVA for 非時間 and 簡易型) is not an input.
+    """
+    phase = eligible.get("phase")
+    if phase and inputs.meter_phase not in (None, phase):
+        return False
+    demand_kw = sum(inputs.contract_capacities.values()) or (
+        inputs.contract_capacity_kw or 0.0
+    )
+    installed_kw = inputs.basic_fee_inputs.get("裝置契約", 0.0)
+    if "min_contract_kw" in eligible:
+        return demand_kw >= eligible["min_contract_kw"]
+    if "min_installed_kw" in eligible or "min_demand_kw" in eligible:
+        return installed_kw >= eligible.get(
+            "min_installed_kw", math.inf
+        ) or demand_kw >= eligible.get("min_demand_kw", math.inf)
+    return True
+
+
 def _household_costs(
     plan_data: dict[str, Any], basic_details: pd.DataFrame, month_index: pd.Index
 ) -> pd.Series:
@@ -795,7 +817,11 @@ def _calculate_adjustments(
     details: list[dict[str, Any]] = []
 
     pf_rule = rules.get("power_factor_adjustment")
-    if pf_rule and inputs.power_factor is not None:
+    if (
+        pf_rule
+        and inputs.power_factor is not None
+        and _power_factor_applies(pf_rule.get("eligible", {}), inputs)
+    ):
         base = pf_rule.get("base_percent", 80)
         max_discount = pf_rule.get("max_discount_percent", 95)
         step = pf_rule.get("step_percent", 0.1)
