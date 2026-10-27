@@ -86,7 +86,7 @@ import taipower_tou as tou
 # 你的每月用電資料（每個月一個值）
 monthly_usage = pd.Series(
     [280, 320, 250, 310, 290, 280, 350, 380, 360, 300, 270, 260],
-    index=pd.date_range("2025-01-01", periods=12, freq="MS")
+    index=pd.date_range("2025-01-01", periods=12, freq="MS"),
 )
 
 # Calculate with tiered rate plan
@@ -162,12 +162,14 @@ plan = tou.plan("residential_non_tou")
 monthly_kwh = 350  # Total kWh for the month
 
 # Create a single-entry series
-usage = pd.Series([monthly_kwh], index=pd.date_range("2025-07-01", periods=1, freq="MS"))
+usage = pd.Series(
+    [monthly_kwh], index=pd.date_range("2025-07-01", periods=1, freq="MS")
+)
 cost = plan.calculate_costs(usage).iloc[0]
 
 print(f"Usage: {monthly_kwh} kWh")
 print(f"Cost: {cost:.2f} TWD")
-print(f"Average: {cost/monthly_kwh:.2f} TWD/kWh")
+print(f"Average: {cost / monthly_kwh:.2f} TWD/kWh")
 ```
 
 ### Two-Month Billing Cycle (隔月抄表)
@@ -234,13 +236,17 @@ dates = pd.date_range("2025-06-01", "2025-07-31", freq="D")
 usage = pd.Series([5] * len(dates), index=dates)  # ~305 kWh total
 
 # Odd-month billing (meter read in July for June-July period)
-plan_odd = tou.plan("residential_non_tou", billing_cycle_type=BillingCycleType.ODD_MONTH)
+plan_odd = tou.plan(
+    "residential_non_tou", billing_cycle_type=BillingCycleType.ODD_MONTH
+)
 costs_odd = plan_odd.calculate_costs(usage)
 
 # Even-month billing (for May-June data, use April-May period or use appropriate dates)
 # Note: Even-month billing periods are (1,2)->2, (3,4)->4, (5,6)->6, etc.
 # For June-July data, you'd typically use odd-month billing instead
-plan_even = tou.plan("residential_non_tou", billing_cycle_type=BillingCycleType.EVEN_MONTH)
+plan_even = tou.plan(
+    "residential_non_tou", billing_cycle_type=BillingCycleType.EVEN_MONTH
+)
 
 # Monthly billing (default)
 plan_monthly = tou.plan("residential_non_tou")  # or BillingCycleType.MONTHLY
@@ -260,7 +266,9 @@ plan_monthly = tou.plan("residential_non_tou")
 cost_monthly = plan_monthly.calculate_costs(usage_240)
 
 # Bimonthly: 240 kWh total, still in tier 1 (0-240 kWh for 2-month period)
-plan_odd = tou.plan("residential_non_tou", billing_cycle_type=BillingCycleType.ODD_MONTH)
+plan_odd = tou.plan(
+    "residential_non_tou", billing_cycle_type=BillingCycleType.ODD_MONTH
+)
 cost_bimonthly = plan_odd.calculate_costs(usage_240)
 
 # Same total cost! (tier limit doubled for bimonthly billing)
@@ -400,8 +408,8 @@ print(f"Is Holiday: {is_holiday}")  # Output: False
 # Get pricing context (rate + more details)
 # 取得費率資訊
 ctx = tou.pricing_context(dt, "residential_simple_2_tier")
-print(f"Season: {ctx['season']}")   # summer (夏月)
-print(f"Period: {ctx['period']}")   # peak (尖峰)
+print(f"Season: {ctx['season']}")  # summer (夏月)
+print(f"Period: {ctx['period']}")  # peak (尖峰)
 print(f"Rate: {ctx['rate']} TWD/kWh")  # 5.16 TWD/kWh
 ```
 
@@ -790,9 +798,7 @@ If you need the Season and Day Type in addition to the Period:
 
 ```python
 plan_obj = tou.plan(plan)
-context = plan_obj.profile.engine.evaluate(
-    pd.DatetimeIndex([dt])
-)
+context = plan_obj.profile.engine.evaluate(pd.DatetimeIndex([dt]))
 print(f"Season: {context['season'].iloc[0]}")  # SeasonType.SUMMER
 print(f"Period: {context['period'].iloc[0]}")  # PeriodType.PEAK
 ```
@@ -926,7 +932,7 @@ from taipower_tou import calculate_bill, BillingInputs
 # Configure billing parameters (contracts, power factor, etc.)
 inputs = BillingInputs(
     contract_capacities={"regular": 200, "off_peak": 50},  # kW
-    power_factor=95.0  # 95% (Resulting in discount)
+    power_factor=95.0,  # 95% (Resulting in discount)
 )
 
 # Calculate for High-Voltage Plan
@@ -1030,10 +1036,16 @@ print(tou.period_context(dt, "residential_simple_2_tier"))
 
 # pricing_context wrapper (uses plan_name)
 print(tou.pricing_context(dt, "residential_simple_2_tier"))
-print(tou.pricing_context(dt, "residential_simple_2_tier", usage=2.5, include_details=True))
+print(
+    tou.pricing_context(
+        dt, "residential_simple_2_tier", usage=2.5, include_details=True
+    )
+)
 
 # costs + monthly_breakdown
-usage = pd.Series([1.5, 2.0, 1.8], index=pd.date_range("2025-07-15 14:00", periods=3, freq="h"))
+usage = pd.Series(
+    [1.5, 2.0, 1.8], index=pd.date_range("2025-07-15 14:00", periods=3, freq="h")
+)
 print(tou.costs(usage, "residential_simple_2_tier"))
 print(tou.monthly_breakdown(usage, "residential_simple_2_tier"))
 ```
@@ -1093,6 +1105,7 @@ print(tou.is_holiday(datetime(2025, 1, 1)))
 
 # custom_calendar (requires date objects, not strings)
 from datetime import date
+
 custom = tou.custom_calendar(holidays=[date(2025, 1, 2)])
 print(custom.is_holiday(datetime(2025, 1, 2)))
 
@@ -1134,16 +1147,16 @@ profile = build_tariff_profile(
             "slots": [
                 {"start": "09:00", "end": "23:00", "period": "peak"},
                 {"start": "23:00", "end": "09:00", "period": "off_peak"},
-            ]
+            ],
         },
         # Define other schedules for (summer, weekend), (non_summer, ...), etc.
         {
             "season": "summer",
-            "day_type": "saturday", # WeekdayDayTypeStrategy uses 'saturday'
-            "slots": [{"start": "00:00", "end": "24:00", "period": "off_peak"}]
-        }
+            "day_type": "saturday",  # WeekdayDayTypeStrategy uses 'saturday'
+            "slots": [{"start": "00:00", "end": "24:00", "period": "off_peak"}],
+        },
     ],
-    default_period="off_peak"
+    default_period="off_peak",
 )
 
 # 3. Define Rates (Prices)
@@ -1154,7 +1167,7 @@ rate = build_tariff_rate(
         {"season": "summer", "period": "super_peak", "cost": 10.0},
         # ... costs for other periods ...
     ],
-    season_strategy=season_strategy
+    season_strategy=season_strategy,
 )
 
 # 4. Build Plan
@@ -1167,8 +1180,11 @@ plan = build_tariff_plan(
 ### Types & enums (型別與列舉)
 
 ```python
-def accepts_types(plan: TariffPlan, profile: TariffProfile) -> tuple[TariffPlan, TariffProfile]:
+def accepts_types(
+    plan: TariffPlan, profile: TariffProfile
+) -> tuple[TariffPlan, TariffProfile]:
     return plan, profile
+
 
 print(PeriodType.PEAK, SeasonType.SUMMER)
 ```
