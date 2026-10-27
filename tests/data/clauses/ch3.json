@@ -180,7 +180,8 @@
      "summary": "基本電費按戶及按契約容量計算；夏月/非夏月基本電費公式，週六半尖峰或離峰契約項為負時按0計算；僅訂週六半尖峰或離峰契約者按戶及按該契約容量計算",
      "tests": [
        "test_tariff_rules.py::test_standard_tou_household_fee_follows_the_meter_phase",
-       "test_clauses_ch3.py::test_standard_two_stage_basic_fee_formula"]},
+       "test_clauses_ch3.py::test_standard_two_stage_basic_fee_formula",
+       "test_clauses_ch3.py::test_weekend_only_contract_household_fee"]},
     {"id": "三-五-(三)-2", "lines": [389, 389], "kind": "not_billing",
      "summary": "2.三段式時間電價",
      "reason": "heading"},
@@ -188,10 +189,11 @@
      "summary": "每月電費為基本電費與流動電費之總和",
      "tests": ["test_clauses_ch3.py::test_standard_tou_bill_is_basic_plus_energy"]},
     {"id": "三-五-(三)-2-(2)", "lines": [391, 405], "kind": "billing",
-     "summary": "基本電費按戶及按契約容量計算；當月經常、半尖峰、週六半尖峰或離峰契約電價公式，最後一項為負時按0計算",
+     "summary": "基本電費按戶及按契約容量計算；當月經常、半尖峰、週六半尖峰或離峰契約電價公式，最後一項為負時按0計算；僅訂週六半尖峰或離峰契約者按該契約容量計算（不含按戶）",
      "tests": [
        "test_tariff_rules.py::test_three_stage_basic_fee_is_per_household_and_per_contract",
-       "test_clauses_ch3.py::test_standard_three_stage_basic_fee_formula"]},
+       "test_clauses_ch3.py::test_standard_three_stage_basic_fee_formula",
+       "test_clauses_ch3.py::test_weekend_only_contract_household_fee"]},
     {"id": "三-五-(三)-3", "lines": [406, 406], "kind": "billing",
      "summary": "按戶計收之基本電費，不列計功率因數調整費",
      "tests": [

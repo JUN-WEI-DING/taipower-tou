@@ -28,6 +28,7 @@ from taipower_tou.factory import (
 )
 from taipower_tou.models import BillingCycleType, _label_value
 from taipower_tou.tariff import (
+    TariffRate,
     check_price_dates,
     season_day_shares,
     tiered_energy_cost,
@@ -443,6 +444,8 @@ def calculate_bill(
         billing_periods,
         energy_costs,
         surcharge,
+        usage_for_billing,
+        tariff_plan.rates,
     )
 
     total = energy_costs + basic_costs + surcharge + adjustment
@@ -566,6 +569,8 @@ def calculate_bill_breakdown(
         billing_periods,
         energy_costs,
         surcharge,
+        usage_for_billing,
+        tariff_plan.rates,
     )
 
     total = energy_costs + basic_costs + surcharge + adjustment
@@ -811,6 +816,8 @@ def _calculate_adjustments(
     billing_periods: pd.PeriodIndex,
     energy_costs: pd.Series,
     surcharge: pd.Series,
+    usage: pd.Series,
+    rates: TariffRate,
 ) -> tuple[pd.Series, pd.DataFrame]:
     rules = plan_data.get("billing_rules", {})
     adjustment = pd.Series(0.0, index=month_index)
@@ -871,19 +878,22 @@ def _calculate_adjustments(
         seasons = dict(
             zip(month_index, _month_season_label(month_index, plan_data, store))
         )
+        outside_ratio = oc_rule.get("outside_contract_basic_ratio")
+        outside = (
+            _times_outside_contract(inputs.contract_capacities)
+            if outside_ratio
+            else set()
+        )
         over_by_bill = _compute_over_contract_kw(
-            inputs, context_df, billing_periods, oc_rule, seasons
+            inputs, context_df, billing_periods, oc_rule, seasons, outside
         )
-        contract_kw = inputs.contract_capacity_kw or inputs.contract_capacities.get(
-            "regular", 0.0
-        )
-        threshold = contract_kw * oc_rule.get("threshold_ratio", 0.10)
+        ratio = oc_rule.get("threshold_ratio", 0.10)
         rate_low = oc_rule.get("rate_low", 2)
         rate_high = oc_rule.get("rate_high", 3)
         for idx, over in (over_by_bill or {}).items():
             amount = 0.0
             counted = 0.0
-            for segment, kw in over.items():
+            for segment, (kw, base) in over.items():
                 # 超出部分依適用電價: each time's excess at its own 契約電價.
                 label = formula.get(_SEGMENT_FEE_LABELS[segment], base_label)
                 rate = _basic_fee_rate_for_label(plan_data, label, month_index, store)
@@ -893,12 +903,31 @@ def _calculate_adjustments(
                     )
                 if rate is None:
                     continue
-                low = min(kw, max(0.0, threshold - counted))
+                if segment in outside:
+                    amount += rate.loc[idx] * kw * outside_ratio
+                    continue
+                # 在契約容量10%以下部分: the contract this time's excess is over.
+                low = min(kw, max(0.0, base * ratio - counted))
                 counted += kw
                 amount += rate.loc[idx] * (low * rate_low + (kw - low) * rate_high)
             adjustment.loc[idx] += amount
             details.append(
                 {"period": idx, "type": "over_contract", "amount": float(amount)}
+            )
+        if outside:
+            # 八(六): 1.6倍計收流動電費 for the kWh outside the contract's times.
+            in_outside = _demand_categories(context_df).isin(outside).to_numpy()
+            extra = pd.Series(
+                usage.to_numpy() * unit_costs(rates, context_df) * in_outside,
+                index=usage.index,
+            ).groupby(billing_periods).sum() * (
+                oc_rule["outside_contract_energy_ratio"] - 1
+            )
+            extra.index = extra.index.to_timestamp()
+            adjustment += extra
+            details.extend(
+                {"period": idx, "type": "outside_contract_energy", "amount": float(v)}
+                for idx, v in extra.items()
             )
 
     return adjustment, pd.DataFrame(details)
@@ -969,7 +998,11 @@ def _basic_fee_from_formula(
     weekend_ratio = float(formula.get("weekend_ratio", 0.5))
 
     entry = _household_fee(plan_data, inputs, "demand")
-    if entry:
+    # 三段式: 僅在週六半尖峰時間或離峰時間用電 users pay 按週六半尖峰契約容量與
+    # 離峰契約容量 only, where 二段式 says 按戶及按 (第三章 五(三)2, 第四章 五(三)2).
+    if entry and not (
+        formula["type"] == "three_stage" and _times_outside_contract(capacities)
+    ):
         household_label = entry["label"]
         count = inputs.basic_fee_inputs.get(household_label, 1.0)
         if entry.get("cost") is not None:
@@ -1293,11 +1326,16 @@ def _compute_over_contract_kw(
     billing_periods: pd.PeriodIndex,
     oc_rule: dict[str, Any],
     seasons: dict[pd.Timestamp, str],
-) -> dict[pd.Timestamp, dict[str, float]] | None:
-    """Each bill's 超約瓩數 by time, in the order the 電價表 deducts them."""
+    outside: set[str],
+) -> dict[pd.Timestamp, dict[str, tuple[float, float]]] | None:
+    """Each bill's 超約瓩數 and the contract it is over, by time, in the order
+    the 電價表 deducts them."""
     if inputs.over_contract_kw is not None:
+        contract_kw = inputs.contract_capacity_kw or inputs.contract_capacities.get(
+            "regular", 0.0
+        )
         return {
-            ts: {"peak": float(inputs.over_contract_kw)}
+            ts: {"peak": (float(inputs.over_contract_kw), contract_kw)}
             for ts in billing_periods.unique().to_timestamp()
         }
     demand = inputs.demand_kw
@@ -1336,8 +1374,24 @@ def _compute_over_contract_kw(
             inputs.contract_capacities,
             oc_rule,
             seasons.get(ts, "non_summer"),
+            outside,
         )
     return results
+
+
+def _times_outside_contract(capacities: dict[str, float]) -> set[str]:
+    """Times a 週六半尖峰 or 離峰 contract alone does not cover (第八章 二(一)8).
+
+    A 週六半尖峰契約容量 covers 週六半尖峰 and 離峰, a 離峰契約容量 離峰 only.
+    Any other contract covers every time.
+    """
+    if any(capacities.get(k) for k in ("regular", "non_summer", "semi_peak")):
+        return set()
+    if capacities.get("saturday_semi_peak"):
+        return {"peak", "semi_peak"}
+    if capacities.get("off_peak"):
+        return {"peak", "semi_peak", "saturday_semi_peak"}
+    return set()
 
 
 def _demand_categories(context_df: pd.DataFrame) -> pd.Series:
@@ -1359,7 +1413,8 @@ def _calculate_over_contract_from_categories(
     capacities: dict[str, float],
     oc_rule: dict[str, Any],
     season: str,
-) -> dict[str, float]:
+    outside: set[str],
+) -> dict[str, tuple[float, float]]:
     """超約瓩數 per time from each time's highest demand (第五章 七(一)).
 
     Each time's excess leaves out the largest excess of the times before it,
@@ -1381,11 +1436,15 @@ def _calculate_over_contract_from_categories(
     )
     bases["off_peak"] = bases["saturday_semi_peak"] + capacities.get("off_peak", 0.0)
 
-    over: dict[str, float] = {}
+    over: dict[str, tuple[float, float]] = {}
     largest = 0.0
     for segment, base in bases.items():
         excess = max(0.0, max_demand.get(segment, 0.0) - base)
-        over[segment] = max(0.0, excess - largest)
+        if segment in outside:
+            # Billed at 4.8x on its own 最高需量, not 超約 later times deduct.
+            over[segment] = (excess, base)
+            continue
+        over[segment] = (max(0.0, excess - largest), base)
         largest = max(largest, excess)
     return over
 

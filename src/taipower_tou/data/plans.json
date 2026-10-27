@@ -730,7 +730,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "power_factor_adjustment": {
           "base_percent": 80,
@@ -984,7 +986,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "three_stage"
+          "tier": "three_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "power_factor_adjustment": {
           "base_percent": 80,
@@ -1284,7 +1288,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "power_factor_adjustment": {
           "base_percent": 80,
@@ -1532,7 +1538,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "three_stage"
+          "tier": "three_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "power_factor_adjustment": {
           "base_percent": 80,
@@ -1920,7 +1928,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
@@ -2137,7 +2147,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
@@ -2375,7 +2387,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "three_stage"
+          "tier": "three_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
@@ -2592,7 +2606,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
@@ -2970,7 +2986,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
@@ -3187,7 +3205,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
@@ -3425,7 +3445,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "three_stage"
+          "tier": "three_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
@@ -3642,7 +3664,9 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {

@@ -465,6 +465,24 @@ def test_standard_three_stage_basic_fee_formula(index, contracts, expected):
 
 
 @pytest.mark.parametrize(
+    ("plan", "household"),
+    [("lighting_standard_2_tier", HOUSEHOLD_THREE), ("lighting_standard_3_tier", 0.0)],
+)
+def test_weekend_only_contract_household_fee(plan, household):
+    """Lines 365-368 and 394-397: 僅在週六半尖峰時間或離峰時間用電 users pay
+    基本電費 按戶及按 週六半尖峰與離峰契約容量 on 二段式, and 按 those
+    contracts alone on 三段式, which leaves 按戶 out."""
+    bill = _bill(
+        plan,
+        JULY,
+        kwh=_sundays(JULY),
+        contract_capacities=_contracts(plan, off_peak=20),
+        meter_phase="three",
+    )
+    assert bill["basic_cost"] == pytest.approx(household + WEEKEND["summer"] * 20)
+
+
+@pytest.mark.parametrize(
     "plan", ["lighting_standard_2_tier", "lighting_standard_3_tier"]
 )
 @pytest.mark.parametrize(
