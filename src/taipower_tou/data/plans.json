@@ -376,11 +376,6 @@
         },
         {
           "season": "non_summer",
-          "period": "peak",
-          "cost": 6.36
-        },
-        {
-          "season": "non_summer",
           "period": "semi_peak",
           "cost": 4.48
         },
@@ -436,13 +431,6 @@
         {
           "season": "non_summer",
           "day_type": "weekday",
-          "start": "16:00",
-          "end": "22:00",
-          "period": "peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
           "start": "06:00",
           "end": "11:00",
           "period": "semi_peak"
@@ -465,13 +453,6 @@
           "season": "non_summer",
           "day_type": "weekday",
           "start": "14:00",
-          "end": "16:00",
-          "period": "semi_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "22:00",
           "end": "24:00",
           "period": "semi_peak"
         },
