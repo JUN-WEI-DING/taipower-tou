@@ -842,7 +842,7 @@ for plan_id, chinese_name in plans.items():
 
 # residential_non_tou: 表燈非時間電價
 # residential_simple_2_tier: 簡易型二段式
-# ... (20 plans total)
+# ... (18 plans total)
 ```
 
 **Get Plan Details:**
