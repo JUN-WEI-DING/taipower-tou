@@ -4,9 +4,9 @@ The bundled 電價表 (`src/taipower_tou/data/詳細電價表.md`, from
 `docs/詳細電價表.pdf`) leaves some billing rules to other Taipower documents.
 The files here fill those gaps. Tests cite them, and none ship with the package.
 Taipower's files were read from Wayback Machine snapshots of its pages,
-except the 營業規章's 第一至三章 and 第五至十章. The maintainer downloaded
-those on 2026-10-28 from Taipower's 營業規章 page,
-https://www.taipower.com.tw/2289/2484/51434/51760/?mid=158 .
+except the 營業規章's 第一至三章 and 第五至十章 and the 114/10/1 計算範例. The
+maintainer downloaded those from Taipower on 2026-10-28, the chapters from its
+營業規章 page, https://www.taipower.com.tw/2289/2484/51434/51760/?mid=158 .
 
 Taipower has two rule books. The 營業規章 is approved by the 經濟部. The
 營業規章施行細則 is Taipower's own detail rules under it. Each has a 第四章
@@ -63,6 +63,8 @@ article.
 | `營業規章施行細則附表.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `95feff477bd09ff41a029c464e744f362d7857bff5de3090703048bcf0d073b5` |
 | `可直接領獎電費帳單樣式.pdf` | Two sample 表燈 bills. Their 流動電費 is cut to the 角 once, after adding every tier and season, and the total is rounded to the 元. | https://web.archive.org/web/20260502034448id_/https://www.taipower.com.tw/media/cgpjt3kc/%E5%8F%AF%E7%9B%B4%E6%8E%A5%E9%A0%98%E7%8D%8E%E9%9B%BB%E8%B2%BB%E5%B8%B3%E5%96%AE%E6%A8%A3%E5%BC%8F.pdf?mediaDL=true | `e71a1381a591d1c53f4c5b88714a584e4988bed79b1c10f83dcb79492f4d54c0` |
 | `各類電價表及計算範例_1130401.pdf` | The 高壓 電動車充換電設施電價 table on page 16 has the 6/1–9/30 夏月 and 95% of every 低壓 price, 基本電費 included. Its worked bills use the 113/4/1 prices. | https://web.archive.org/web/20251115050107id_/https://www.taipower.com.tw/media/mpbjpjgj/%E5%90%84%E9%A1%9E%E9%9B%BB%E5%83%B9%E8%A1%A8%E5%8F%8A%E8%A8%88%E7%AE%97%E7%AF%84%E4%BE%8B_1130401.pdf?mediaDL=true | `4002772d1a45cc7a2f62c4a788822ae6afa5b7fc18d98edf9067db270aa8e6c2` |
+| `各類電價表及計算範例_1141001.pdf` | The 114/10/1 edition, with the bundled 電價表's prices. Each of its 24 worked bills is for one 8月. The 15 with a 需量契約 all assume 倘最高需量未超過契約容量, and no 單價×度數 product has a 分 digit, so none settles an Open question below. Page 16 takes 95% of a 高壓 電動車 bill after rounding the bill to the 元, 89,729元×95%=85,243元. `tests/test_worked_examples.py` bills each example. | https://www.taipower.com.tw/media/wzicn04w/%E5%90%84%E9%A1%9E%E9%9B%BB%E5%83%B9%E8%A1%A8%E5%8F%8A%E8%A8%88%E7%AE%97%E7%AF%84%E4%BE%8B.pdf?mediaDL=true , downloaded 2026-10-28 | `7cc52610922cc3e85a54585f5c6f15ace093a069f2cc93e32257cac8dca4ba6c` |
+| `各類電價表及計算範例_1141001.txt` | The text of the PDF above, extracted with `pdfplumber`. | | `daba5ee6142f3d8aa4cfb16d57fb54cc55087a995ad5eb55bd357da76e69d90a` |
 | `電動車充換電設施電價介紹.pdf` | Taipower's slides on the EV tariff at the 114/10 prices. Page 12 gives 高壓 EV 5% off the whole bill. | https://web.archive.org/web/20251206022145/https://www.taipower.com.tw/media/gqzhlwqx/%E9%9B%BB%E5%8B%95%E8%BB%8A%E5%85%85%E6%8F%9B%E9%9B%BB%E8%A8%AD%E6%96%BD%E9%9B%BB%E5%83%B9%E4%BB%8B%E7%B4%B9.pdf | `9b256f71d1e1edcbae595a374a45cf4b88f23fbee445903bc9e47b4ffce21f2e` |
 
 第一章's 修正沿革 lists every amendment of the 營業規章. Since the 108/2/18
@@ -75,13 +77,16 @@ revision, 108/10/17 amended 第15條, 111/9/7 第5、21、28、29、30、32、39
 No Taipower document settles these. The package's readings are in the README.
 
 - Which 契約容量 the 10% of 超約 is taken of, for times after 尖峰 or with
-  more than one contract. The tariff, both 第四章, the 113/4/1 and 113/10/16
-  計算範例, the 高壓用戶服務網 Q&A and Taipower's FAQ give no such example.
+  more than one contract. The tariff, both 第四章, the 113/4/1, 113/10/16 and
+  114/10/1 計算範例, the 高壓用戶服務網 Q&A and Taipower's FAQ give no such
+  example.
 - Whether a 三段式 customer with only a 週六半尖峰 or 離峰 contract pays
   按戶計收. Since the 110/6/10 電價表 first had a 低壓 三段式, its sentence
-  leaves 按戶 out, while 二段式 has said 按戶及按 since 2014.
+  leaves 按戶 out, while 二段式 has said 按戶及按 since 2014. The 114/10/1
+  計算範例's 低壓 三段式 bill has a 經常契約.
 - Whether a time-of-use bill cuts 流動電費 to the 角 per time period or once.
-  The sample bills above are both 非時間.
+  The sample bills above are both 非時間. In the 114/10/1 計算範例 every
+  單價×度數 product ends in 0 分, so both ways give its totals.
 
 ## Read but not kept
 
