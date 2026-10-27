@@ -251,16 +251,19 @@ def test_three_stage_demand_contract_basic_fee(index, capacities, expected):
     assert bill["basic_cost"] == pytest.approx(expected)
 
 
-def test_three_stage_weekend_only_contract_pays_no_household_fee():
-    """五(三)2(2) lines 693-697: 用戶僅在週六半尖峰時間或離峰時間用電而申請...
-    者，基本電費按週六半尖峰契約容量與離峰契約容量計算. 二段式 says 按戶及按
-    週六半尖峰契約容量與離峰契約容量 (lines 668-669); 三段式 leaves 按戶 out."""
+def test_three_stage_weekend_only_contract_pays_the_household_fee():
+    """五(三)2(2) lines 690-697: 基本電費按戶及按契約容量計算, and the 三段式
+    table has 按戶計收 with no exception (line 578). Its sentence for 僅在週六
+    半尖峰時間或離峰時間用電 users leaves 按戶 out where 二段式 says 按戶及按
+    (lines 668-669). Since the 110/6/10 電價表 first had a 低壓 三段式 it has
+    read so, copying the 高壓 三段式 sentence, where there is no 按戶. This
+    reads it as a slip and charges 按戶; no Taipower example settles it."""
     bill = _bill(
         "low_voltage_three_stage",
         pd.Series(0.25, index=JULY),
         contract_capacities={"off_peak": 50},
     )
-    assert bill["basic_cost"] == pytest.approx(WEEKEND["summer"] * 50)
+    assert bill["basic_cost"] == pytest.approx(HOUSEHOLD + WEEKEND["summer"] * 50)
 
 
 @pytest.mark.parametrize("season", ["summer", "non_summer"])

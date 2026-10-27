@@ -1,8 +1,11 @@
-"""營業規章 第四章 電費之計收, with amounts worked from its text.
+"""第四章 電費之計收 of Taipower's 營業規章 and 營業規章施行細則, with amounts
+worked from their text.
 
-docs/references/營業規章第四章.txt is the text of Taipower's 營業規章 chapter 4,
-which the 電價表 bills under. Prices are from
-src/taipower_tou/data/詳細電價表.md (114/10/1), high_voltage_2_tier line 856.
+The 電價表 bills under both. docs/references/營業規章第四章.txt is the 營業規章
+chapter (111/9/7), and docs/references/營業規章施行細則第四章.txt the 施行細則
+chapter (108/9/17). A test cites 營業規章 when the article is from it, and the
+施行細則 otherwise. Prices are from src/taipower_tou/data/詳細電價表.md
+(114/10/1), high_voltage_2_tier line 856.
 """
 
 import pandas as pd
@@ -117,3 +120,23 @@ def test_family_discounts_halve_the_first_kwh(discount, kwh):
     inputs = tou.BillingInputs(billing_cycle_months=1, **{discount: True})
     bill = tou.calculate_bill(usage, "residential_non_tou", inputs).iloc[0]
     assert bill["energy_cost"] == pytest.approx(0.5 * full["energy_cost"])
+
+
+@pytest.mark.xfail(strict=True, reason="not supported: no input for a change mid-month")
+def test_contract_change_mid_month_prorates_the_basic_fee_by_days():
+    """營業規章 第二十七條: 用戶於月中變更用電時...基本電費...依變更前後按實際
+    使用日數照核定電價每日以三十分之一計算. 200 kW to 300 kW on 16 July is
+    15/30 of 200 kW and 16/30 of 300 kW at 223.60 TWD."""
+    changes = {pd.Timestamp("2026-07-16"): {"regular": 300}}
+    bill = _bill(contract_changes=changes)
+    expected = REGULAR_SUMMER * (200 * 15 / 30 + 300 * 16 / 30)
+    assert bill["basic_cost"] == pytest.approx(expected)
+
+
+@pytest.mark.xfail(strict=True, reason="not supported: no input for outages")
+def test_outage_hours_take_3_per_mille_of_the_basic_fee_off():
+    """營業規章 第三十九條: 高壓以上電力用戶 扣減電費金額＝基本電費×3‰×停電時數,
+    and 第四十條 the same for 遙控卸除用電負載. 2 outage hours take 0.6% off
+    a 44720 TWD basic fee."""
+    bill = _bill(outage_hours=2)
+    assert bill["adjustment"] == pytest.approx(-0.006 * REGULAR_SUMMER * 200)

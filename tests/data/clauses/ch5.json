@@ -373,9 +373,9 @@
     1083,
     1084
    ],
-   "kind": "not_billing",
+   "kind": "billing",
    "summary": "停止供電或限制用電時按營業規章第三十九條扣減電費",
-   "reason": "outage deductions follow the 營業規章 and depend on outage records, not usage"
+   "tests": ["test_business_rules.py::test_outage_hours_take_3_per_mille_of_the_basic_fee_off"]
   },
   {
    "id": "五-六",

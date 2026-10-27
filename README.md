@@ -736,7 +736,7 @@ place of 非夏月契約.
 Each time's 10% is taken of the contracts its excess is over, the sum in its
 row above. The tariff does not say which contract the 10% means; this is the
 package's reading. 最高需量 counts whole kW, dropping the fraction
-(營業規章 第二十八條).
+(營業規章施行細則 第二十八條).
 
 A customer may contract for 週六半尖峰 or 離峰 time alone (第八章 二(一)8).
 Use at other times then pays 4.8× that time's basic fee rate on its highest
@@ -756,7 +756,7 @@ does not give, so the package warns and asks for `contract_capacities`.
 The tariff changes the month's bill (該月份電費), basic fee plus energy cost,
 by 0.1% for each 1% of power factor away from 80%. The 按戶計收 basic fee
 is left out. Over-contract fees get no discount, but below 80% they get the
-surcharge with the rest of the bill (營業規章 第三十條). A month with no kWh
+surcharge with the rest of the bill (營業規章施行細則 第三十條). A month with no kWh
 counts as 80% (第三十八條).
 
 ```
@@ -795,7 +795,7 @@ together in `adjustment` (13,155.70). Its total is 179,576, rounded to the
 元 as Taipower bills.
 
 Taipower cuts each bill item (energy, basic fee, 超約, 功率因數) to the 角,
-dropping the 分, and rounds the total half up to the 元 (營業規章
+dropping the 分, and rounds the total half up to the 元 (營業規章施行細則
 第二十九條). `calculate_bill` does the same, and works 功率因數 from the cut
 items. Pass `BillingInputs(taipower_rounding=False)` to keep every amount
 unrounded, for example to compare plans or optimize a load.
@@ -805,7 +805,6 @@ unrounded, for example to compare plans or optimize a load.
 Tests mark each of these as an expected failure, since no input describes
 the customer or the decision is open.
 
-- Bills are not rounded to 角 and 元 (營業規章 第二十九條).
 - 免計營業稅 customers, 公用路燈, 農業動力 and the 軍眷 and 退休 family discounts.
 - Transformer losses for a 高壓 supply metered on the low-voltage side.
 - 用電設備容量 (kVA) for 表燈 power factor eligibility.

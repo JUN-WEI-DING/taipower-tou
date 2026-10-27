@@ -189,7 +189,7 @@
      "summary": "每月電費為基本電費與流動電費之總和",
      "tests": ["test_clauses_ch3.py::test_standard_tou_bill_is_basic_plus_energy"]},
     {"id": "三-五-(三)-2-(2)", "lines": [391, 405], "kind": "billing",
-     "summary": "基本電費按戶及按契約容量計算；當月經常、半尖峰、週六半尖峰或離峰契約電價公式，最後一項為負時按0計算；僅訂週六半尖峰或離峰契約者按該契約容量計算（不含按戶）",
+     "summary": "基本電費按戶及按契約容量計算；當月經常、半尖峰、週六半尖峰或離峰契約電價公式，最後一項為負時按0計算；僅訂週六半尖峰或離峰契約者按該契約容量計算（條文未寫按戶）",
      "tests": [
        "test_tariff_rules.py::test_three_stage_basic_fee_is_per_household_and_per_contract",
        "test_clauses_ch3.py::test_standard_three_stage_basic_fee_formula",
@@ -271,9 +271,9 @@
     {"id": "三-五-(六)", "lines": [457, 458], "kind": "not_billing",
      "summary": "用戶遲延繳付電費，加計遲延繳付費用，併於下次電費中收取",
      "reason": "late-payment fees are added to a later bill, not computed from usage"},
-    {"id": "三-五-(七)", "lines": [459, 460], "kind": "not_billing",
+    {"id": "三-五-(七)", "lines": [459, 460], "kind": "billing",
      "summary": "停止供電或限制用電時，按營業規章第三十九條相關規定扣減電費",
-     "reason": "outage deductions follow 營業規章第三十九條 and depend on outage records, not usage"},
+     "tests": ["test_business_rules.py::test_outage_hours_take_3_per_mille_of_the_basic_fee_off"]},
     {"id": "三-六", "lines": [461, 470], "kind": "billing",
      "summary": "功率因數：三相供應且非時間或簡易型設備容量20千伏安以上、標準型契約容量20瓩以上者，不及80%每低1%電費增加0.1%，超過80%每超過1%減少0.1%，超過95%部分不予扣減",
      "tests": [

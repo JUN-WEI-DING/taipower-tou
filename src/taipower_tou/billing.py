@@ -49,7 +49,7 @@ class BillingInputs:
     meter_ampere: float | None = None
     billing_cycle_months: int | None = None
     demand_adjustment_factor: float = 1.0
-    # 營業規章 第二十九條 rounding. False keeps every amount unrounded, for
+    # 營業規章施行細則 第二十九條 rounding. False keeps every amount unrounded, for
     # callers that compare or optimize bills.
     taipower_rounding: bool = True
 
@@ -764,14 +764,14 @@ def _calculate_basic_fees(
 
 
 def _to_jiao(inputs: BillingInputs, amount: Any) -> Any:
-    """營業規章 第二十九條: 應計電費各項均計至角位，分位以下捨棄."""
+    """營業規章施行細則 第二十九條: 應計電費各項均計至角位，分位以下捨棄."""
     if not inputs.taipower_rounding:
         return amount
     return np.trunc(np.round(amount * 10, 6)) / 10
 
 
 def _to_yuan(inputs: BillingInputs, amount: Any) -> Any:
-    """營業規章 第二十九條: 電費總金額...均以元為單位，角位四捨五入進整."""
+    """營業規章施行細則 第二十九條: 電費總金額...均以元為單位，角位四捨五入進整."""
     if not inputs.taipower_rounding:
         return amount
     return np.sign(amount) * np.floor(np.abs(np.round(amount, 6)) + 0.5)
@@ -937,12 +937,12 @@ def _calculate_adjustments(
             + outside_energy
             + surcharge
         )
-        # 營業規章 第三十條: the 非約定基本電費 is adjusted too, except for 80%
+        # 營業規章施行細則 第三十條: the 非約定基本電費 is adjusted too, except for 80%
         # and above, where 超約 gets no 功率因數扣減.
         if pf < base:
             target = target + over_costs
         pf_cost = _to_jiao(inputs, target * ((base - pf) * step / 100.0))
-        # 營業規章 第三十八條: 全月均無用電之用戶，當月功率因數按80％計算.
+        # 營業規章施行細則 第三十八條: 全月均無用電之用戶，當月功率因數按80％計算.
         used = usage.groupby(billing_periods).sum() > 0
         used.index = used.index.to_timestamp()
         pf_cost = pf_cost.where(used.reindex(month_index, fill_value=False), 0.0)
@@ -1386,7 +1386,7 @@ def _compute_over_contract_kw(
         },
         index=context_df.index,
     )
-    # 營業規章 第二十八條: 用電最高需量以瓩為計量單位，小數以下捨棄.
+    # 營業規章施行細則 第二十八條: 用電最高需量以瓩為計量單位，小數以下捨棄.
     max_by_cat = np.floor(
         combined.groupby(["period", "category"], sort=False)["demand"].max().fillna(0.0)
     )

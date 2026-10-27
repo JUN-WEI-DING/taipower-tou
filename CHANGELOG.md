@@ -78,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   20 kW 裝置契約 or a 30 kW 需量契約, and every 高壓 bill. Any bill given a
   `power_factor` was adjusted.
 - Below 80% 功率因數 the 超約 fee is adjusted too, and a month with no kWh
-  gets no 功率因數 adjustment, as Taipower's 營業規章 第三十、三十八條 say.
+  gets no 功率因數 adjustment, as Taipower's 營業規章施行細則 第三十、三十八條 say.
   最高需量 counts whole kW (第二十八條), so 205.9 kW on a 200 kW contract
   is 5 kW over.
 - `low_voltage_power` bills a 需量契約 per kW of 經常 and 非夏月契約 and
@@ -100,7 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `calculate_bill` and `calculate_bill_breakdown` round as Taipower bills
-  (營業規章 第二十九條). Each item is cut to the 角, 功率因數 is worked from
+  (營業規章施行細則 第二十九條). Each item is cut to the 角, 功率因數 is worked from
   the cut items, and the total is rounded half up to the 元. A
   `low_voltage_2_tier` July bill with 1.18 kWh at 尖峰 and a 10 kW 裝置契約
   totals 1487 TWD instead of 1486.5372. `BillingInputs(taipower_rounding=False)`
@@ -120,8 +120,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/data/tariff_114_10_01.json` transcribes the 電價表's prices,
   hours, tiers and basic fees with the source line of each number. Tests
   check every plan against it at every half hour.
-- `tests/data/clauses/` splits the 電價表's 第三、四、五、八章 and 營業規章
-  第四章 into clauses. Each clause that changes a bill names its tests,
+- `tests/data/clauses/` splits the 電價表's 第三、四、五、八章 and the
+  第四章 of 營業規章 and of 營業規章施行細則 into clauses. Each clause that changes a bill names its tests,
   and the others say why no bill depends on them. Rules with no input in
   this package, such as 免計營業稅 or 儲冷式空調, are expected failures.
 - `docs/references/` keeps the Taipower documents the tests cite beyond
