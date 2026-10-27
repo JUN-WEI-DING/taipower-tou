@@ -40,6 +40,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   1644.3 TWD a month instead of 100 TWD.
 - The 100 TWD minimum applies per month, so a two-month bill is at least
   200 TWD. It was 100 TWD for any bill.
+- Three-stage plans price weekday 半尖峰 at the weekday price. It used the
+  Saturday 半尖峰 price, about half as much. A factory drawing 100 kW on
+  weekdays 08:00–18:00 on `high_voltage_three_stage` was billed 90873 TWD
+  for July 2026 instead of 143198 TWD. This bug was present in 0.1.0.
+- `residential_simple_3_tier` prices non-summer weekday 16:00–22:00 as
+  半尖峰 at 4.48 TWD. It used a 尖峰 price of 6.36 TWD that the 電價表 does
+  not list, since 簡易型三段式 has 尖峰 only in 夏月. A January bill of
+  1 kWh every hour drops from 2501.79 to 2264.91 TWD of energy. This bug was
+  present in 0.1.0.
 
 ### Changed
 - Off-peak days use the list in force on each date. From 2014 the list is
@@ -50,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests compare every day of 2014–2027 with Taipower's official
   時間電價日曆表 (`tests/data/taipower_calendar/`).
   Years after 2027 assume the current list stays in force.
+- Tests check every price in `plans.json` against the bundled 電價表 text,
+  bills at the edges of its rules against amounts worked from that text,
+  bills computed two ways that must agree, and the Python examples in the
+  README.
 - Examples use 2026 dates, which the bundled prices cover.
 
 ### Added
