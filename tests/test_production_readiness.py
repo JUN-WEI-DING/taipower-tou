@@ -469,8 +469,8 @@ class TestAPICompatibility:
 
         # Should be a dict
         assert isinstance(plans, dict)
-        # Should have 20 plans
-        assert len(plans) == 20
+        # Should have 18 plans
+        assert len(plans) == 18
         # Keys should be plan IDs (lowercase with underscores)
         for plan_id in plans.keys():
             assert plan_id.replace("_", "").islower()
@@ -832,7 +832,7 @@ class TestDocumentationExamples:
 
         # Should be a dict with 20 entries
         assert isinstance(plans, dict)
-        assert len(plans) == 20
+        assert len(plans) == 18
 
         # Keys are plan IDs, values are Chinese names
         assert "residential_simple_2_tier" in plans

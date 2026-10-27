@@ -157,7 +157,7 @@ def plan(
             name, calendar=calendar, billing_cycle_type=billing_cycle_type
         )
     except KeyError as exc:
-        raise ValueError(f"Unsupported plan name: {name}") from exc
+        raise ValueError(f"Unsupported plan name: {name}. {exc.args[0]}") from exc
 
 
 def period_at(

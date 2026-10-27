@@ -31,12 +31,10 @@ _PLAN_NAME_MAP: dict[str, str] = {
     "low_voltage_2_tier": "低壓電力二段式",
     "low_voltage_three_stage": "低壓電力三段式",
     "low_voltage_ev": "低壓電動車",
-    "high_voltage_power": "高壓電力",
     "high_voltage_2_tier": "高壓電力二段式",
     "high_voltage_three_stage": "高壓電力三段式",
     "high_voltage_batch": "高壓批次生產",
     "high_voltage_ev": "高壓電動車",
-    "extra_high_voltage_power": "特高壓電力",
     "extra_high_voltage_2_tier": "特高壓電力二段式",
     "extra_high_voltage_three_stage": "特高壓電力三段式",
     "extra_high_voltage_batch": "特高壓批次生產",
@@ -44,6 +42,15 @@ _PLAN_NAME_MAP: dict[str, str] = {
 
 # Reverse mapping for Chinese name to plan ID lookup
 _CHINESE_NAME_MAP: dict[str, str] = {v: k for k, v in _PLAN_NAME_MAP.items()}
+
+# 0.1.0 copied the 二段式 plans under these names. The 電價表 has no 高壓 or
+# 特高壓 非時間電價.
+_REMOVED_PLANS: dict[str, str] = {
+    "high_voltage_power": "high_voltage_2_tier",
+    "高壓電力": "high_voltage_2_tier",
+    "extra_high_voltage_power": "extra_high_voltage_2_tier",
+    "特高壓電力": "extra_high_voltage_2_tier",
+}
 
 
 @dataclass
@@ -162,6 +169,13 @@ class PlanStore:
             return dict(self.get_plan(plan_id))
         except KeyError:
             pass
+
+        replacement = _REMOVED_PLANS.get(plan_id.strip())
+        if replacement:
+            raise KeyError(
+                f"Plan {plan_id} was removed in 0.2.0: the 電價表 has no 高壓 or "
+                f"特高壓 非時間電價. It billed exactly as {replacement}; use that."
+            )
 
         # Try Chinese name mapping (using shared map)
         mapped_id = _CHINESE_NAME_MAP.get(plan_id.strip())

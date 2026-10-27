@@ -74,7 +74,7 @@
    "kind": "billing",
    "summary": "用戶得選按二段式、三段式、批次生產或電動車充換電設施電價計費",
    "tests": [
-    "test_tariff_table.py::test_plans_missing_from_the_tariff_bill_as_two_stage"
+    "test_tariff_table.py::test_removed_non_tou_high_voltage_plans_name_their_replacement"
    ]
   },
   {

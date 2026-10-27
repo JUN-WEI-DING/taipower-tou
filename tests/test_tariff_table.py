@@ -181,5 +181,5 @@ def test_removed_non_tou_high_voltage_plans_name_their_replacement(
     plan_id, replacement
 ):
     assert plan_id not in tou.available_plans()
-    with pytest.raises(KeyError, match=replacement):
+    with pytest.raises(ValueError, match=replacement):
         tou.plan(plan_id)

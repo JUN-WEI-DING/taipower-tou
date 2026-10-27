@@ -338,9 +338,9 @@ This section is for **time-of-use (TOU) plans** where rates vary by time period 
 | **Extra High Voltage** | `extra_high_voltage_2_tier`, `extra_high_voltage_three_stage`, `extra_high_voltage_batch` | 特高壓電力二段式、三段式、批次生產 |
 
 `low_voltage_power` is 低壓電力非時間電價, one price per season at any hour.
-`high_voltage_power` and `extra_high_voltage_power` bill exactly as
-`high_voltage_2_tier` and `extra_high_voltage_2_tier`. The 電價表 has no
-高壓 or 特高壓 非時間電價; these ids stay so existing code keeps working.
+The 電價表 has no 高壓 or 特高壓 非時間電價. 0.1.0's `high_voltage_power` and
+`extra_high_voltage_power` billed exactly as `high_voltage_2_tier` and
+`extra_high_voltage_2_tier` and are removed; use those.
 
 ### Understanding TOU Rates (瞭解時間電價)
 
@@ -1303,8 +1303,8 @@ except Exception as exc:
 
 ## Available Plans (可用方案)
 
-All 20 Taipower plans are supported. Plans are organized by billing type:
-支援全部 20 種臺電方案，按計費方式分類：
+18 Taipower plans are supported. Plans are organized by billing type:
+支援 18 種臺電方案，按計費方式分類：
 
 ### Tiered Rate Plans (累進費率方案)
 
@@ -1335,11 +1335,9 @@ Rates vary by time period, season, and day type.
 | **High Voltage** | `high_voltage_2_tier` | 高壓電力二段式 |
 | **High Voltage** | `high_voltage_three_stage` | 高壓電力三段式 |
 | **High Voltage** | `high_voltage_ev` | 高壓電動車充電 |
-| **High Voltage** | `high_voltage_power` | 同高壓電力二段式 |
 | **High Voltage** | `high_voltage_batch` | 高壓批次生產 |
 | **Extra High Voltage** | `extra_high_voltage_2_tier` | 特高壓電力二段式 |
 | **Extra High Voltage** | `extra_high_voltage_three_stage` | 特高壓電力三段式 |
-| **Extra High Voltage** | `extra_high_voltage_power` | 同特高壓電力二段式 |
 | **Extra High Voltage** | `extra_high_voltage_batch` | 特高壓批次生產 |
 
 ## Performance (效能)

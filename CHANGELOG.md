@@ -121,9 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/references/` keeps the Taipower documents the tests cite beyond
   the 電價表, with their archive URLs and sha256.
 - The README's over-contract, power factor and bill example sections
-  follow the 電價表. `high_voltage_power` and `extra_high_voltage_power`
-  are documented as the same as the 二段式 plans, since the 電價表 has no
-  高壓 or 特高壓 非時間電價.
+  follow the 電價表.
 - Examples use 2026 dates, which the bundled prices cover.
 
 ### Added
@@ -145,6 +143,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `DeprecationWarning`. They stay accepted so existing code keeps working.
 
 ### Removed
+- `high_voltage_power` (高壓電力) and `extra_high_voltage_power` (特高壓電力).
+  The 電價表 has no 高壓 or 特高壓 非時間電價, and 0.1.0 billed them exactly as
+  `high_voltage_2_tier` and `extra_high_voltage_2_tier`. Asking for one
+  raises an error that names the 二段式 plan to use.
 - Holiday downloads from the ruyut/TaiwanCalendar API and the local cache.
 - The `platformdirs` dependency and the `lunar` extra (`zhdate`).
 
