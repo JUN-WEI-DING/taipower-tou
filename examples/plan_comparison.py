@@ -24,7 +24,7 @@ def create_household_usage(summer_month: bool = True) -> pd.Series:
 
     dates = pd.date_range(f"2025-{month:02d}-01", periods=24 * days, freq="h")
     hour = dates.hour
-    day_of_week = dates.dayofweek
+    day_of_week = dates.day_of_week
 
     usage_values = []
     for h, dow in zip(hour, day_of_week):

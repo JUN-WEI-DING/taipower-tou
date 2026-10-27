@@ -144,7 +144,7 @@ class TestResidentialSimple2TierAccuracy:
         # July 2024: 31 days, summer month
         dates = pd.date_range("2024-07-01", periods=24 * 31, freq="h")
         hour = dates.hour
-        day_of_week = dates.dayofweek
+        day_of_week = dates.day_of_week
 
         # Simulate realistic usage: higher during peak hours
         usage_values = []
@@ -531,7 +531,7 @@ class TestRealWorldScenarios:
         # Business hours: 9am-9pm, Monday-Saturday
         dates = pd.date_range("2024-07-01", periods=24 * 30, freq="h")
         hour = dates.hour
-        day_of_week = dates.dayofweek
+        day_of_week = dates.day_of_week
 
         usage = []
         for h, dow in zip(hour, day_of_week):

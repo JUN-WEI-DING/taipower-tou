@@ -90,7 +90,7 @@ class TaiwanDayTypeStrategy:
         """
         # Create DatetimeIndex for vectorized lookup
         dates_index = pd.DatetimeIndex(dates.values)
-        is_saturday = dates_index.dayofweek == 5
+        is_saturday = dates_index.day_of_week == 5
 
         # Use vectorized is_holiday if available (for DatetimeIndex)
         is_holiday_series = self._calendar.is_holiday(dates_index)

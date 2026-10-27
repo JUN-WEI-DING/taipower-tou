@@ -155,7 +155,7 @@ class TaiwanCalendar:
                 listed.update(_listed_offpeak_days(int(year)))
             local_days = target.tz_localize(None).normalize()
             is_listed = local_days.isin(pd.DatetimeIndex(sorted(listed)))
-            is_sunday = target.dayofweek == 6
+            is_sunday = target.day_of_week == 6
             return pd.Series(is_sunday | is_listed, index=target, name="is_holiday")
 
 

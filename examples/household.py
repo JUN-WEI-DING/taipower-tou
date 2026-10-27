@@ -39,7 +39,7 @@ def create_realistic_household_usage(
     usage_values = []
     for dt in dates:
         hour = dt.hour
-        dow = dt.dayofweek
+        dow = dt.day_of_week
         is_summer = month in [6, 7, 8, 9]  # June-September
         is_weekend = dow >= 5
 
@@ -125,8 +125,8 @@ def show_consumption_analysis(usage: pd.Series) -> None:
     off_peak_usage = usage[off_peak_hours].sum()
 
     # Weekend vs weekday
-    weekday_usage = usage[usage.index.dayofweek < 5].sum()
-    weekend_usage = usage[usage.index.dayofweek >= 5].sum()
+    weekday_usage = usage[usage.index.day_of_week < 5].sum()
+    weekend_usage = usage[usage.index.day_of_week >= 5].sum()
 
     print(f"Total Monthly Usage:      {total_kwh:8.2f} kWh")
     print(f"Daily Average:            {daily_avg:8.2f} kWh/day")
@@ -213,8 +213,8 @@ def suggest_cost_saving_tips(usage: pd.Series, bill: pd.DataFrame) -> None:
     print()
 
     # Weekend vs weekday
-    weekday_avg = usage[usage.index.dayofweek < 5].sum() / 30 / 24
-    weekend_avg = usage[usage.index.dayofweek >= 5].sum() / 30 / 24
+    weekday_avg = usage[usage.index.day_of_week < 5].sum() / 30 / 24
+    weekend_avg = usage[usage.index.day_of_week >= 5].sum() / 30 / 24
 
     if weekday_avg > weekend_avg:
         print("💡 Weekday usage is higher: Consider weekend activities")

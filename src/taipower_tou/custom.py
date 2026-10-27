@@ -58,7 +58,7 @@ class CustomCalendar:
 
         @is_holiday.register
         def _(self, target: pd.DatetimeIndex) -> pd.Series:
-            is_weekend = target.dayofweek.isin(sorted(self._weekend_days))
+            is_weekend = target.day_of_week.isin(sorted(self._weekend_days))
             if not self._holidays:
                 return pd.Series(is_weekend, index=target, name="is_holiday")
 

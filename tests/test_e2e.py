@@ -22,7 +22,7 @@ def test_e2e_household_smart_meter_analysis():
 
     # Realistic household consumption pattern
     hour = dates.hour
-    day_of_week = dates.dayofweek
+    day_of_week = dates.day_of_week
 
     usage = []
     for h, dow in zip(hour, day_of_week):
@@ -89,7 +89,7 @@ def test_e2e_factory_peak_shaving_analysis():
     # Factory has 15-minute demand data for a summer month
     dates = pd.date_range("2024-07-01", periods=96 * 30, freq="15min")
     hour = dates.hour
-    day_of_week = dates.dayofweek
+    day_of_week = dates.day_of_week
 
     # Industrial pattern: high steady daytime demand
     demand = []
@@ -179,7 +179,7 @@ def test_e2e_small_shop_plan_selection():
     # Small retail shop has business-hour usage
     dates = pd.date_range("2024-07-01", periods=24 * 30, freq="h")
     hour = dates.hour
-    day_of_week = dates.dayofweek
+    day_of_week = dates.day_of_week
 
     usage = []
     for h, dow in zip(hour, day_of_week):

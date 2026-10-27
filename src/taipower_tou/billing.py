@@ -1185,33 +1185,7 @@ def _check_demand_resolution(demand: pd.Series) -> None:
     if len(demand) < 2:
         return
 
-    inferred_freq = demand.index.inferred_freq
-    if inferred_freq is None:
-        # Try to detect median interval
-        intervals = demand.index.to_series().diff().dropna()
-        if len(intervals) > 0:
-            median_interval = intervals.median()
-            minutes = median_interval.total_seconds() / 60
-        else:
-            return
-    else:
-        # Parse frequency string to get minutes
-        freq_str = inferred_freq.upper()
-        if freq_str.startswith("15T") or freq_str == "15MIN":
-            return  # 15 minute data is ideal
-        elif freq_str.startswith("30T") or freq_str == "30MIN":
-            minutes = 30
-        elif freq_str.startswith("H") or freq_str.startswith("1H"):
-            minutes = 60
-        elif freq_str.startswith("T"):
-            # Parse minutes from T format (e.g., 5T, 10T)
-            try:
-                minutes = int(freq_str[1:]) if len(freq_str) > 1 else 1
-            except ValueError:
-                return
-        else:
-            return  # Unknown frequency, skip warning
-
+    minutes = demand.index.to_series().diff().median().total_seconds() / 60
     if minutes > 15:
         warnings.warn(
             f"Demand data resolution is approximately {int(minutes)} minutes, "
