@@ -15,6 +15,7 @@ except ImportError:
     npt: Any = None  # type: ignore
     pd: Any = None  # type: ignore
 
+from taipower_tou.calendar import taiwan_wall_time
 from taipower_tou.errors import InvalidUsageInput, TariffError
 from taipower_tou.models import (
     BillingCycleType,
@@ -89,7 +90,7 @@ class TaiwanDayTypeStrategy:
             Dictionary mapping each date to its day type
         """
         # Create DatetimeIndex for vectorized lookup
-        dates_index = pd.DatetimeIndex(dates.values)
+        dates_index = pd.DatetimeIndex(dates)
         is_saturday = dates_index.day_of_week == 5
 
         # Use vectorized is_holiday if available (for DatetimeIndex)
@@ -225,40 +226,35 @@ class _TariffEngine:
         if not isinstance(index, pd.DatetimeIndex):
             raise TypeError("Index must be a pandas.DatetimeIndex")
 
-        # Preload all years for batch calendar optimization
-        unique_years = index.year.unique()
-        years_set = {int(y) for y in unique_years}
-        self._preload_calendar_years(years_set)
+        local = taiwan_wall_time(index)
+        self._preload_calendar_years({int(y) for y in local.year.unique()})
 
-        unique_dates = pd.Series(index.normalize().unique())
+        local_days = local.normalize()
+        unique_dates = pd.Series(local_days.unique())
 
-        # Season mapping (fast - no calendar needed)
         date_to_season = unique_dates.dt.date.apply(
             self.profile.season_strategy.get_season
         )
-        season_map = dict(zip(unique_dates, date_to_season))
-        season_objs = index.normalize().map(season_map)
+        season_objs = local_days.map(dict(zip(unique_dates, date_to_season)))
         season_series = pd.Series(season_objs, index=index, name="season")
         season_codes = (
             season_objs.map(self._season_map).fillna(0).astype(np.int8).values
         )
 
-        # Day type mapping - use batch method for vectorized calendar lookup
         day_type_strategy = self.profile.day_type_strategy
         if hasattr(day_type_strategy, "get_day_types_batch"):
             date_to_day_type = day_type_strategy.get_day_types_batch(unique_dates)
         else:
             date_to_day_type = {
-                dt: day_type_strategy.get_day_type(dt) for dt in unique_dates.dt.date
+                day: day_type_strategy.get_day_type(day.date()) for day in unique_dates
             }
-        day_type_map = date_to_day_type
-        day_type_objs = index.normalize().map(day_type_map)
+        day_type_objs = local_days.map(date_to_day_type)
         day_type_series = pd.Series(day_type_objs, index=index, name="day_type")
         day_type_codes = (
             day_type_objs.map(self._day_type_map).fillna(0).astype(np.int8).values
         )
 
-        minutes = index.hour * 60 + index.minute
+        minutes = local.hour * 60 + local.minute
         period_codes = self._lookup_table[season_codes, day_type_codes, minutes]
         period_objs = np.array(self._period_types)[period_codes]
         period_series = pd.Series(period_objs, index=index, name="period")
@@ -462,7 +458,7 @@ class TariffPlan:
             index=usage_kwh.index,
         )
         interval_costs = usage_kwh * unit_costs
-        month_index = _month_group_index(usage_kwh.index)
+        month_index = taiwan_wall_time(usage_kwh.index)
         monthly_costs = interval_costs.groupby(month_index.to_period("M")).sum()
         monthly_costs.index = monthly_costs.index.to_timestamp()
         monthly_costs.name = "cost"
@@ -539,7 +535,7 @@ class TariffPlan:
             raise TariffError("pandas is required for cost calculation")
         _validate_usage_series(usage_kwh)
 
-        month_index = _month_group_index(usage_kwh.index)
+        month_index = taiwan_wall_time(usage_kwh.index)
         context = self.profile.evaluate(usage_kwh.index)
 
         if self.rates.tiered_rates:
@@ -625,12 +621,6 @@ class TariffPlan:
                 ]
             ]
         return grouped[["month", "season", "period", "usage_kwh", "cost"]]
-
-
-def _month_group_index(index: pd.DatetimeIndex) -> pd.DatetimeIndex:
-    if index.tz is None:
-        return index
-    return index.tz_localize(None)
 
 
 def _apportion_usage_by_season(
@@ -748,6 +738,7 @@ def _billing_period_group_index(
     Returns:
         分組用的 PeriodIndex
     """
+    index = taiwan_wall_time(index)
     if cycle_type == BillingCycleType.MONTHLY:
         return index.to_period("M")
 

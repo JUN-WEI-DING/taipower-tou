@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar
+from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar, taiwan_wall_time
 from taipower_tou.errors import (
     InvalidBasicFeeInput,
     InvalidUsageInput,
@@ -1158,6 +1158,7 @@ def _apply_minimum_usage(
 def _billing_period_index(
     index: pd.DatetimeIndex, cycle_months: int | None
 ) -> pd.PeriodIndex:
+    index = taiwan_wall_time(index)
     if not cycle_months or cycle_months <= 1:
         return index.to_period("M")
     first = index.min()

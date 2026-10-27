@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import warnings
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from functools import cache, singledispatchmethod
 from importlib.resources import files
 from pathlib import Path
@@ -17,6 +17,17 @@ except ImportError:
     pd = None
 
 from taipower_tou.errors import CalendarError
+
+# Taipower bills by Taiwan local time, which has been UTC+8 without daylight
+# saving since 1980.
+TAIWAN_TZ = timezone(timedelta(hours=8))
+
+
+def taiwan_wall_time(index: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Return a timezone-aware index as naive Taiwan local time."""
+    if index.tz is None:
+        return index
+    return index.tz_convert(TAIWAN_TZ).tz_localize(None)
 
 
 @dataclass(frozen=True)
@@ -144,18 +155,20 @@ class TaiwanCalendar:
 
     @is_holiday.register
     def _(self, target: datetime) -> bool:
+        if target.tzinfo is not None:
+            target = target.astimezone(TAIWAN_TZ)
         return self.is_holiday(target.date())
 
     if pd is not None:
 
         @is_holiday.register
         def _(self, target: pd.DatetimeIndex) -> pd.Series:
+            local = taiwan_wall_time(target)
             listed: set[date] = set()
-            for year in target.year.unique():
+            for year in local.year.unique():
                 listed.update(_listed_offpeak_days(int(year)))
-            local_days = target.tz_localize(None).normalize()
-            is_listed = local_days.isin(pd.DatetimeIndex(sorted(listed)))
-            is_sunday = target.day_of_week == 6
+            is_listed = local.normalize().isin(pd.DatetimeIndex(sorted(listed)))
+            is_sunday = local.day_of_week == 6
             return pd.Series(is_sunday | is_listed, index=target, name="is_holiday")
 
 
