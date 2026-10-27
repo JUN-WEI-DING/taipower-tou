@@ -1687,21 +1687,6 @@
       "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 313-325 (fixed dates plus lunar 春節 eve-1, 端午, 中秋 and 4/4 or 4/5 掃墓節). Line 640 refers to the 表燈 list."
     ]
   },
-  "high_voltage_power": {
-    "title": null,
-    "lines": [
-      843,
-      844
-    ],
-    "summer": null,
-    "energy": [],
-    "tiers": [],
-    "basic_fees": [],
-    "surcharges": [],
-    "notes": [
-      "No such table. Chapter 5 四、電價 (lines 843-844) offers only 二段式時間電價, 三段式時間電價, 批次生產時間電價 and 電動車充換電設施電價; there is no non-time-of-use 高壓/特高壓 電力 tariff in the 114/10/1 table."
-    ]
-  },
   "high_voltage_2_tier": {
     "title": "第五章 高壓及特高壓電力電價 四、電價 (一)二段式時間電價 高壓供電",
     "lines": [
@@ -2345,21 +2330,6 @@
       "Unsure: summer boundary. The referenced chapter-4 table's header says 夏月 6月1日至9月30日 (lines 624-626), but every chapter-5 table uses 5月16日至10月15日 (e.g. line 854). The text does not say which applies; summer here follows the referenced table.",
       "Lines 830-832: only for 高壓供電 with contract capacity 100 kW or more; there is no 特高壓 EV tariff. Lines 1167-1170: if use stops qualifying, billing moves to 高壓電力二段式.",
       "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 985-997."
-    ]
-  },
-  "extra_high_voltage_power": {
-    "title": null,
-    "lines": [
-      843,
-      844
-    ],
-    "summer": null,
-    "energy": [],
-    "tiers": [],
-    "basic_fees": [],
-    "surcharges": [],
-    "notes": [
-      "No such table. Chapter 5 四、電價 (lines 843-844) offers only 二段式時間電價, 三段式時間電價, 批次生產時間電價 and 電動車充換電設施電價; there is no non-time-of-use 高壓/特高壓 電力 tariff in the 114/10/1 table."
     ]
   },
   "extra_high_voltage_2_tier": {

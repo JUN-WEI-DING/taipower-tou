@@ -166,18 +166,20 @@ def test_basic_fee_prices(plan_id):
     assert sorted(_plans_json_fee_prices(plan_id)) == sorted(expected)
 
 
-# The 電價表 has no 高壓 or 特高壓 非時間電價 (第五章 四). These ids are kept as
-# the 二段式 plans they always copied.
-SAME_AS = {
+# The 電價表 has no 高壓 or 特高壓 非時間電價 (第五章 四), and 高壓 users have
+# all been on 時間電價 since 1989. 0.1.0 had these ids as copies of 二段式.
+REMOVED = {
     "high_voltage_power": "high_voltage_2_tier",
     "extra_high_voltage_power": "extra_high_voltage_2_tier",
+    "高壓電力": "high_voltage_2_tier",
+    "特高壓電力": "extra_high_voltage_2_tier",
 }
 
 
-@pytest.mark.parametrize("plan_id", SAME_AS)
-def test_plans_missing_from_the_tariff_bill_as_two_stage(plan_id):
-    assert TABLE[plan_id]["title"] is None
-    assert _actual(plan_id) == _actual(SAME_AS[plan_id])
-    assert (
-        _plan_data(plan_id)["basic_fees"] == _plan_data(SAME_AS[plan_id])["basic_fees"]
-    )
+@pytest.mark.parametrize(("plan_id", "replacement"), REMOVED.items())
+def test_removed_non_tou_high_voltage_plans_name_their_replacement(
+    plan_id, replacement
+):
+    assert plan_id not in tou.available_plans()
+    with pytest.raises(KeyError, match=replacement):
+        tou.plan(plan_id)

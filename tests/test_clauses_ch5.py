@@ -22,10 +22,8 @@ HV = {"regular": (223.60, 166.90), "second": 166.90, "weekend": (44.70, 33.30)}
 EHV = {"regular": (217.30, 160.60), "second": 160.60, "weekend": (43.40, 32.10)}
 TWO_STAGE = {
     "high_voltage_2_tier": HV,
-    "high_voltage_power": HV,
     "high_voltage_batch": HV,
     "extra_high_voltage_2_tier": EHV,
-    "extra_high_voltage_power": EHV,
     "extra_high_voltage_batch": EHV,
 }
 THREE_STAGE = {"high_voltage_three_stage": HV, "extra_high_voltage_three_stage": EHV}
@@ -54,9 +52,7 @@ EHV_2_TIER_JULY = _july_energy(
 )
 JULY_ENERGY = {
     "high_voltage_2_tier": HV_2_TIER_JULY,
-    "high_voltage_power": HV_2_TIER_JULY,
     "extra_high_voltage_2_tier": EHV_2_TIER_JULY,
-    "extra_high_voltage_power": EHV_2_TIER_JULY,
     "high_voltage_three_stage": _july_energy(
         [(6, 9.39), (9, 5.85), (9, 2.53)], [(15, 2.60), (9, 2.53)], [(24, 2.53)]
     ),
