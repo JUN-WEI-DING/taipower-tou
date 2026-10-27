@@ -11,6 +11,10 @@ class CalendarError(PowerKitError):
     """Calendar-related failures."""
 
 
+class UncheckedYearWarning(UserWarning):
+    """Off-peak days for a year after the last Taipower calendar checked."""
+
+
 class TariffError(PowerKitError):
     """Tariff-related failures."""
 

@@ -13,6 +13,7 @@ import pandas as pd
 import pytest
 
 import taipower_tou as tou
+from taipower_tou.calendar import LAST_CHECKED_YEAR
 
 OFFICIAL_CALENDARS = sorted(
     (Path(__file__).parent / "data" / "taipower_calendar").glob("*.csv")
@@ -63,3 +64,7 @@ def test_is_holiday_matches_official_calendar(path):
         if calendar.is_holiday(day) != (day_type == "sunday_holiday")
     ]
     assert not wrong
+
+
+def test_last_checked_year_is_the_newest_official_calendar():
+    assert LAST_CHECKED_YEAR == int(OFFICIAL_CALENDARS[-1].stem)

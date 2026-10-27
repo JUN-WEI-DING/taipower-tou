@@ -30,6 +30,7 @@ from taipower_tou.errors import (
     MissingRequiredInput,
     PowerKitError,
     TariffError,
+    UncheckedYearWarning,
 )
 from taipower_tou.factory import PlanRequirements, PlanStore, TariffFactory
 from taipower_tou.models import BillingCycleType
@@ -303,6 +304,7 @@ __all__ = [
     "MissingRequiredInput",
     "PowerKitError",
     "TariffError",
+    "UncheckedYearWarning",
     "WeekdayDayTypeStrategy",
     "build_day_schedule",
     "build_tariff_plan",

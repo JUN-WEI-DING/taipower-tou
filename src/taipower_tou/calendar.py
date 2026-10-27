@@ -16,7 +16,7 @@ try:
 except ImportError:
     pd = None
 
-from taipower_tou.errors import CalendarError
+from taipower_tou.errors import CalendarError, UncheckedYearWarning
 
 # Taipower bills by Taiwan local time, which has been UTC+8 without daylight
 # saving since 1980.
@@ -83,6 +83,11 @@ _RULES = (
 )
 
 
+# The last year in tests/data/taipower_calendar. Later years assume Taipower
+# keeps the list in force today.
+LAST_CHECKED_YEAR = 2027
+
+
 @cache
 def _festival_table() -> dict[int, _Festivals]:
     text = files("taipower_tou.data").joinpath("festival_dates.csv").read_text("utf-8")
@@ -120,6 +125,26 @@ def _listed_offpeak_days(year: int) -> frozenset[date]:
     )
 
 
+# pandas resets Python's per-location warning registry, so remember the years
+# already warned about to warn once per year per process.
+@cache
+def _warn_unchecked_year(year: int) -> None:
+    warnings.warn(
+        f"Off-peak days for {year} assume Taipower keeps its current 電價表 "
+        f"list. This version was checked against Taipower's calendars up to "
+        f"{LAST_CHECKED_YEAR}; check Taipower's 時間電價日曆表 for {year}.",
+        UncheckedYearWarning,
+        stacklevel=3,
+    )
+
+
+def _offpeak_days(year: int) -> frozenset[date]:
+    days = _listed_offpeak_days(year)
+    if year > LAST_CHECKED_YEAR:
+        _warn_unchecked_year(year)
+    return days
+
+
 class TaiwanCalendar:
     """Taipower 離峰日: Sundays plus the days listed in the 電價表.
 
@@ -150,7 +175,7 @@ class TaiwanCalendar:
 
     @is_holiday.register
     def _(self, target: date) -> bool:
-        listed = _listed_offpeak_days(target.year)
+        listed = _offpeak_days(target.year)
         return target.weekday() == 6 or target in listed
 
     @is_holiday.register
@@ -166,7 +191,7 @@ class TaiwanCalendar:
             local = taiwan_wall_time(target)
             listed: set[date] = set()
             for year in local.year.unique():
-                listed.update(_listed_offpeak_days(int(year)))
+                listed.update(_offpeak_days(int(year)))
             is_listed = local.normalize().isin(pd.DatetimeIndex(sorted(listed)))
             is_sunday = local.day_of_week == 6
             return pd.Series(is_sunday | is_listed, index=target, name="is_holiday")
