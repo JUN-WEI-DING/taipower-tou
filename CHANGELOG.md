@@ -87,6 +87,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PartialPeriodWarning` is raised on every partial bill. It was raised once
   per date range, so a second customer read on the same days got no
   warning.
+- `calculate_bill` and `calculate_bill_breakdown` leave the `BillingInputs`
+  they are given unchanged, as the README says. They wrote the plan's
+  default `billing_cycle_months` into it, so a `BillingInputs` used once for
+  `residential_non_tou` billed every later plan in two-month bills. A July
+  `residential_simple_2_tier` bill with 1 kWh at 尖峰 came to 155 TWD for
+  July and August instead of 80 TWD for July.
+- `contract_capacity_kw` is the 經常契約, `contract_capacities={"regular":
+  kw}`. Given alone, it billed no basic fee and every kW of demand as 超約,
+  so 150 kW on a 200 kW `high_voltage_2_tier` contract in July paid no
+  basic fee and 100620.0 TWD of 超約 instead of 44720.0 and none.
+- `BillingInputs.for_lighting_standard` keeps `phase` and bills `contract_kw`
+  as the 經常契約. A three-phase 30 kW 標準型二段式 bill paid the
+  single-phase 按戶計收 of 129.10 TWD instead of 262.50, and 20 kW of
+  demand, within the contract, paid 14172.0 TWD of 超約 instead of none.
+- `BillingInputs.for_residential` gives no `basic_fee_inputs` for one
+  household, so `residential_non_tou` accepts its inputs in strict mode. It
+  raised `InvalidBasicFeeInput` for a `basic_fee` key that plan does not
+  bill.
+- Every contract in `contract_capacities` is optional. Strict mode accepts a
+  裝置契約 bill, which raised `MissingRequiredInput` for `low_voltage_2_tier`
+  on a 10 kW 裝置契約, and a bill with some of its plan's contracts no longer
+  warns "Formula may require contract_capacities keys".
+- `meter_phase` is read ignoring case. `"Three"` matched no 底度 rule, so an
+  empty July on a 30 A three-phase `residential_non_tou` meter paid the
+  100 TWD minimum instead of 107 TWD.
 - Off-peak days (離峰日) now follow the list in Taipower's 電價表 instead of
   the government office calendar. 補假 and 彈性放假 days are no longer
   off-peak, and listed days that fall on a Saturday are now off-peak. The
@@ -110,7 +135,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   1263.4 TWD (all at 非夏月 rates) from `TariffPlan.calculate_costs`.
 - `calculate_bill_breakdown` no longer fails on usage that spans two seasons,
   and its tiered rows now have costs, one row per season.
-- An empty usage series raises `InvalidUsageInput`.
+- An empty usage series raises `InvalidUsageInput` from every entry point.
+  `calculate_bill`, `calculate_bill_breakdown`, `calculate_bill_from_list`
+  and `calculate_bill_from_dict` raised `AttributeError`.
 - 底度 for a low-voltage meter over 10 A counts the meter as 10 A, as the
   電價表 says. It multiplied the ampere by 20 (single-phase) or 60
   (three-phase), so an empty house with a 30 A single-phase meter was billed
@@ -182,6 +209,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Unrounded totals, `pricing_context` and `calculate_costs` are unchanged.
 
 ### Changed
+- `calculate_bill` and `calculate_bill_breakdown` raise `InvalidBillingInput`
+  for a `BillingInputs` value no bill can have, with or without
+  `strict=True`. These are a negative, NaN or infinite contract, 裝置契約,
+  household count, `over_contract_kw` or `meter_ampere`, a
+  `demand_adjustment_factor` of 0 or less, a `power_factor` that is NaN,
+  over 100, or 1 or less, a `billing_cycle_months` other than 1, 2 or
+  `None`, a `meter_phase` other than single or three, and a
+  `contract_capacity_kw` that differs from `contract_capacities["regular"]`.
+  They were billed. A `power_factor` of 0.95, meant as 95%, added 3804.9 TWD
+  to a 200 kW `high_voltage_2_tier` July bill instead of taking 722.0 off,
+  and a -200 kW contract made a bill of -36836 TWD.
+- `InvalidBasicFeeInput` is an `InvalidBillingInput`, so it is also a
+  `ValueError`. A bad `basic_fee_inputs` value raises it in every mode.
+- A `contract_capacities` key the plan does not bill, such as `"regualr"`,
+  warns and is left out, and `strict=True` raises `InvalidBillingInput` for
+  it. It was left out without a word.
+- Two readings at one timestamp in `usage` or `demand_kw` raise
+  `InvalidUsageInput` from `calculate_bill`, `calculate_bill_breakdown`,
+  `TariffPlan.calculate_costs` and `monthly_breakdown`. Both readings were
+  billed.
+- `calculate_bill` warns for a two-month bill with a 契約容量, since Taipower
+  bills those every month on 當月最高需量. It also warns for time-of-use
+  usage whose timestamps step by more than an hour, which it prices at the
+  period of each timestamp. 24 kWh a day in July on
+  `residential_simple_2_tier` costs 1532.6 TWD of energy as daily data,
+  all at 00:00's 離峰 price, and 2602.1 TWD as 1 kWh an hour.
 - `calculate_bill_breakdown`'s `basic_details` has `season` and `share`
   columns, and lists each fee once for each season of a bill that spans
   two.

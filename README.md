@@ -358,9 +358,13 @@ In TOU plans, rates vary based on **when** you use electricity:
 TOU plans need **hourly or finer** time-series data to calculate different rates for different periods.
 時間電價需要 **小時或更細** 的時間序列資料來計算不同時段的費率。
 
-Each timestamp in `usage` and `demand_kw` labels the start of its interval. In 15-minute data, the kWh at 08:45 were used from 08:45 to 09:00 and are priced at 08:45's period. A meter export that labels each interval by its end (09:00 for 08:45-09:00) must first be moved back one interval, for example with `usage.shift(-1, freq="15min")`.
+A time-of-use bill prices each reading at the period of its timestamp, so daily kWh would all be priced at 00:00. `calculate_bill` warns when every gap between `usage` timestamps is a multiple of one step longer than an hour, as in daily or 2-hourly data. Irregular readings such as 09:00, 10:30 and 14:00 have a 30-minute step and do not warn.
 
-每個時間標記代表區間的開始。15 分鐘資料中 08:45 的度數是 08:45 到 09:00 用的，依 08:45 的時段計價。若電表匯出的資料以區間結束時間標記（08:45 到 09:00 標為 09:00），請先往前移一個區間，例如 `usage.shift(-1, freq="15min")`。
+時間電價依每筆資料的時間標記計價，每日度數會全部算成 00:00 的時段。`usage` 各時間標記的間隔若都是同一個超過一小時的間隔的倍數，例如每日或每兩小時一筆，`calculate_bill` 會發出警告。09:00、10:30、14:00 這類不規則資料的共同間隔是 30 分鐘，不會警告。
+
+Each timestamp in `usage` and `demand_kw` labels the start of its interval. In 15-minute data, the kWh at 08:45 were used from 08:45 to 09:00 and are priced at 08:45's period. A meter export that labels each interval by its end (09:00 for 08:45-09:00) must first be moved back one interval, for example with `usage.shift(-1, freq="15min")`. Two readings at the same timestamp raise `InvalidUsageInput`, and so does an empty `usage`.
+
+每個時間標記代表區間的開始。15 分鐘資料中 08:45 的度數是 08:45 到 09:00 用的，依 08:45 的時段計價。若電表匯出的資料以區間結束時間標記（08:45 到 09:00 標為 09:00），請先往前移一個區間，例如 `usage.shift(-1, freq="15min")`。同一時間標記有兩筆資料，或 `usage` 是空的，會拋出 `InvalidUsageInput`。
 
 #### Example A: Create Data Manually (範例 A：用 Python 手動建立資料)
 
@@ -544,6 +548,28 @@ print(bill)
 `calculate_bill` and `calculate_bill_breakdown` do not change the `BillingInputs` you pass, so one `BillingInputs` can bill several months or plans. A field left as `None`, such as `billing_cycle_months`, takes each plan's default for that bill only.
 
 `calculate_bill` 與 `calculate_bill_breakdown` 不會修改傳入的 `BillingInputs`，同一個 `BillingInputs` 可以重複用於不同月份或方案。留空（`None`）的欄位，例如 `billing_cycle_months`，只在該次計算採用方案的預設值。
+
+`calculate_bill` checks `BillingInputs` before it bills. These values raise `InvalidBillingInput`, with or without `strict=True`:
+
+- A contract, 裝置契約, household count, `over_contract_kw` or `meter_ampere` that is negative, NaN, infinite or not a number. A bad `basic_fee_inputs` value raises `InvalidBasicFeeInput`, which is an `InvalidBillingInput`.
+- A `demand_adjustment_factor` of 0 or less.
+- A `power_factor` that is NaN, over 100, or 1 or less. It is a percentage, so pass 95 for 95%, not 0.95.
+- A `billing_cycle_months` other than 1, 2 or `None`.
+- A `meter_phase` other than `"single"` or `"three"`. Case does not matter, so `"Three"` is `"three"`.
+- A `contract_capacity_kw` with a different `"regular"` in `contract_capacities`. `contract_capacity_kw=200` is the 經常契約, `contract_capacities={"regular": 200}`.
+
+Every contract in `contract_capacities` is optional, so a 高壓 bill with `{"regular": 200}` alone has no 非夏月, 週六半尖峰 or 離峰 contract. A key the plan does not bill, such as a misspelt `"regualr"`, warns and is left out, and `strict=True` raises `InvalidBillingInput` for it. A 高壓 or 特高壓 bill with no contract raises `MissingRequiredInput`. A 低壓 or 標準型 bill with neither a contract nor a 裝置契約 warns, and `strict=True` raises `MissingRequiredInput`. Taipower bills a 契約容量 every month, since 超約 is on each month's highest demand, so `billing_cycle_months=2` with a contract warns.
+
+`calculate_bill` 計算前會檢查 `BillingInputs`。下列數值不論是否 `strict=True` 都會拋出 `InvalidBillingInput`：
+
+- 契約容量、裝置契約、戶數、`over_contract_kw` 或 `meter_ampere` 為負數、NaN、無窮大或不是數字。`basic_fee_inputs` 的數值有誤時拋出 `InvalidBasicFeeInput`，它也是 `InvalidBillingInput`。
+- `demand_adjustment_factor` 小於或等於 0。
+- `power_factor` 是 NaN、大於 100，或小於或等於 1。功率因數是百分比，95% 請傳 95，不是 0.95。
+- `billing_cycle_months` 不是 1、2 或 `None`。
+- `meter_phase` 不是 `"single"` 或 `"three"`。不分大小寫，`"Three"` 就是 `"three"`。
+- 同時給 `contract_capacity_kw` 與不同的 `contract_capacities["regular"]`。`contract_capacity_kw=200` 就是經常契約 `contract_capacities={"regular": 200}`。
+
+`contract_capacities` 的每種契約都可以不給，例如高壓只給 `{"regular": 200}` 就是沒有非夏月、週六半尖峰與離峰契約。方案沒有的契約名稱，例如拼錯的 `"regualr"`，會發出警告並略過，`strict=True` 時拋出 `InvalidBillingInput`。高壓與特高壓沒有任何契約會拋出 `MissingRequiredInput`。低壓或標準型既沒有契約也沒有裝置契約時會發出警告，`strict=True` 時拋出 `MissingRequiredInput`。台電的契約容量用戶按月計費，超約依當月最高需量計算，所以有契約時設 `billing_cycle_months=2` 會發出警告。
 
 **Important:** For penalty calculation, use **15-minute interval** demand data. See [Data Resolution Requirements](#data-resolution-requirements) below.
 **重要：** 違約金計算請使用 **15 分鐘間隔** 的需量資料。詳見下方的[資料解析度要求](#data-resolution-requirements)。
@@ -803,6 +829,8 @@ counts as 80% (第三十八條), even when it is billed its 底度.
 Only the bills the tariff names are adjusted: three-phase 表燈 bills (標準型
 with a contract of 20 kW or more), three-phase 低壓 bills with a 20 kW
 裝置契約 or a 30 kW 需量契約, and every 高壓 bill. Pass `meter_phase`.
+`power_factor` is a percentage, 95 for 95%. A value of 1 or less, such as
+0.95, raises `InvalidBillingInput`.
 
 | Power Factor | Result | Example |
 |--------------|--------|---------|

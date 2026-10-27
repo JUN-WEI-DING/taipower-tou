@@ -551,11 +551,199 @@ def test_three_phase_380_volt_meter_has_the_low_voltage_minimum():
     assert bill["energy_cost"] == pytest.approx(60 * 1.78)
 
 
-@pytest.mark.parametrize(("power_factor", "share"), [(0, 0.08), (100, -0.015)])
+@pytest.mark.parametrize(("power_factor", "share"), [(10, 0.07), (100, -0.015)])
 def test_power_factor_far_from_80_percent(power_factor, share):
     """第五章 六 (line 1085): 每低1%，該月份電費應增加0.1%, and 超過95%部分不予
-    扣減 (README Power Factor: max discount 1.5%). 0% adds 8% and 100% takes
-    1.5% off."""
+    扣減 (README Power Factor: max discount 1.5%). 10% adds 7% and 100% takes
+    1.5% off. 0% is no 功率因數 a bill can have."""
     bill = _high_voltage_bill(pd.Series(0.25, index=JULY), power_factor=power_factor)
     month = bill["basic_cost"] + bill["energy_cost"]
     assert bill["adjustment"] == pytest.approx(share * month)
+
+
+def test_contract_capacity_kw_and_another_regular_contract_are_refused():
+    """README Step 5: contract_capacity_kw is the 經常契約 of
+    contract_capacities. Two different 經常契約 are no bill's contract."""
+    inputs = tou.BillingInputs(
+        contract_capacity_kw=200, contract_capacities={"regular": 150}
+    )
+    with pytest.raises(tou.InvalidBillingInput, match="contract_capacity_kw"):
+        tou.calculate_bill(pd.Series(0.25, index=JULY), "high_voltage_2_tier", inputs)
+
+
+@pytest.mark.parametrize("strict", [False, True])
+def test_contracts_the_bill_does_not_have_are_left_out_without_a_warning(strict):
+    """第五章 五(一) (lines 856-862): a 高壓 bill may have a 經常契約 alone,
+    without 非夏月, 週六半尖峰 or 離峰 contracts. July pays 200 x 223.60."""
+    inputs = tou.BillingInputs(contract_capacities={"regular": 200})
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        bill = tou.calculate_bill(
+            pd.Series(0.25, index=JULY), "high_voltage_2_tier", inputs, strict=strict
+        )
+    assert not [w for w in record if issubclass(w.category, UserWarning)]
+    assert bill["basic_cost"].iloc[0] == pytest.approx(200 * REGULAR_SUMMER)
+
+
+def test_contract_the_plan_does_not_have_warns_and_strict_mode_refuses_it():
+    """README Step 5: a contract_capacities key the plan does not bill, such
+    as a misspelt "regualr", is left out with a warning, and strict mode
+    refuses it."""
+    inputs = tou.BillingInputs(contract_capacities={"regular": 200, "regualr": 50})
+    usage = pd.Series(0.25, index=JULY)
+    with pytest.warns(UserWarning, match="regualr"):
+        bill = tou.calculate_bill(usage, "high_voltage_2_tier", inputs)
+    assert bill["basic_cost"].iloc[0] == pytest.approx(200 * REGULAR_SUMMER)
+    with pytest.raises(tou.InvalidBillingInput, match="regualr"):
+        tou.calculate_bill(usage, "high_voltage_2_tier", inputs, strict=True)
+
+
+def test_low_voltage_bill_without_any_contract_is_refused_in_strict_mode():
+    """第四章 五(三) (lines 655-700): a 低壓 time-of-use bill pays either per
+    kW of 裝置契約 or per kW of 需量契約. Strict mode refuses neither."""
+    with pytest.raises(tou.MissingRequiredInput):
+        tou.calculate_bill(
+            pd.Series(0.25, index=JULY),
+            "low_voltage_2_tier",
+            tou.BillingInputs(),
+            strict=True,
+        )
+
+
+NAN = math.nan
+REFUSED_INPUTS = {
+    "negative-contract": {"contract_capacities": {"regular": -200}},
+    "nan-contract": {"contract_capacities": {"regular": NAN}},
+    "text-contract": {"contract_capacities": {"regular": "200"}},
+    "negative-contract-kw": {"contract_capacities": {}, "contract_capacity_kw": -1},
+    "negative-installed": {"basic_fee_inputs": {"裝置契約": -10}},
+    "nan-household": {"basic_fee_inputs": {"按戶計收": NAN}},
+    "negative-over-contract": {"over_contract_kw": -5},
+    "nan-over-contract": {"over_contract_kw": NAN},
+    "negative-ampere": {"meter_ampere": -10},
+    "zero-demand-factor": {"demand_adjustment_factor": 0},
+    "negative-demand-factor": {"demand_adjustment_factor": -1.1},
+    "nan-demand-factor": {"demand_adjustment_factor": NAN},
+    "nan-power-factor": {"power_factor": NAN},
+    "zero-power-factor": {"power_factor": 0},
+    "negative-power-factor": {"power_factor": -90},
+    "power-factor-over-100": {"power_factor": 101},
+    "fraction-power-factor": {"power_factor": 0.95},
+    "zero-months": {"billing_cycle_months": 0},
+    "three-months": {"billing_cycle_months": 3},
+    "unknown-phase": {"meter_phase": "two"},
+}
+
+
+@pytest.mark.parametrize("strict", [False, True])
+@pytest.mark.parametrize("case", REFUSED_INPUTS)
+def test_billing_input_no_bill_can_have_is_refused(case, strict):
+    """README Step 5: a value no bill can have raises InvalidBillingInput in
+    every mode. Contracts, 裝置契約, households, 超約 kW and amperes are 0 or
+    more, demand_adjustment_factor is above 0, 功率因數 is a percentage up to
+    100 (第五章 六, line 1085), and a bill covers one month or two (營業規章
+    第二十六條)."""
+    fields = {"contract_capacities": _contract_200(), **REFUSED_INPUTS[case]}
+    with pytest.raises(tou.InvalidBillingInput):
+        tou.calculate_bill(
+            pd.Series(0.25, index=JULY),
+            "high_voltage_2_tier",
+            tou.BillingInputs(**fields),
+            strict=strict,
+        )
+
+
+def test_power_factor_given_as_a_fraction_says_it_is_a_percentage():
+    """README Power Factor: power_factor is a percentage, 95 for 95%."""
+    inputs = tou.BillingInputs(contract_capacities=_contract_200(), power_factor=0.9)
+    with pytest.raises(tou.InvalidBillingInput, match="percentage"):
+        tou.calculate_bill(pd.Series(0.25, index=JULY), "high_voltage_2_tier", inputs)
+
+
+@pytest.mark.parametrize("phase", ["three", "Three", "THREE"])
+def test_meter_phase_is_read_ignoring_case(phase):
+    """五(一)1(2) (line 338): a 三相 meter over 10 A pays at least 60 kWh a
+    month, 60 x 1.78 in an empty July."""
+    inputs = tou.BillingInputs(
+        meter_phase=phase,
+        meter_voltage_v=220,
+        meter_ampere=30,
+        billing_cycle_months=1,
+        taipower_rounding=False,
+    )
+    bill = tou.calculate_bill(pd.Series(0.0, index=JULY), "residential_non_tou", inputs)
+    assert bill["energy_cost"].iloc[0] == pytest.approx(60 * 1.78)
+
+
+def _repeated(index):
+    return index.insert(100, index[100])
+
+
+@pytest.mark.parametrize("series", ["usage", "demand_kw"])
+def test_two_readings_at_one_timestamp_are_refused(series):
+    """README Step 1: each timestamp labels the start of its interval, so an
+    interval read twice is not one meter's usage or demand."""
+    usage = pd.Series(0.25, index=JULY)
+    demand = pd.Series(100.0, index=JULY)
+    if series == "usage":
+        usage = pd.Series(0.25, index=_repeated(JULY))
+    else:
+        demand = pd.Series(100.0, index=_repeated(JULY))
+    with pytest.raises(tou.InvalidUsageInput):
+        _high_voltage_bill(usage, demand_kw=demand)
+
+
+def test_empty_usage_list_is_refused():
+    """CHANGELOG 0.2.0 Fixed: an empty usage series raises InvalidUsageInput."""
+    with pytest.raises(tou.InvalidUsageInput):
+        tou.calculate_bill_from_list(
+            [], "residential_simple_2_tier", start="2026-07-01", freq="1h"
+        )
+
+
+@pytest.mark.parametrize(
+    ("plan", "inputs", "warns"),
+    [
+        ("high_voltage_2_tier", {"contract_capacities": _contract_200()}, True),
+        ("low_voltage_2_tier", {"contract_capacities": {"regular": 20}}, True),
+        ("low_voltage_2_tier", {"basic_fee_inputs": {"裝置契約": 10}}, False),
+        ("residential_simple_2_tier", {}, False),
+    ],
+    ids=["high-voltage", "demand-contract", "installed-contract", "simple"],
+)
+def test_two_month_bill_of_a_demand_contract_warns(plan, inputs, warns):
+    """第四章 七(一) and 第五章 七(一) (lines 743, 1093): 超約 is on 當月最高需量,
+    each month's highest demand, so Taipower bills a 契約容量 every month."""
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        tou.calculate_bill(
+            pd.Series(0.25, index=JULY_AUGUST),
+            plan,
+            tou.BillingInputs(billing_cycle_months=2, **inputs),
+        )
+    monthly = [w for w in record if "every month" in str(w.message)]
+    assert bool(monthly) == warns
+
+
+@pytest.mark.parametrize(
+    ("plan", "freq", "warns"),
+    [
+        ("residential_simple_2_tier", "D", True),
+        ("high_voltage_2_tier", "2h", True),
+        ("residential_simple_2_tier", "h", False),
+        ("residential_simple_2_tier", "15min", False),
+        ("residential_non_tou", "D", False),
+        ("low_voltage_power", "D", False),
+    ],
+)
+def test_time_of_use_usage_coarser_than_an_hour_warns(plan, freq, warns):
+    """README Step 1: TOU plans need hourly or finer usage. Daily kWh would
+    be priced at the period of 00:00. 表燈非時間 and 低壓電力非時間 price a
+    kWh the same at any hour."""
+    index = pd.date_range("2026-07-01", "2026-07-31 23:59", freq=freq)
+    inputs = tou.BillingInputs(contract_capacities={"regular": 200})
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        tou.calculate_bill(pd.Series(1.0, index=index), plan, inputs)
+    coarse = [w for w in record if "hourly or finer" in str(w.message)]
+    assert bool(coarse) == warns

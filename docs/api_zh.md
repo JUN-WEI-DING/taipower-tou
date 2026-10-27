@@ -55,6 +55,8 @@
 - `calculate_bill(usage, plan_id, inputs=None, ...)`
   - 功能：依 `plans.json` 規則計算每月帳單費用（含基本費/加成/調整）。
   - 設定：`inputs` 為 `BillingInputs`，可傳契約容量、功率因數、電表設定等。
+  - 檢查：不會修改傳入的 `BillingInputs`。帳單不可能有的數值會拋出 `InvalidBillingInput`，例如負的契約容量、0.95 的功率因數（請傳 95）、`billing_cycle_months=3`。方案沒有的契約名稱會發出警告，`strict=True` 時拋出錯誤。`contract_capacity_kw` 就是經常契約 `contract_capacities["regular"]`。
+  - 資料：同一時間標記有兩筆資料或 `usage` 是空的會拋出 `InvalidUsageInput`。時間電價方案的資料比每小時粗（例如每日一筆）會發出警告。
 - `calculate_bill_simple(usage, plan_id, ...)`
   - 功能：快速計算每月帳單費用（不需進階引數）。
 - `calculate_bill_breakdown(usage, plan_id, inputs=None, ...)`

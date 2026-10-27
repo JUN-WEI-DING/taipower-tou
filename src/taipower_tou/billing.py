@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+import numbers
+from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,7 @@ from taipower_tou import _warnings
 from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar, taiwan_wall_time
 from taipower_tou.errors import (
     InvalidBasicFeeInput,
+    InvalidBillingInput,
     InvalidUsageInput,
     MissingRequiredInput,
     PartialPeriodWarning,
@@ -27,6 +29,7 @@ from taipower_tou.factory import (
 from taipower_tou.models import BillingCycleType, _label_value
 from taipower_tou.tariff import (
     TariffRate,
+    _validate_usage_series,
     check_price_dates,
     season_day_shares,
     tiered_energy_cost,
@@ -218,11 +221,17 @@ class BillingInputs:
                 ampere=10,
             )
         """
+        # Only 簡易型 plans bill "basic_fee", so a single household leaves it
+        # out and the inputs fit every residential plan, strict mode too.
         return cls(
             meter_phase=phase,
             meter_voltage_v=voltage,
             meter_ampere=ampere,
-            basic_fee_inputs={"basic_fee": basic_fee_multiplier},
+            basic_fee_inputs=(
+                {}
+                if basic_fee_multiplier == 1.0
+                else {"basic_fee": basic_fee_multiplier}
+            ),
         )
 
     @classmethod
@@ -239,15 +248,16 @@ class BillingInputs:
             contract_kw: Contract capacity in kW
             household_count: Number of households (default 1.0)
         """
-        label = "按戶計收-單相" if phase == "single" else "按戶計收-三相"
+        label = "按戶計收-三相" if phase.lower() == "three" else "按戶計收-單相"
         return cls(
-            contract_capacity_kw=contract_kw,
-            basic_fee_inputs={label: household_count, "經常契約": contract_kw},
+            meter_phase=phase,
+            contract_capacities={"regular": contract_kw},
+            basic_fee_inputs={label: household_count},
         )
 
 
-def _get_required_capacities_for_formula(formula_type: str) -> set[str]:
-    """Return required contract_capacities keys for each formula type."""
+def _contract_keys(formula_type: str | None) -> set[str]:
+    """The contract_capacities keys a basic fee formula bills."""
     if formula_type == "two_stage":
         return {"regular", "non_summer", "saturday_semi_peak", "off_peak"}
     if formula_type == "three_stage":
@@ -257,42 +267,130 @@ def _get_required_capacities_for_formula(formula_type: str) -> set[str]:
     return set()
 
 
+def _number(value: Any) -> float:
+    """A real number as a float, and anything else as NaN, which every range
+    check refuses."""
+    return float(value) if isinstance(value, numbers.Real) else math.nan
+
+
+def _check_amount(
+    name: str, value: Any, error: type[InvalidBillingInput] = InvalidBillingInput
+) -> None:
+    """A kW, household count or ampere is a finite number, 0 or more."""
+    if not 0 <= _number(value) < math.inf:
+        raise error(f"{name} must be a finite number of 0 or more, got {value!r}.")
+
+
+def _check_values(inputs: BillingInputs) -> None:
+    """Refuse a value no bill can have, whatever the plan."""
+    for key, value in inputs.contract_capacities.items():
+        _check_amount(f"contract_capacities[{key!r}]", value)
+    for key, value in inputs.basic_fee_inputs.items():
+        _check_amount(f"basic_fee_inputs[{key!r}]", value, InvalidBasicFeeInput)
+    for name in ("contract_capacity_kw", "over_contract_kw", "meter_ampere"):
+        if getattr(inputs, name) is not None:
+            _check_amount(name, getattr(inputs, name))
+    factor = inputs.demand_adjustment_factor
+    if not 0 < _number(factor) < math.inf:
+        raise InvalidBillingInput(
+            f"demand_adjustment_factor must be a finite number above 0, got {factor!r}."
+        )
+    pf = inputs.power_factor
+    if pf is not None:
+        if not 0 < _number(pf) <= 100:
+            raise InvalidBillingInput(
+                f"power_factor must be a percentage above 0 and up to 100, got {pf!r}."
+            )
+        if pf <= 1:
+            raise InvalidBillingInput(
+                f"power_factor is a percentage, 95 for 95%, not 0.95. Got {pf!r}."
+            )
+    if inputs.billing_cycle_months not in (None, 1, 2):
+        raise InvalidBillingInput(
+            "billing_cycle_months must be 1, 2 or None (the plan's default), "
+            f"got {inputs.billing_cycle_months!r}."
+        )
+    phase = inputs.meter_phase
+    if phase is not None and (
+        not isinstance(phase, str) or phase.lower() not in ("single", "three")
+    ):
+        raise InvalidBillingInput(
+            f"meter_phase must be 'single', 'three' or None, got {phase!r}."
+        )
+
+
+def _check_demand(demand: Any) -> None:
+    if demand is None:
+        return
+    if not isinstance(demand, pd.Series) or not isinstance(
+        demand.index, pd.DatetimeIndex
+    ):
+        raise InvalidUsageInput("demand_kw must be a pandas.Series with DatetimeIndex")
+    if demand.index.has_duplicates:
+        raise InvalidUsageInput("demand_kw has more than one reading at a timestamp")
+
+
+def _parse_inputs(
+    plan_data: dict[str, Any], inputs: BillingInputs, strict: bool
+) -> tuple[BillingInputs, int]:
+    """The caller's inputs as this plan's bill reads them, and the bill's
+    months. They are checked here once, and the bill trusts them. The
+    caller's BillingInputs is left as given, so it can bill another plan."""
+    _check_values(inputs)
+    _check_demand(inputs.demand_kw)
+    contracts = dict(inputs.contract_capacities)
+    if inputs.contract_capacity_kw is not None:
+        regular = contracts.setdefault("regular", inputs.contract_capacity_kw)
+        if regular != inputs.contract_capacity_kw:
+            raise InvalidBillingInput(
+                f"contract_capacity_kw {inputs.contract_capacity_kw:g} is the "
+                f"經常契約, and contract_capacities gives another, {regular:g}."
+            )
+    cycle_months = int(
+        inputs.billing_cycle_months
+        or plan_data.get("billing_rules", {}).get("billing_cycle_months")
+        or 1
+    )
+    parsed = replace(
+        inputs,
+        contract_capacities=contracts,
+        contract_capacity_kw=None,
+        meter_phase=inputs.meter_phase and inputs.meter_phase.lower(),
+        billing_cycle_months=cycle_months,
+    )
+    for message in _validate_billing_inputs(plan_data, parsed, cycle_months, strict):
+        _warnings.warn(message, UserWarning)
+    return parsed, cycle_months
+
+
 def _validate_billing_inputs(
     plan_data: dict[str, Any],
     inputs: BillingInputs,
-    strict: bool = False,
+    cycle_months: int,
+    strict: bool,
 ) -> list[str]:
-    """Validate billing inputs and return warnings.
-
-    Args:
-        plan_data: The plan's JSON data
-        inputs: User-provided billing inputs
-        strict: If True, raise errors on unknown keys and missing optional fields
-
-    Returns:
-        A list of warning messages for non-strict validation issues
+    """Warnings for inputs this plan does not bill as given, which strict
+    mode raises instead.
 
     Raises:
         MissingRequiredInput: If required inputs are missing
         InvalidBasicFeeInput: If basic_fee_inputs has invalid keys (strict mode)
+        InvalidBillingInput: If contract_capacities has a key the plan does
+            not bill (strict mode)
     """
     requirements = PlanRequirements.from_plan_data(plan_data)
     warnings = []
+    contracts = inputs.contract_capacities
+    contract_keys = _contract_keys(requirements.formula_type)
 
-    # 1. Check contract capacity requirement (critical - always enforced)
-    if requirements.requires_contract_capacity:
-        has_capacity = (
-            inputs.contract_capacity_kw is not None or inputs.contract_capacities
+    if requirements.requires_contract_capacity and not contracts:
+        raise MissingRequiredInput(
+            f"Plan '{plan_data.get('id')}' requires contract capacity. "
+            f"Provide either contract_capacity_kw or contract_capacities. "
+            f"Use BillingInputs.for_high_voltage() or "
+            f"BillingInputs.for_extra_high_voltage() for convenient setup."
         )
-        if not has_capacity:
-            raise MissingRequiredInput(
-                f"Plan '{plan_data.get('id')}' requires contract capacity. "
-                f"Provide either contract_capacity_kw or contract_capacities. "
-                f"Use BillingInputs.for_high_voltage() or "
-                f"BillingInputs.for_extra_high_voltage() for convenient setup."
-            )
 
-    # 2. Validate basic_fee_inputs keys
     valid_basic_fee_labels = set(requirements.valid_basic_fee_labels)
     if plan_data.get("basic_fee") is not None:
         valid_basic_fee_labels.add("basic_fee")
@@ -309,27 +407,36 @@ def _validate_billing_inputs(
                 f"Unknown keys in basic_fee_inputs (ignored): {unknown_keys}"
             )
 
-    # 3. For formula-based plans, validate required capacities
-    if requirements.uses_basic_fee_formula and requirements.formula_type:
-        required_caps = _get_required_capacities_for_formula(requirements.formula_type)
-        provided_caps = set(inputs.contract_capacities.keys())
-        missing_caps = required_caps - provided_caps
-
-        if missing_caps:
-            # In strict mode, this is an error
-            if strict:
-                raise MissingRequiredInput(
-                    f"Formula type '{requirements.formula_type}' requires "
-                    f"contract_capacities with keys: {required_caps}. "
-                    f"Missing: {missing_caps}. "
-                    f"Use BillingInputs.for_high_voltage() or similar factory method."
-                )
-            # In non-strict mode, warn
-            warnings.append(
-                f"Formula may require contract_capacities keys: {missing_caps}"
+    unknown_contracts = set(contracts) - contract_keys
+    if unknown_contracts:
+        message = (
+            f"Plan '{plan_data.get('id')}' bills no {sorted(unknown_contracts)} "
+            "contract, so the bill leaves them out. "
+            + (
+                f"Its contracts are {sorted(contract_keys)}."
+                if contract_keys
+                else "It bills no 契約容量."
             )
+        )
+        if strict:
+            raise InvalidBillingInput(message)
+        warnings.append(message)
+    if contract_keys and not contracts and "裝置契約" not in inputs.basic_fee_inputs:
+        message = (
+            f"Plan '{plan_data.get('id')}' bills its basic fee per kW of "
+            "contract_capacities, or of a 裝置契約 in basic_fee_inputs where the "
+            "plan has one. With neither, it bills no kW."
+        )
+        if strict:
+            raise MissingRequiredInput(message)
+        warnings.append(message)
+    if cycle_months > 1 and contract_keys & set(contracts):
+        warnings.append(
+            f"Taipower bills a 契約容量 every month, since 超約 is on 當月最高需量. "
+            f"This bill of plan '{plan_data.get('id')}' covers {cycle_months} "
+            "months and does not match Taipower's."
+        )
 
-    # 4. Check meter spec requirement for minimum usage rules
     if requirements.requires_meter_spec:
         if not all([inputs.meter_phase, inputs.meter_voltage_v, inputs.meter_ampere]):
             if strict:
@@ -347,17 +454,22 @@ def _validate_billing_inputs(
     return warnings
 
 
-def _validate_usage_series(usage: pd.Series) -> None:
-    """Validate usage series for billing entrypoints."""
-    numeric_usage = pd.to_numeric(usage, errors="coerce")
-    if numeric_usage.isna().any():
-        raise InvalidUsageInput("usage series contains NaN or non-numeric values")
-    if not np.isfinite(numeric_usage.to_numpy()).all():
-        raise InvalidUsageInput("usage values must be finite")
-    if (numeric_usage < 0).any():
-        raise InvalidUsageInput("usage values must be non-negative")
-    if not usage.index.is_monotonic_increasing:
-        raise InvalidUsageInput("usage timestamps must be ordered")
+def _check_usage_resolution(plan_data: dict[str, Any], usage: pd.Series) -> None:
+    """README Step 1: time-of-use plans need hourly or finer usage. A
+    reading is priced at the period of its timestamp, so a day's kWh would
+    all be priced at 00:00. Irregular readings warn only when every gap
+    between them is a multiple of one step over an hour."""
+    if plan_data.get("type") != "TOU" or len(usage) < 2:
+        return
+    steps = np.unique(np.diff(usage.index.as_unit("ns").asi8))
+    step = pd.Timedelta(math.gcd(*steps.tolist()))
+    if step > pd.Timedelta("1h"):
+        _warnings.warn(
+            f"Usage timestamps are {step / pd.Timedelta('1h'):g} hours apart, or "
+            "a multiple of that. A time-of-use plan prices each reading at the "
+            "period its timestamp falls in, so pass hourly or finer usage.",
+            UserWarning,
+        )
 
 
 def calculate_bill(
@@ -426,42 +538,27 @@ def _bill(
     detailed: bool = False,
 ) -> dict[str, pd.DataFrame]:
     """Each bill's items and total, with the breakdown's details if detailed."""
-    if not isinstance(usage, pd.Series):
-        raise InvalidUsageInput("usage must be a pandas.Series")
-    if not isinstance(usage.index, pd.DatetimeIndex):
-        raise InvalidUsageInput("usage index must be a pandas.DatetimeIndex")
     _validate_usage_series(usage)
     # float32 kWh would carry its rounding into every price.
     usage = usage.astype("float64")
 
-    inputs = inputs or BillingInputs()
     store = PlanStore()
     plan_data = store.resolve_plan(plan_id)
-
-    for warning in _validate_billing_inputs(plan_data, inputs, strict=strict):
-        _warnings.warn(warning, UserWarning)
+    inputs, cycle_months = _parse_inputs(plan_data, inputs or BillingInputs(), strict)
+    _check_usage_resolution(plan_data, usage)
 
     calendar = calendar_instance or taiwan_calendar(
         cache_dir=cache_dir, api_timeout=api_timeout
     )
 
-    if inputs.billing_cycle_months is None:
-        inputs.billing_cycle_months = plan_data.get("billing_rules", {}).get(
-            "billing_cycle_months"
-        )
-
-    cycle_months = inputs.billing_cycle_months or 1
     local = taiwan_wall_time(usage.index)
     first_month = local.min().to_period("M")
     billing_periods = _bill_months(local, first_month, cycle_months)
     _check_whole_months(local, billing_periods, cycle_months)
 
-    # Convert billing_cycle_months to BillingCycleType
-    billing_cycle_type = BillingCycleType.MONTHLY
-    if inputs.billing_cycle_months and inputs.billing_cycle_months > 1:
-        # For bimonthly billing, default to odd-month cycle
-        # (can be overridden by adding logic to determine odd vs even)
-        billing_cycle_type = BillingCycleType.ODD_MONTH
+    billing_cycle_type = (
+        BillingCycleType.ODD_MONTH if cycle_months > 1 else BillingCycleType.MONTHLY
+    )
 
     tariff_plan = _build_tariff_plan_from_data(
         plan_data,
@@ -474,9 +571,18 @@ def _bill(
     times = _times(context)
     metered = _read_registers(usage, billing_periods, times, inputs)
     usage_for_billing = _apply_minimum_usage(
-        plan_data, store, metered, inputs, billing_periods
+        plan_data, store, metered, inputs, billing_periods, cycle_months
     )
-    demand = _read_demand(inputs, tariff_plan.profile, first_month, cycle_months)
+    demand = _read_demand(
+        inputs,
+        tariff_plan.profile,
+        first_month,
+        cycle_months,
+        local,
+        context,
+        times,
+        billing_periods,
+    )
 
     energy_costs = _to_jiao(
         inputs,
@@ -485,7 +591,7 @@ def _bill(
             context,
             billing_periods,
             tariff_plan,
-            inputs.billing_cycle_months or 1,
+            cycle_months,
         ),
     )
     month_index = energy_costs.index
@@ -502,10 +608,11 @@ def _bill(
         month_index,
         parts,
         _idle_months(metered, inputs, billing_periods, times, demand),
+        cycle_months,
     )
     basic_costs = _to_jiao(inputs, basic_costs)
     surcharge = _to_jiao(
-        inputs, _calculate_surcharges(plan_data, inputs, monthly_usage)
+        inputs, _calculate_surcharges(plan_data, cycle_months, monthly_usage)
     )
     adjustment, adjustment_details = _calculate_adjustments(
         plan_data,
@@ -525,7 +632,7 @@ def _bill(
     )
 
     total = _to_yuan(inputs, energy_costs + basic_costs + surcharge + adjustment)
-    min_fee = _minimum_fee(plan_data, inputs.billing_cycle_months or 1)
+    min_fee = _minimum_fee(plan_data, cycle_months)
     if min_fee is not None:
         min_adjustment = (min_fee - total).clip(lower=0.0)
         total = total.clip(lower=min_fee)
@@ -550,7 +657,7 @@ def _bill(
         context,
         billing_periods,
         tariff_plan,
-        inputs.billing_cycle_months or 1,
+        cycle_months,
     )
 
     return {
@@ -637,9 +744,7 @@ def _metered_bills(usage: pd.Series, billing_periods: pd.PeriodIndex) -> pd.Seri
 
 def _installed_only(inputs: BillingInputs) -> bool:
     """A bill 按裝置契約容量計費, with no 需量契約."""
-    return "裝置契約" in inputs.basic_fee_inputs and not (
-        inputs.contract_capacities or inputs.contract_capacity_kw
-    )
+    return "裝置契約" in inputs.basic_fee_inputs and not inputs.contract_capacities
 
 
 def _calculate_basic_fees(
@@ -648,12 +753,12 @@ def _calculate_basic_fees(
     month_index: pd.Index,
     parts: dict[pd.Timestamp, dict[str, float]],
     idle_months: pd.Series,
+    months: int,
 ) -> tuple[pd.Series, pd.DataFrame]:
     """Each bill's 基本電費: a month of each season's fees, weighted by the
     season's share of the bill's days as for a mid-month price change
     (營業規章 第二十七條一), times the bill's months."""
     idle_ratio = plan_data.get("billing_rules", {}).get("zero_usage_basic_fee_ratio")
-    months = inputs.billing_cycle_months or 1
     details = []
     for ts in month_index:
         scale = float(months)
@@ -784,7 +889,7 @@ def _to_yuan(inputs: BillingInputs, amount: Any) -> Any:
 
 def _calculate_surcharges(
     plan_data: dict[str, Any],
-    inputs: BillingInputs,
+    months: int,
     monthly_usage: pd.Series,
 ) -> pd.Series:
     rules = plan_data.get("billing_rules", {})
@@ -795,7 +900,6 @@ def _calculate_surcharges(
     if rule:
         # 每月總度數超過2000度之部分: a two-month bill's threshold is 4000 kWh, as
         # 第三章 五(一)2 doubles 分段度數 for 隔月抄表.
-        months = inputs.billing_cycle_months or 1
         threshold = rule.get("threshold_kwh", 2000) * months
         cost = rule.get("cost_per_kwh", 0.0)
         over = (monthly_usage - threshold).clip(lower=0.0)
@@ -812,9 +916,7 @@ def _power_factor_applies(eligible: dict[str, Any], inputs: BillingInputs) -> bo
     phase = eligible.get("phase")
     if phase and inputs.meter_phase not in (None, phase):
         return False
-    demand_kw = sum(inputs.contract_capacities.values()) or (
-        inputs.contract_capacity_kw or 0.0
-    )
+    demand_kw = sum(inputs.contract_capacities.values())
     installed_kw = inputs.basic_fee_inputs.get("裝置契約", 0.0)
     if "min_contract_kw" in eligible:
         return demand_kw >= eligible["min_contract_kw"]
@@ -988,6 +1090,7 @@ def _apply_minimum_usage(
     usage: pd.Series,
     inputs: BillingInputs,
     billing_periods: pd.PeriodIndex,
+    cycle_months: int,
 ) -> pd.Series:
     rules = plan_data.get("billing_rules", {})
     ref = rules.get("minimum_usage_rules_ref")
@@ -1036,7 +1139,6 @@ def _apply_minimum_usage(
         return usage
 
     adjusted = usage.copy()
-    cycle_months = inputs.billing_cycle_months or 1
     for period, group in usage.groupby(billing_periods):
         total = group.sum()
         required = min_kwh * cycle_months
@@ -1140,9 +1242,7 @@ def _compute_over_contract_kw(
     """Each bill's 超約瓩數 in each of its seasons, with the contract it is
     over, by time in the order the 電價表 deducts them."""
     if inputs.over_contract_kw is not None:
-        contract_kw = inputs.contract_capacity_kw or inputs.contract_capacities.get(
-            "regular", 0.0
-        )
+        contract_kw = inputs.contract_capacities.get("regular", 0.0)
         over = {"peak": (float(inputs.over_contract_kw), contract_kw)}
         return {ts: dict.fromkeys(seasons, over) for ts, seasons in parts.items()}
     if demand is None:
@@ -1205,30 +1305,37 @@ def _over_contract_fee(
 
 
 def _read_demand(
-    inputs: BillingInputs, profile: Any, first: pd.Period, cycle_months: int
+    inputs: BillingInputs,
+    profile: Any,
+    first: pd.Period,
+    cycle_months: int,
+    local: pd.DatetimeIndex,
+    context: pd.DataFrame,
+    times: np.ndarray,
+    billing_periods: pd.PeriodIndex,
 ) -> pd.DataFrame | None:
     """Each 需量 as Taipower reads it, in Taiwan wall time: the 十五分鐘平均瓩數
     (營業規章 第三條) in whole kW (施行細則 第二十八條: 小數以下捨棄), with the
-    bill, season and time it falls in."""
+    bill, season and time it falls in. Demand on the usage's own Taiwan wall
+    times takes the usage's context, times and bills."""
     demand = inputs.demand_kw
     if demand is None:
         return None
-    if not isinstance(demand, pd.Series) or not isinstance(
-        demand.index, pd.DatetimeIndex
-    ):
-        raise InvalidUsageInput("demand_kw must be a pandas.Series with DatetimeIndex")
     demand = pd.Series(
         demand.to_numpy(dtype="float64"), index=taiwan_wall_time(demand.index)
     )
     _check_demand_resolution(demand)
     demand = _quarter_hour_demand(demand) * inputs.demand_adjustment_factor
-    context = profile.evaluate(demand.index)
+    if not demand.index.equals(local):
+        context = profile.evaluate(demand.index)
+        times = _times(context)
+        billing_periods = _bill_months(demand.index, first, cycle_months)
     return pd.DataFrame(
         {
             "kw": np.floor(np.round(demand.to_numpy(), 6)),
-            "bill": _bill_months(demand.index, first, cycle_months),
+            "bill": billing_periods,
             "season": _labels(context["season"]),
-            "time": _times(context),
+            "time": times,
         },
         index=demand.index,
     )

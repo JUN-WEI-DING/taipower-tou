@@ -44,12 +44,9 @@ class InvalidBillingInput(PowerKitError, ValueError):
     a negative 契約容量 or a 功率因數 above 100."""
 
 
-class InvalidBasicFeeInput(PowerKitError):
-    """Raised when basic_fee_inputs contains invalid keys or values.
-
-    In strict mode, this ensures users only provide valid fee labels for
-    their selected plan.
-    """
+class InvalidBasicFeeInput(InvalidBillingInput):
+    """Raised when basic_fee_inputs has a value no bill can have, such as a
+    negative 裝置契約, or, in strict mode, a label the plan does not bill."""
 
 
 class UnknownPlanError(PowerKitError, KeyError, ValueError):

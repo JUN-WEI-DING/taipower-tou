@@ -724,6 +724,8 @@ def _validate_usage_series(usage_kwh: pd.Series) -> None:
         raise InvalidUsageInput("usage values must be non-negative")
     if not usage_kwh.index.is_monotonic_increasing:
         raise InvalidUsageInput("usage timestamps must be ordered")
+    if usage_kwh.index.has_duplicates:
+        raise InvalidUsageInput("usage has more than one reading at a timestamp")
 
 
 __all__ = [
