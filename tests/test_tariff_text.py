@@ -154,6 +154,6 @@ def test_three_stage_weekday_and_saturday_semi_peak_prices_differ(plan):
     assert [(c["period"], c["rate"]) for c in got] == [
         ("semi_peak", pytest.approx(rate)) for _, rate in cases
     ]
-    index = pd.DatetimeIndex([when for when, _ in cases])
+    index = pd.DatetimeIndex(sorted(when for when, _ in cases))
     costs = tariff.calculate_costs(pd.Series(1.0, index=index))
     assert costs.sum() == pytest.approx(sum(rate for _, rate in cases))

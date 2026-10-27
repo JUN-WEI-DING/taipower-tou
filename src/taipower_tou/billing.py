@@ -31,6 +31,7 @@ from taipower_tou.tariff import (
     check_price_dates,
     season_day_shares,
     tiered_energy_cost,
+    unit_costs,
 )
 
 
@@ -1345,14 +1346,7 @@ def _calculate_energy_costs(
         }
         return pd.Series(totals).sort_index()
 
-    unit_costs = pd.Series(
-        [
-            rates.get_cost(season, period)
-            for season, period in zip(context_df["season"], context_df["period"])
-        ],
-        index=usage.index,
-    )
-    interval_costs = usage * unit_costs
+    interval_costs = usage * unit_costs(rates, context_df)
     totals = interval_costs.groupby(billing_periods).sum()
     if hasattr(totals, "index") and hasattr(totals.index, "to_timestamp"):
         totals.index = totals.index.to_timestamp()
@@ -1389,20 +1383,14 @@ def _calculate_period_costs(
             )
         return pd.DataFrame(records, columns=columns)
 
-    unit_costs = np.array(
-        [
-            rates.get_cost(season, period_type)
-            for season, period_type in zip(context_df["season"], context_df["period"])
-        ],
-        dtype=float,
-    )
+    unit_cost = unit_costs(rates, context_df)
     rows = pd.DataFrame(
         {
             "period": billing_periods.to_timestamp(),
             "season": context_df["season"].map(_label_value).to_numpy(),
             "period_type": context_df["period"].map(_label_value).to_numpy(),
             "usage_kwh": usage.to_numpy(),
-            "energy_cost": usage.to_numpy() * unit_costs,
+            "energy_cost": usage.to_numpy() * unit_cost,
         }
     )
     return rows.groupby(columns[:3], sort=False, as_index=False)[columns[3:]].sum()

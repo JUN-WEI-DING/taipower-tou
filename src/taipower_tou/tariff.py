@@ -382,7 +382,7 @@ class TariffPlan:
             cost: float | None = None
 
             if not self.rates.tiered_rates:
-                unit_cost = self.rates.get_cost(season, period)
+                unit_cost = self.rates.get_cost(season, period, context["day_type"])
                 if usage_kwh is not None:
                     cost = float(usage_kwh) * unit_cost
 
@@ -413,12 +413,7 @@ class TariffPlan:
             cost_series = pd.Series([None] * len(target), index=target, name="cost")
         else:
             rate_series = pd.Series(
-                [
-                    self.rates.get_cost(season, period)
-                    for season, period in zip(seasons, periods)
-                ],
-                index=target,
-                name="rate",
+                unit_costs(self.rates, context_df), index=target, name="rate"
             )
             if usage_kwh is None:
                 cost_series = pd.Series([None] * len(target), index=target, name="cost")
@@ -455,14 +450,8 @@ class TariffPlan:
             return self._calculate_tiered_costs(usage_kwh)
 
         context = self.profile.evaluate(usage_kwh.index)
-        unit_costs = pd.Series(
-            [
-                self.rates.get_cost(season, period)
-                for season, period in zip(context["season"], context["period"])
-            ],
-            index=usage_kwh.index,
-        )
-        interval_costs = usage_kwh * unit_costs
+        unit_cost = pd.Series(unit_costs(self.rates, context), index=usage_kwh.index)
+        interval_costs = usage_kwh * unit_cost
         month_index = taiwan_wall_time(usage_kwh.index)
         monthly_costs = interval_costs.groupby(month_index.to_period("M")).sum()
         monthly_costs.index = monthly_costs.index.to_timestamp()
@@ -552,20 +541,14 @@ class TariffPlan:
                 ]
             return result
 
-        unit_costs = pd.Series(
-            [
-                self.rates.get_cost(season, period)
-                for season, period in zip(context["season"], context["period"])
-            ],
-            index=usage_kwh.index,
-        )
+        unit_cost = pd.Series(unit_costs(self.rates, context), index=usage_kwh.index)
         base = pd.DataFrame(
             {
                 "month": month_index.to_period("M"),
                 "season": context["season"].apply(_label_value),
                 "period": context["period"].apply(_label_value),
                 "usage_kwh": usage_kwh.values,
-                "cost": (usage_kwh * unit_costs).values,
+                "cost": (usage_kwh * unit_cost).values,
             }
         )
         grouped = base.groupby(
@@ -590,6 +573,19 @@ class TariffPlan:
                 ]
             ]
         return grouped[["month", "season", "period", "usage_kwh", "cost"]]
+
+
+def unit_costs(rates: TariffRate, context: pd.DataFrame) -> npt.NDArray[np.float64]:
+    """The price per kWh for each row of a season, day type and period context."""
+    return np.array(
+        [
+            rates.get_cost(season, period, day_type)
+            for season, day_type, period in zip(
+                context["season"], context["day_type"], context["period"]
+            )
+        ],
+        dtype=float,
+    )
 
 
 def check_price_dates(

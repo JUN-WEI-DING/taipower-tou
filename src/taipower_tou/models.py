@@ -61,6 +61,10 @@ class TariffRate:
         default_factory=dict
     )
     tiered_rates: list[ConsumptionTier] = field(default_factory=list)
+    # Prices listed per day type, keyed by season, period and day type labels.
+    # A three-stage plan's weekday and Saturday 半尖峰 differ, so these take
+    # precedence over period_costs.
+    day_type_costs: dict[tuple[str, str, str], float] = field(default_factory=dict)
     # The first and last day Taipower's bundled prices cover, or None for
     # prices the caller supplies.
     price_dates: tuple[date, date] | None = None
@@ -76,7 +80,16 @@ class TariffRate:
             return "tou"
         return "unknown"
 
-    def get_cost(self, season: SeasonType | str, period: PeriodType | str) -> float:
+    def get_cost(
+        self,
+        season: SeasonType | str,
+        period: PeriodType | str,
+        day_type: Any = None,
+    ) -> float:
+        if day_type is not None:
+            key = (_label_value(season), _label_value(period), _label_value(day_type))
+            if key in self.day_type_costs:
+                return self.day_type_costs[key]
         if (season, period) in self.period_costs:
             return self.period_costs[(season, period)]
         season_key = _label_value(season)
