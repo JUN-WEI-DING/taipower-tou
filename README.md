@@ -753,8 +753,10 @@ An off-peak day is a Sunday or a listed day: 1/1, 春節 (除夕 to 初五), 2/2
 From 2025-09-01 the list also has 除夕前1日, 9/28, 10/25 and 12/25.
 補假 and 彈性放假 days are not off-peak days, and a listed day that falls on a Saturday is still one.
 The calculation runs offline. Years outside 2014–2100 raise `CalendarError`; use `custom_calendar(...)` for them.
+Timezone-aware timestamps are converted to Taiwan time (UTC+8) first. Naive timestamps are read as Taiwan time.
 
 離峰日依台電電價表所列日期計算（週日與表列節日），補假與彈性放假不算離峰日。不需連網，支援 2014–2100 年。
+帶時區的時間會先換成台灣時間（UTC+8）；不帶時區的時間視為台灣時間。
 
 ```python
 from datetime import datetime
@@ -766,7 +768,12 @@ print(tou.is_holiday(datetime(2025, 1, 27)))  # False
 ```
 
 `tests/data/taipower_calendar/` holds Taipower's official 時間電價日曆表 day by day, and the tests compare every listed year with them.
-Taipower publishes these calendars about a year ahead, so 2014–2027 are checked against official calendars. Later years assume the current list stays in force.
+Taipower publishes these calendars about a year ahead, so 2014–2027 are checked against official calendars. Later years assume the current list stays in force and raise `UncheckedYearWarning`, once per year.
+
+> [!IMPORTANT]
+> **Taipower can change the off-peak list.** On 2025-09-01 Taipower added off-peak days and revised the 114年 calendar it had already published, so 2025-10-25 and 2025-12-25 became off-peak days. This package computes the list it knew when it was released and cannot follow a later change, even for a year it has checked. Before you rely on a bill, check Taipower's latest 電價表 and 時間電價日曆表, and upgrade when a new version of this package follows a change.
+>
+> **台電可能修改離峰日。** 台電在 2025-09-01 新增離峰日，並改版已公布的 114 年日曆，2025-10-25 與 2025-12-25 因此成為離峰日。本套件只能依發布時已知的規則計算，之後的修改不會自動反映，已核對過的年份也一樣。重要的帳單請自行核對台電最新的電價表與時間電價日曆表，並在本套件發布對應新版後升級。
 
 **Check Period Type (Peak/Off-Peak):**
 

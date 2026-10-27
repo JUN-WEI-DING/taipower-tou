@@ -158,8 +158,7 @@ class TaiwanCalendar:
         if cache_dir is not None or api_timeout is not None:
             warnings.warn(
                 "cache_dir and api_timeout have no effect: off-peak days are "
-                "computed from Taipower's rule without network access. They will "
-                "be removed in a future release.",
+                "computed from Taipower's rule without network access.",
                 DeprecationWarning,
                 stacklevel=2,
             )

@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   2026-02-21, 2026-02-27 and 2027-03-01.
 - Results no longer depend on network access, the local cache, or whether
   `zhdate` is installed.
+- Timezone-aware input is evaluated in Taiwan local time (UTC+8). An
+  Asia/Taipei index used to get the previous day's day type, and a UTC index
+  used UTC hours and months. For a weekday daytime load this underbilled by
+  6–10%. This bug was present in 0.1.0.
+- `DatetimeIndex.dayofweek` and string `inferred_freq`, which pandas 4
+  removes, are no longer used.
 
 ### Changed
 - Off-peak days use the list in force on each date. From 2014 the list is
@@ -28,9 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   時間電價日曆表 (`tests/data/taipower_calendar/`).
   Years after 2027 assume the current list stays in force.
 
+### Added
+- `UncheckedYearWarning`, raised once per year for years after the last
+  Taipower calendar this version was checked against (2027). Taipower can
+  change the off-peak list, as it did on 2025-09-01.
+
 ### Deprecated
 - `cache_dir` and `api_timeout` have no effect and raise a
-  `DeprecationWarning`. They will be removed in a future release.
+  `DeprecationWarning`. They stay accepted so existing code keeps working.
 
 ### Removed
 - Holiday downloads from the ruyut/TaiwanCalendar API and the local cache.
