@@ -810,36 +810,39 @@ def _calculate_adjustments(
     oc_rule = rules.get("over_contract_penalty")
     if oc_rule:
         base_label = oc_rule.get("base_fee_label", "經常契約")
-        base_rate = _basic_fee_rate_for_label(plan_data, base_label, month_index, store)
-        if base_rate is not None:
-            over_series = _compute_over_contract_kw(
-                inputs,
-                context_df,
-                billing_periods,
-                oc_rule,
+        formula = rules.get("basic_fee_formula", {})
+        seasons = dict(
+            zip(month_index, _month_season_label(month_index, plan_data, store))
+        )
+        over_by_bill = _compute_over_contract_kw(
+            inputs, context_df, billing_periods, oc_rule, seasons
+        )
+        contract_kw = inputs.contract_capacity_kw or inputs.contract_capacities.get(
+            "regular", 0.0
+        )
+        threshold = contract_kw * oc_rule.get("threshold_ratio", 0.10)
+        rate_low = oc_rule.get("rate_low", 2)
+        rate_high = oc_rule.get("rate_high", 3)
+        for idx, over in (over_by_bill or {}).items():
+            amount = 0.0
+            counted = 0.0
+            for segment, kw in over.items():
+                # 超出部分依適用電價: each time's excess at its own 契約電價.
+                label = formula.get(_SEGMENT_FEE_LABELS[segment], base_label)
+                rate = _basic_fee_rate_for_label(plan_data, label, month_index, store)
+                if rate is None:
+                    rate = _basic_fee_rate_for_label(
+                        plan_data, base_label, month_index, store
+                    )
+                if rate is None:
+                    continue
+                low = min(kw, max(0.0, threshold - counted))
+                counted += kw
+                amount += rate.loc[idx] * (low * rate_low + (kw - low) * rate_high)
+            adjustment.loc[idx] += amount
+            details.append(
+                {"period": idx, "type": "over_contract", "amount": float(amount)}
             )
-            if over_series is not None:
-                threshold_ratio = oc_rule.get("threshold_ratio", 0.10)
-                rate_low = oc_rule.get("rate_low", 2)
-                rate_high = oc_rule.get("rate_high", 3)
-                for idx, over in over_series.items():
-                    contract_kw = (
-                        inputs.contract_capacity_kw
-                        or inputs.contract_capacities.get("regular", 0.0)
-                    )
-                    threshold = contract_kw * threshold_ratio
-                    over_low = min(over, threshold)
-                    over_high = max(0.0, over - threshold)
-                    amount = base_rate.loc[idx] * over_low * rate_low
-                    amount += base_rate.loc[idx] * over_high * rate_high
-                    adjustment.loc[idx] += amount
-                    details.append(
-                        {
-                            "period": idx,
-                            "type": "over_contract",
-                            "amount": float(amount),
-                        }
-                    )
 
     return adjustment, pd.DataFrame(details)
 
@@ -1195,16 +1198,27 @@ def _check_demand_resolution(demand: pd.Series) -> None:
         )
 
 
+_SEGMENT_FEE_LABELS = {
+    "peak": "regular_label",
+    "semi_peak": "semi_peak_label",
+    "saturday_semi_peak": "saturday_label",
+    "off_peak": "off_peak_label",
+}
+
+
 def _compute_over_contract_kw(
     inputs: BillingInputs,
     context_df: pd.DataFrame,
     billing_periods: pd.PeriodIndex,
     oc_rule: dict[str, Any],
-) -> pd.Series | None:
+    seasons: dict[pd.Timestamp, str],
+) -> dict[pd.Timestamp, dict[str, float]] | None:
+    """Each bill's 超約瓩數 by time, in the order the 電價表 deducts them."""
     if inputs.over_contract_kw is not None:
-        return pd.Series(
-            inputs.over_contract_kw, index=billing_periods.unique().to_timestamp()
-        )
+        return {
+            ts: {"peak": float(inputs.over_contract_kw)}
+            for ts in billing_periods.unique().to_timestamp()
+        }
     demand = inputs.demand_kw
     if demand is None:
         return None
@@ -1235,21 +1249,24 @@ def _compute_over_contract_kw(
     )
     results = {}
     for period, group in max_by_cat.groupby(level=0, sort=False):
-        values = group.droplevel(0).to_dict()
-        over = _calculate_over_contract_from_categories(
-            values, inputs.contract_capacities, oc_rule
+        ts = period.to_timestamp()
+        results[ts] = _calculate_over_contract_from_categories(
+            group.droplevel(0).to_dict(),
+            inputs.contract_capacities,
+            oc_rule,
+            seasons.get(ts, "non_summer"),
         )
-        results[period.to_timestamp()] = over
-    return pd.Series(results)
+    return results
 
 
 def _demand_categories(context_df: pd.DataFrame) -> pd.Series:
     categories = []
     for day_type, period in zip(context_df["day_type"], context_df["period"]):
-        if str(day_type) == "saturday" and str(period) == "semi_peak":
+        period = _label_value(period)
+        if _label_value(day_type) == "saturday" and period == "semi_peak":
             categories.append("saturday_semi_peak")
         else:
-            categories.append(str(period))
+            categories.append(period)
     return pd.Series(categories, index=context_df.index)
 
 
@@ -1257,44 +1274,36 @@ def _calculate_over_contract_from_categories(
     max_demand: dict[str, float],
     capacities: dict[str, float],
     oc_rule: dict[str, Any],
-) -> float:
-    tier = oc_rule.get("tier", "two_stage")
+    season: str,
+) -> dict[str, float]:
+    """超約瓩數 per time from each time's highest demand (第五章 七(一)).
+
+    Each time's excess leaves out the largest excess of the times before it,
+    so no kW is counted twice.
+    """
     regular = capacities.get("regular", 0.0)
-    non_summer = capacities.get("non_summer", 0.0)
-    semi_peak = capacities.get("semi_peak", 0.0)
-    saturday = capacities.get("saturday_semi_peak", 0.0)
-    off_peak = capacities.get("off_peak", 0.0)
-
-    if tier == "three_stage":
-        peak_over = max(0.0, max_demand.get("peak", 0.0) - regular)
-        semi_over = max(0.0, max_demand.get("semi_peak", 0.0) - (regular + semi_peak))
-        saturday_over = max(
-            0.0,
-            max_demand.get("saturday_semi_peak", 0.0)
-            - (regular + semi_peak + saturday),
-        )
-        off_over = max(
-            0.0,
-            max_demand.get("off_peak", 0.0)
-            - (regular + semi_peak + saturday + off_peak),
-        )
-        semi_over = max(0.0, semi_over - peak_over)
-        saturday_over = max(0.0, saturday_over - max(peak_over, semi_over))
-        off_over = max(0.0, off_over - max(peak_over, semi_over, saturday_over))
-        return max(peak_over, semi_over, saturday_over, off_over)
-
-    peak_over = max(0.0, max_demand.get("peak", 0.0) - (regular + non_summer))
-    saturday_over = max(
-        0.0,
-        max_demand.get("saturday_semi_peak", 0.0) - (regular + non_summer + saturday),
+    if oc_rule.get("tier") == "three_stage":
+        second, second_kw = "semi_peak", capacities.get("semi_peak", 0.0)
+        peak_base = regular
+    else:
+        second, second_kw = None, capacities.get("non_summer", 0.0)
+        # 夏月尖峰時間超約瓩數＝當月尖峰時間用電最高需量－經常契約容量.
+        peak_base = regular if season == "summer" else regular + second_kw
+    bases = {"peak": peak_base}
+    if second:
+        bases[second] = regular + second_kw
+    bases["saturday_semi_peak"] = (
+        regular + second_kw + capacities.get("saturday_semi_peak", 0.0)
     )
-    off_over = max(
-        0.0,
-        max_demand.get("off_peak", 0.0) - (regular + non_summer + saturday + off_peak),
-    )
-    saturday_over = max(0.0, saturday_over - peak_over)
-    off_over = max(0.0, off_over - max(peak_over, saturday_over))
-    return max(peak_over, saturday_over, off_over)
+    bases["off_peak"] = bases["saturday_semi_peak"] + capacities.get("off_peak", 0.0)
+
+    over: dict[str, float] = {}
+    largest = 0.0
+    for segment, base in bases.items():
+        excess = max(0.0, max_demand.get(segment, 0.0) - base)
+        over[segment] = max(0.0, excess - largest)
+        largest = max(largest, excess)
+    return over
 
 
 def _calculate_energy_costs(
