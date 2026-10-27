@@ -417,6 +417,26 @@ def test_high_voltage_summer_season_runs_may_16_to_october_15(plan, non_summer, 
     }
 
 
+def test_high_voltage_ev_summer_runs_june_1_to_september_30():
+    """四(四) lines 982-984: 按第四章第四條第(三)款「電動車充換電設施電價」95%
+    計算, whose 夏月 is 6月1日至9月30日 (line 625), not the 5月16日至10月15日 of
+    the other 高壓 tables. Taipower's 各類電價表及計算範例 (113/4/1) prints the
+    高壓 table with the same 夏月. The prices are a weekday 17:00, 尖峰 in both
+    seasons (lines 629-630)."""
+    days = {
+        datetime(2026, 5, 29, 17): ("non_summer", 12.14),
+        datetime(2026, 6, 1, 17): ("summer", 12.47),
+        datetime(2026, 9, 30, 17): ("summer", 12.47),
+        datetime(2026, 10, 1, 17): ("non_summer", 12.14),
+    }
+    tariff = tou.plan("high_voltage_ev")
+    got = {when: tariff.pricing_context(when) for when in days}
+    assert {when: (c["season"], c["rate"]) for when, c in got.items()} == {
+        when: (season, pytest.approx(EV_SHARE * rate))
+        for when, (season, rate) in days.items()
+    }
+
+
 VARIABLE_PEAK = {
     "high_voltage_three_stage_variable_peak": (
         HV,

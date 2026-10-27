@@ -148,7 +148,8 @@
     "test_tariff_table.py::test_every_half_hour_has_the_tariff_period_and_price",
     "test_tariff_table.py::test_basic_fee_prices",
     "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period",
-    "test_clauses_ch5.py::test_ev_basic_fee_is_per_household_and_per_regular_contract"
+    "test_clauses_ch5.py::test_ev_basic_fee_is_per_household_and_per_regular_contract",
+    "test_clauses_ch5.py::test_high_voltage_ev_summer_runs_june_1_to_september_30"
    ]
   },
   {
