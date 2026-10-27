@@ -54,6 +54,8 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+# A pandas or Python deprecation fails the suite before it changes behavior.
+filterwarnings = ["error::DeprecationWarning", "error::FutureWarning"]
 
 [tool.ruff]
 line-length = 88
