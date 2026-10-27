@@ -24,7 +24,11 @@ from taipower_tou.factory import (
     _season_strategy,
 )
 from taipower_tou.models import BillingCycleType, _label_value
-from taipower_tou.tariff import season_day_shares, tiered_energy_cost
+from taipower_tou.tariff import (
+    check_price_dates,
+    season_day_shares,
+    tiered_energy_cost,
+)
 
 
 @dataclass
@@ -401,6 +405,7 @@ def calculate_bill(
         calendar,
         billing_cycle_type=billing_cycle_type,
     )
+    check_price_dates(usage.index, tariff_plan.rates.price_dates)
     context = tariff_plan.profile.evaluate(usage_for_billing.index)
     energy_costs = _calculate_energy_costs(
         usage_for_billing,
@@ -514,6 +519,7 @@ def calculate_bill_breakdown(
         calendar,
         billing_cycle_type=billing_cycle_type,
     )
+    check_price_dates(usage.index, tariff_plan.rates.price_dates)
     context = tariff_plan.profile.evaluate(usage_for_billing.index)
 
     energy_costs = _calculate_energy_costs(

@@ -15,6 +15,10 @@ class UncheckedYearWarning(UserWarning):
     """Off-peak days for a year after the last Taipower calendar checked."""
 
 
+class UncheckedPriceWarning(UserWarning):
+    """Usage dated outside the period the bundled price table covers."""
+
+
 class TariffError(PowerKitError):
     """Tariff-related failures."""
 

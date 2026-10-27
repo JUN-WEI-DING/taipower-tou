@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import date
 from functools import lru_cache
 from typing import Any
 
@@ -121,6 +122,17 @@ class PlanStore:
 
     def definitions(self) -> dict[str, Any]:
         return self._load().get("definitions", {})
+
+    def price_dates(self) -> tuple[date, date]:
+        """First and last day the bundled prices cover.
+
+        The last day is how far Taipower's 電價費率審議會 has decided prices.
+        """
+        dates = self._load()["price_dates"]
+        return (
+            date.fromisoformat(dates["effective_from"]),
+            date.fromisoformat(dates["decided_through"]),
+        )
 
     def get_plan(self, plan_id: str) -> dict[str, Any]:
         for plan in self._load().get("plans", []):
@@ -342,4 +354,5 @@ def _build_tariff_plan_from_data(
         tiered_rates=tiered if tiered else None,
         season_strategy=season_strategy,
     )
+    rate = replace(rate, price_dates=store.price_dates())
     return build_tariff_plan(profile, rate, billing_cycle_type)

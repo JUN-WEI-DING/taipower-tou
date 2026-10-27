@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import functools
+import warnings
 from collections import Counter
 from datetime import date, datetime, time
 from typing import Any, Protocol
@@ -17,7 +18,7 @@ except ImportError:
     pd: Any = None  # type: ignore
 
 from taipower_tou.calendar import taiwan_wall_time
-from taipower_tou.errors import InvalidUsageInput, TariffError
+from taipower_tou.errors import InvalidUsageInput, TariffError, UncheckedPriceWarning
 from taipower_tou.models import (
     BillingCycleType,
     ConsumptionTier,
@@ -373,6 +374,7 @@ class TariffPlan:
             )
 
         if isinstance(target, datetime):
+            check_price_dates(pd.DatetimeIndex([target]), self.rates.price_dates)
             context = get_context(target, self.profile)
             season = context["season"]
             period = context["period"]
@@ -401,6 +403,7 @@ class TariffPlan:
         if pd is None or not isinstance(target, pd.DatetimeIndex):
             raise InvalidUsageInput("target must be a datetime or pandas.DatetimeIndex")
 
+        check_price_dates(target, self.rates.price_dates)
         context_df = self.profile.evaluate(target)
         seasons = context_df["season"]
         periods = context_df["period"]
@@ -446,6 +449,7 @@ class TariffPlan:
         if pd is None:
             raise TariffError("pandas is required for cost calculation")
         _validate_usage_series(usage_kwh)
+        check_price_dates(usage_kwh.index, self.rates.price_dates)
 
         if self.rates.tiered_rates:
             return self._calculate_tiered_costs(usage_kwh)
@@ -498,6 +502,7 @@ class TariffPlan:
         if pd is None:
             raise TariffError("pandas is required for cost calculation")
         _validate_usage_series(usage_kwh)
+        check_price_dates(usage_kwh.index, self.rates.price_dates)
 
         month_index = taiwan_wall_time(usage_kwh.index)
         context = self.profile.evaluate(usage_kwh.index)
@@ -585,6 +590,38 @@ class TariffPlan:
                 ]
             ]
         return grouped[["month", "season", "period", "usage_kwh", "cost"]]
+
+
+def check_price_dates(
+    index: pd.DatetimeIndex, price_dates: tuple[date, date] | None
+) -> None:
+    """Warn when usage falls outside the days Taipower's bundled prices cover."""
+    if price_dates is None:
+        return
+    effective_from, decided_through = price_dates
+    local = taiwan_wall_time(index)
+    if local.min().date() < effective_from:
+        _warn_outside_price_dates(effective_from, before=True)
+    if local.max().date() > decided_through:
+        _warn_outside_price_dates(decided_through, before=False)
+
+
+# pandas resets Python's per-location warning registry, so remember what was
+# already warned about to warn once per side per process.
+@functools.cache
+def _warn_outside_price_dates(bound: date, before: bool) -> None:
+    if before:
+        message = (
+            f"Prices are Taipower's table effective {bound}. Usage before "
+            f"{bound} was billed at earlier prices."
+        )
+    else:
+        message = (
+            f"Prices are Taipower's current table, which Taipower's 電價費率審議會 "
+            f"has kept through {bound}. Check Taipower's 電價表 for prices after "
+            "that day."
+        )
+    warnings.warn(message, UncheckedPriceWarning, stacklevel=4)
 
 
 def season_day_shares(

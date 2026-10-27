@@ -1,5 +1,9 @@
 {
   "version": "20251001",
+  "price_dates": {
+    "effective_from": "2025-10-01",
+    "decided_through": "2026-12-31"
+  },
   "definitions": {
     "seasons": [
       {

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import time
+from datetime import date, time
 from enum import Enum
 from typing import Any
 
@@ -61,6 +61,9 @@ class TariffRate:
         default_factory=dict
     )
     tiered_rates: list[ConsumptionTier] = field(default_factory=list)
+    # The first and last day Taipower's bundled prices cover, or None for
+    # prices the caller supplies.
+    price_dates: tuple[date, date] | None = None
 
     def rate_structure(self) -> str:
         has_periods = bool(self.period_costs)
