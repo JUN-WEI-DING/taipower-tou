@@ -38,7 +38,7 @@ def test_usage_outside_price_dates_warns_once(start, match):
     with pytest.warns(tou.UncheckedPriceWarning, match=match) as record:
         for use in _price_uses():
             use(_usage(start))
-    assert len(record) == 1
+    assert len([w for w in record if w.category is tou.UncheckedPriceWarning]) == 1
 
 
 def test_usage_inside_price_dates_does_not_warn():

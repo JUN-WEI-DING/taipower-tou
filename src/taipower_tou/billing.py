@@ -6,6 +6,7 @@ import math
 import warnings
 from dataclasses import dataclass, field
 from datetime import date
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,7 @@ from taipower_tou.errors import (
     InvalidBasicFeeInput,
     InvalidUsageInput,
     MissingRequiredInput,
+    PartialPeriodWarning,
 )
 from taipower_tou.factory import (
     PlanRequirements,
@@ -392,6 +394,7 @@ def calculate_bill(
     billing_periods = _billing_period_index(
         usage_for_billing.index, inputs.billing_cycle_months
     )
+    _check_whole_months(usage.index, billing_periods, inputs.billing_cycle_months or 1)
 
     # Convert billing_cycle_months to BillingCycleType
     billing_cycle_type = BillingCycleType.MONTHLY
@@ -506,6 +509,7 @@ def calculate_bill_breakdown(
     billing_periods = _billing_period_index(
         usage_for_billing.index, inputs.billing_cycle_months
     )
+    _check_whole_months(usage.index, billing_periods, inputs.billing_cycle_months or 1)
 
     # Convert billing_cycle_months to BillingCycleType
     billing_cycle_type = BillingCycleType.MONTHLY
@@ -1160,6 +1164,33 @@ def _billing_period_index(
     base = pd.PeriodIndex(index, freq="M")
     start = base.min()
     return pd.PeriodIndex([start + int(g) * cycle_months for g in group], freq="M")
+
+
+def _check_whole_months(
+    index: pd.DatetimeIndex, billing_periods: pd.PeriodIndex, cycle_months: int
+) -> None:
+    """Warn when the first or last bill covers only part of its months."""
+    local = taiwan_wall_time(index)
+    first_day = local.min().normalize()
+    last_day = local.max().normalize()
+    bills_start = billing_periods.min().start_time
+    bills_end = (billing_periods.max() + (cycle_months - 1)).end_time.normalize()
+    if first_day > bills_start or last_day < bills_end:
+        _warn_partial_period(first_day.date(), last_day.date(), cycle_months)
+
+
+# pandas resets Python's per-location warning registry, so remember the usage
+# spans already warned about.
+@cache
+def _warn_partial_period(first_day: date, last_day: date, cycle_months: int) -> None:
+    warnings.warn(
+        f"Bills cover {cycle_months} calendar month(s) each, counted from the "
+        f"first month of usage. Usage from {first_day} to {last_day} leaves "
+        "part of the first or last bill's months empty, so that bill is not "
+        "one Taipower bill. Taipower bills from one meter reading to the next.",
+        PartialPeriodWarning,
+        stacklevel=4,
+    )
 
 
 def _check_demand_resolution(demand: pd.Series) -> None:

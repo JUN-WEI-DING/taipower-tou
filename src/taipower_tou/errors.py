@@ -19,6 +19,10 @@ class UncheckedPriceWarning(UserWarning):
     """Usage dated outside the period the bundled price table covers."""
 
 
+class PartialPeriodWarning(UserWarning):
+    """A bill covers only part of its calendar months."""
+
+
 class TariffError(PowerKitError):
     """Tariff-related failures."""
 
