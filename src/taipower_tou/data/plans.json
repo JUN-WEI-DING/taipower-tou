@@ -1052,6 +1052,19 @@
             "min_installed_kw": 20,
             "min_demand_kw": 30
           }
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "需量經常契約",
+          "non_summer_label": "需量非夏月契約",
+          "weekend_ratio": 0.5
+        },
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "需量經常契約",
+          "tier": "two_stage"
         }
       }
     },

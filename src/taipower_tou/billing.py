@@ -990,7 +990,9 @@ def _basic_fee_from_formula(
         if formula["type"] == "two_stage":
             regular_rate = _season_rate(formula["regular_label"], season_label)
             non_summer_rate = _season_rate(formula["non_summer_label"], season_label)
-            saturday_rate = _season_rate(formula["saturday_label"], season_label)
+            saturday_rate = _season_rate(
+                formula.get("saturday_label", ""), season_label
+            )
             regular = capacities.get("regular", 0.0)
             non_summer = capacities.get("non_summer", 0.0)
             saturday = capacities.get("saturday_semi_peak", 0.0)
@@ -1018,7 +1020,7 @@ def _basic_fee_from_formula(
                     details.append(
                         {
                             "period": month_index[idx],
-                            "label": formula["saturday_label"],
+                            "label": formula.get("saturday_label", ""),
                             "quantity": weekend_base,
                             "rate": saturday_rate,
                             "cost": cost_weekend,
@@ -1051,7 +1053,7 @@ def _basic_fee_from_formula(
                     details.append(
                         {
                             "period": month_index[idx],
-                            "label": formula["saturday_label"],
+                            "label": formula.get("saturday_label", ""),
                             "quantity": weekend_base,
                             "rate": saturday_rate,
                             "cost": cost_weekend,
@@ -1062,7 +1064,9 @@ def _basic_fee_from_formula(
         if formula["type"] == "three_stage":
             regular_rate = _season_rate(formula["regular_label"], season_label)
             semi_rate = _season_rate(formula["semi_peak_label"], season_label)
-            saturday_rate = _season_rate(formula["saturday_label"], season_label)
+            saturday_rate = _season_rate(
+                formula.get("saturday_label", ""), season_label
+            )
             regular = capacities.get("regular", 0.0)
             semi_peak = capacities.get("semi_peak", 0.0)
             saturday = capacities.get("saturday_semi_peak", 0.0)
@@ -1097,7 +1101,7 @@ def _basic_fee_from_formula(
                 details.append(
                     {
                         "period": month_index[idx],
-                        "label": formula["saturday_label"],
+                        "label": formula.get("saturday_label", ""),
                         "quantity": weekend_base,
                         "rate": saturday_rate,
                         "cost": cost_weekend,
@@ -1313,6 +1317,9 @@ def _demand_categories(context_df: pd.DataFrame) -> pd.Series:
         period = _label_value(period)
         if _label_value(day_type) == "saturday" and period == "semi_peak":
             categories.append("saturday_semi_peak")
+        elif period == "flat":
+            # 非時間電價: one 最高需量 for the month, against 經常 (+ 非夏月).
+            categories.append("peak")
         else:
             categories.append(period)
     return pd.Series(categories, index=context_df.index)
