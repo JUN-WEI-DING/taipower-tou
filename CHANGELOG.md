@@ -68,6 +68,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `high_voltage_ev`.
 - 標準型時間電價 charges 按戶計收 (129.10 TWD single-phase, 262.50
   three-phase, chosen by `meter_phase`). It was never charged.
+- A bill pays one 按戶計收 fee, the one for its contract type and meter
+  phase. A bill without `contract_capacities` paid every 按戶計收 fee of
+  its plan, for example 105.00 + 262.50 TWD on `low_voltage_2_tier`, and
+  a `low_voltage_2_tier` 需量契約 bill paid the 裝置契約 105.00 TWD
+  instead of 262.50 TWD.
+- 功率因數 adjusts only the bills the 電價表 names: three-phase 表燈 bills
+  (標準型 with a contract of 20 kW or more), three-phase 低壓 bills with a
+  20 kW 裝置契約 or a 30 kW 需量契約, and every 高壓 bill. Any bill given a
+  `power_factor` was adjusted.
+- Below 80% 功率因數 the 超約 fee is adjusted too, and a month with no kWh
+  gets no 功率因數 adjustment, as Taipower's 營業規章 第三十、三十八條 say.
+  最高需量 counts whole kW (第二十八條), so 205.9 kW on a 200 kW contract
+  is 5 kW over.
+- `low_voltage_power` bills a 需量契約 per kW of 經常 and 非夏月契約 and
+  charges its 超約. `contract_capacities` were ignored and demand was
+  never checked.
+- A 裝置契約 bill with `demand_kw` pays no 超約. It was charged against a
+  0 kW contract, so a 9 kW demand on a 10 kW 裝置契約 added 6377 TWD.
+  When demand passes the 裝置契約 kW the bill warns, since Taipower moves
+  it to 需量契約電價 at a contract the 電價表 does not give.
+- Contracts for 週六半尖峰 or 離峰 time alone follow 第八章 二(一)8. Use
+  at other times pays 4.8x that time's basic fee and 1.6x its energy
+  price instead of 超約, 三段式 bills leave out 按戶計收, and 10% of the
+  contract is taken of the contract each time's excess is over. 10 kW over
+  a 300 kW 週六半尖峰 contract was 1341 TWD and is now 894 TWD.
+- `high_voltage_ev` uses the 6/1–9/30 夏月 of the 低壓 table it is 95% of.
+  It used the 5/16–10/15 of the other 高壓 tables. For 100 kW all day on a
+  200 kW contract, May 2026 drops from 323629.4 to 317131.4 TWD and
+  October from 336317.6 to 327665.0 TWD.
 
 ### Changed
 - Off-peak days use the list in force on each date. From 2014 the list is
@@ -85,6 +114,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/data/tariff_114_10_01.json` transcribes the 電價表's prices,
   hours, tiers and basic fees with the source line of each number. Tests
   check every plan against it at every half hour.
+- `tests/data/clauses/` splits the 電價表's 第三、四、五、八章 and 營業規章
+  第四章 into clauses. Each clause that changes a bill names its tests,
+  and the others say why no bill depends on them. Rules with no input in
+  this package, such as 免計營業稅 or 儲冷式空調, are expected failures.
+- `docs/references/` keeps the Taipower documents the tests cite beyond
+  the 電價表, with their archive URLs and sha256.
 - The README's over-contract, power factor and bill example sections
   follow the 電價表. `high_voltage_power` and `extra_high_voltage_power`
   are documented as the same as the 二段式 plans, since the 電價表 has no

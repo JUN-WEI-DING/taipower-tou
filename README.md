@@ -733,9 +733,19 @@ place of 非夏月契約.
   - First 20 kW (10%): 20 × Rate × 2
   - Remaining 10 kW: 10 × Rate × 3
 
-The 10% is taken of 經常契約. When several times exceed, the first 10% goes
-to the earliest of them in the order above. The tariff does not say how to
-split it; this is the package's reading.
+Each time's 10% is taken of the contracts its excess is over, the sum in its
+row above. The tariff does not say which contract the 10% means; this is the
+package's reading. 最高需量 counts whole kW, dropping the fraction
+(營業規章 第二十八條).
+
+A customer may contract for 週六半尖峰 or 離峰 time alone (第八章 二(一)8).
+Use at other times then pays 4.8× that time's basic fee rate on its highest
+demand and 1.6× its energy price, in place of 超約. On 三段式 plans such a
+customer pays no 按戶計收, as the text of 第三章 and 第四章 reads.
+
+A 裝置契約 customer with `demand_kw` pays no 超約. When the demand passes the
+裝置契約 kW, Taipower moves the bill to 需量契約電價, at a contract the tariff
+does not give, so the package warns and asks for `contract_capacities`.
 
 ---
 
@@ -745,11 +755,17 @@ split it; this is the package's reading.
 
 The tariff changes the month's bill (該月份電費), basic fee plus energy cost,
 by 0.1% for each 1% of power factor away from 80%. The 按戶計收 basic fee
-is left out. Over-contract fees get no discount.
+is left out. Over-contract fees get no discount, but below 80% they get the
+surcharge with the rest of the bill (營業規章 第三十條). A month with no kWh
+counts as 80% (第三十八條).
 
 ```
-功率因數調整 = (基本電費 − 按戶計收 + 流動電費) × (80% − 實際功率因數%) × 0.1%
+功率因數調整 = (基本電費 − 按戶計收 + 流動電費 [+ 超約, below 80%]) × (80% − 實際功率因數%) × 0.1%
 ```
+
+Only the bills the tariff names are adjusted: three-phase 表燈 bills (標準型
+with a contract of 20 kW or more), three-phase 低壓 bills with a 20 kW
+裝置契約 or a 30 kW 需量契約, and every 高壓 bill. Pass `meter_phase`.
 
 | Power Factor | Result | Example |
 |--------------|--------|---------|
@@ -776,6 +792,24 @@ a 230 kW peak on a weekday afternoon and 95% power factor.
 
 `calculate_bill` gives the same total, with the penalty and the discount
 together in `adjustment` (13,155.70).
+
+### Rules the package does not apply
+
+Tests mark each of these as an expected failure, since no input describes
+the customer or the decision is open.
+
+- Bills are not rounded to 角 and 元 (營業規章 第二十九條).
+- 免計營業稅 customers, 公用路燈, 農業動力 and the 軍眷 and 退休 family discounts.
+- Transformer losses for a 高壓 supply metered on the low-voltage side.
+- 用電設備容量 (kVA) for 表燈 power factor eligibility.
+- 儲冷式空調 off-peak energy at 60%.
+- 充換電設備 capacity checks for the EV tariff.
+- 三段式尖峰時間可變動時間電價. Taipower tells each customer its 指定 days the
+  day before, and no public list exists.
+- 自備 161 kV or 345 kV substation discounts and 常閉環路 or backup lines.
+
+Tariff clauses and their tests are listed in `tests/data/clauses/`. The
+documents behind them are in `docs/references/`.
 
 ---
 
