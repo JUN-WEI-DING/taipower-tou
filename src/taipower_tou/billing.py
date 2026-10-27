@@ -435,7 +435,7 @@ def calculate_bill(
     )
 
     total = energy_costs + basic_costs + surcharge + adjustment
-    min_fee = _minimum_monthly_fee(plan_data)
+    min_fee = _minimum_fee(plan_data, inputs.billing_cycle_months or 1)
     if min_fee is not None:
         total = total.clip(lower=min_fee)
 
@@ -555,7 +555,7 @@ def calculate_bill_breakdown(
     )
 
     total = energy_costs + basic_costs + surcharge + adjustment
-    min_fee = _minimum_monthly_fee(plan_data)
+    min_fee = _minimum_fee(plan_data, inputs.billing_cycle_months or 1)
     if min_fee is not None:
         min_adjustment = (min_fee - total).clip(lower=0.0)
         total = total.clip(lower=min_fee)
@@ -1078,12 +1078,13 @@ def _basic_fee_from_formula(
     return monthly, details
 
 
-def _minimum_monthly_fee(plan_data: dict[str, Any]) -> float | None:
+def _minimum_fee(plan_data: dict[str, Any], cycle_months: int) -> float | None:
+    """The least a bill covering cycle_months months is charged."""
     rules = plan_data.get("billing_rules", {})
     value = rules.get("min_monthly_fee")
     if value is None:
         return None
-    return float(value)
+    return float(value) * cycle_months
 
 
 def _apply_minimum_usage(
