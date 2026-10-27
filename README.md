@@ -734,8 +734,12 @@ place of 非夏月契約.
   - Remaining 10 kW: 10 × Rate × 3
 
 Each time's 10% is taken of the contracts its excess is over, the sum in its
-row above. The tariff does not say which contract the 10% means; this is the
-package's reading. 最高需量 counts whole kW, dropping the fraction
+row above. The tariff does not say which contract the 10% means, and no
+Taipower example has a 10% split after 尖峰 or with more than one contract.
+This is the package's reading, the one the per-time formulas and a 2015
+paper (Journal of Energy and Power Engineering 9:660) use. A published 離峰
+example (POXA, 2026) rules out taking it of that time's own contract alone.
+`docs/references/README.md` lists what was searched. 最高需量 counts whole kW, dropping the fraction
 (營業規章施行細則 第二十八條).
 
 A customer may contract for 週六半尖峰 or 離峰 time alone (第八章 二(一)8).
