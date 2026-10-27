@@ -429,7 +429,7 @@ def calculate_bill(
         inputs,
         month_index,
         store,
-        _idle_months(usage_for_billing, inputs, billing_periods),
+        _idle_months(usage_for_billing, inputs, billing_periods, context),
     )
     surcharge = _calculate_surcharges(plan_data, inputs, monthly_usage)
     adjustment, _ = _calculate_adjustments(
@@ -552,7 +552,7 @@ def calculate_bill_breakdown(
         inputs,
         month_index,
         store,
-        _idle_months(usage_for_billing, inputs, billing_periods),
+        _idle_months(usage_for_billing, inputs, billing_periods, context),
     )
     surcharge = _calculate_surcharges(plan_data, inputs, monthly_usage)
     adjustment, adjustment_details = _calculate_adjustments(
@@ -617,10 +617,34 @@ def _month_season_label(
     return labels
 
 
+def _household_fee(
+    plan_data: dict[str, Any], inputs: BillingInputs, contract: str
+) -> dict[str, Any] | None:
+    """The one 按戶計收 fee of a bill, by contract type and meter phase."""
+    phase = "three" if inputs.meter_phase == "three" else "single"
+    for entry in plan_data.get("basic_fees", []):
+        if (
+            entry.get("unit") == "per_household_month"
+            and entry.get("contract", contract) == contract
+            and entry.get("phase", phase) == phase
+        ):
+            return entry
+    return None
+
+
 def _idle_months(
-    usage: pd.Series, inputs: BillingInputs, billing_periods: pd.PeriodIndex
+    usage: pd.Series,
+    inputs: BillingInputs,
+    billing_periods: pd.PeriodIndex,
+    context: pd.DataFrame,
 ) -> pd.Series:
-    """Bills with no kWh and no demand (抄見度數與最高需量均為0)."""
+    """Bills with no kWh and no demand (抄見度數與最高需量均為0).
+
+    An 裝置契約 time-of-use bill counts only peak kWh (第四章 五(五)).
+    """
+    peak = context["period"].map(_label_value) == "peak"
+    if "裝置契約" in inputs.basic_fee_inputs and peak.any():
+        usage = usage.where(peak, 0.0)
     used = usage.groupby(billing_periods).sum() > 0
     if inputs.demand_kw is not None:
         demand = inputs.demand_kw.reindex(usage.index).fillna(0.0)
@@ -670,10 +694,12 @@ def _calculate_basic_fees(
                     }
                 )
 
+        household = _household_fee(plan_data, inputs, "installed")
         for entry in plan_data.get("basic_fees", []):
             label = entry.get("label", "")
-            unit = entry.get("unit", "")
-            if unit == "per_household_month":
+            if entry.get("unit") == "per_household_month":
+                if entry is not household:
+                    continue
                 quantity = inputs.basic_fee_inputs.get(label, 1.0)
             else:
                 quantity = inputs.basic_fee_inputs.get(label, 0.0)
@@ -887,15 +913,11 @@ def _basic_fee_from_formula(
     capacities = inputs.contract_capacities
     weekend_ratio = float(formula.get("weekend_ratio", 0.5))
 
-    household_label = formula.get("household_label")
-    if isinstance(household_label, dict):
-        household_label = household_label[
-            "three" if inputs.meter_phase == "three" else "single"
-        ]
-    if household_label:
+    entry = _household_fee(plan_data, inputs, "demand")
+    if entry:
+        household_label = entry["label"]
         count = inputs.basic_fee_inputs.get(household_label, 1.0)
-        entry = rates.get(household_label)
-        if entry and entry.get("cost") is not None:
+        if entry.get("cost") is not None:
             monthly += float(entry["cost"]) * count
             if detailed:
                 for ts in month_index:

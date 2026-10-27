@@ -252,7 +252,7 @@ def test_installed_tou_month_without_peak_usage_pays_half():
     """第四章 五(五): 按裝置契約容量計費之用戶，當月份抄見度數（「時間電價」
     用戶為尖峰時間用電）為0度 → 基本電費按核定電價50%."""
     usage = pd.Series(0.25, index=JULY)
-    usage[(JULY.dayofweek < 5) & (JULY.hour >= 9)] = 0.0
+    usage[(JULY.day_of_week < 5) & (JULY.hour >= 9)] = 0.0
     inputs = tou.BillingInputs(basic_fee_inputs={"裝置契約": 10})
     bill = tou.calculate_bill(usage, "low_voltage_2_tier", inputs).iloc[0]
     assert bill["basic_cost"] == pytest.approx(

@@ -513,12 +513,14 @@
         {
           "label": "按戶計收-單相",
           "unit": "per_household_month",
-          "cost": 129.1
+          "cost": 129.1,
+          "phase": "single"
         },
         {
           "label": "按戶計收-三相",
           "unit": "per_household_month",
-          "cost": 262.5
+          "cost": 262.5,
+          "phase": "three"
         },
         {
           "label": "經常契約",
@@ -726,11 +728,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": {
-            "single": "按戶計收-單相",
-            "three": "按戶計收-三相"
-          }
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -744,12 +742,14 @@
         {
           "label": "按戶計收-單相",
           "unit": "per_household_month",
-          "cost": 129.1
+          "cost": 129.1,
+          "phase": "single"
         },
         {
           "label": "按戶計收-三相",
           "unit": "per_household_month",
-          "cost": 262.5
+          "cost": 262.5,
+          "phase": "three"
         },
         {
           "label": "經常契約",
@@ -978,11 +978,7 @@
           "semi_peak_label": "半尖峰契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": {
-            "single": "按戶計收-單相",
-            "three": "按戶計收-三相"
-          }
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -1041,7 +1037,8 @@
         {
           "label": "按戶計收",
           "unit": "per_household_month",
-          "cost": 105.0
+          "cost": 105.0,
+          "contract": "installed"
         },
         {
           "label": "裝置契約",
@@ -1051,7 +1048,8 @@
         {
           "label": "按戶計收(需量)",
           "unit": "per_household_month",
-          "cost": 262.5
+          "cost": 262.5,
+          "contract": "demand"
         },
         {
           "label": "經常契約",
@@ -1258,8 +1256,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         },
         "zero_usage_basic_fee_ratio": 0.5
       }
@@ -1502,8 +1499,7 @@
           "semi_peak_label": "半尖峰契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         },
         "zero_usage_basic_fee_ratio": 0.5
       }
@@ -1664,8 +1660,7 @@
         },
         "basic_fee_formula": {
           "type": "regular_only",
-          "regular_label": "經常契約",
-          "household_label": "按戶計收"
+          "regular_label": "經常契約"
         },
         "zero_usage_basic_fee_ratio": 0.5
       }
@@ -1883,8 +1878,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -2101,8 +2095,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -2340,8 +2333,7 @@
           "semi_peak_label": "半尖峰契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -2558,8 +2550,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -2719,8 +2710,7 @@
         },
         "basic_fee_formula": {
           "type": "regular_only",
-          "regular_label": "經常契約",
-          "household_label": "按戶計收"
+          "regular_label": "經常契約"
         },
         "zero_usage_basic_fee_ratio": 0.5
       }
@@ -2938,8 +2928,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -3156,8 +3145,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -3395,8 +3383,7 @@
           "semi_peak_label": "半尖峰契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -3613,8 +3600,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     }
