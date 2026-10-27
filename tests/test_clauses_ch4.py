@@ -387,25 +387,18 @@ def test_installed_contract_metered_under_its_capacity_keeps_the_installed_price
     assert bill["total"] == pytest.approx(expected)
 
 
-@pytest.mark.parametrize(
-    ("plan", "household"),
-    [("low_voltage_power", 0.0), ("low_voltage_2_tier", HOUSEHOLD)],
-)
-def test_installed_contract_demand_over_capacity_moves_to_demand_price(plan, household):
+@pytest.mark.parametrize("plan", ["low_voltage_power", "low_voltage_2_tier"])
+def test_installed_contract_demand_over_capacity_needs_a_demand_contract(plan):
     """七(一)2 lines 740-741: 如用電最高需量超出原裝置契約容量時，自超約月份起改按
-    需量契約電價計費. July's 11 kW passes the 10 kW 裝置契約, so July and August
-    pay the 需量契約 basic fee. The text does not give the new 需量契約容量; this
-    reads it as the 10 kW the customer had."""
-    index = pd.date_range("2026-07-01", "2026-08-31 23:45", freq="15min")
-    demand = pd.Series(8.0, index=index)
-    demand.loc[pd.Timestamp(EVENING["summer"])] = 11.0
-    inputs = tou.BillingInputs(
-        basic_fee_inputs={"裝置契約": 10}, demand_kw=demand, billing_cycle_months=1
-    )
-    bills = tou.calculate_bill(pd.Series(0.25, index=index), plan, inputs)
-    assert bills["basic_cost"].tolist() == pytest.approx(
-        [household + REGULAR["summer"] * 10] * 2
-    )
+    需量契約電價計費. The text does not give the new 需量契約容量, so the bill
+    warns and asks for it instead of guessing one."""
+    with pytest.warns(UserWarning, match="需量契約電價"):
+        _bill(
+            plan,
+            _evening(kwh=2.0),
+            basic_fee_inputs={"裝置契約": 10},
+            demand_kw=_at(JULY, {EVENING["summer"]: 11.0}),
+        )
 
 
 def _demand(index, peaks):

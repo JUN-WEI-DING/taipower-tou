@@ -860,7 +860,12 @@ def _calculate_adjustments(
                 )
 
     oc_rule = rules.get("over_contract_penalty")
-    if oc_rule:
+    installed_only = "裝置契約" in inputs.basic_fee_inputs and not (
+        inputs.contract_capacities or inputs.contract_capacity_kw
+    )
+    if oc_rule and installed_only:
+        _warn_installed_demand_over_capacity(inputs, context_df, billing_periods)
+    elif oc_rule:
         base_label = oc_rule.get("base_fee_label", "經常契約")
         formula = rules.get("basic_fee_formula", {})
         seasons = dict(
@@ -897,6 +902,30 @@ def _calculate_adjustments(
             )
 
     return adjustment, pd.DataFrame(details)
+
+
+def _warn_installed_demand_over_capacity(
+    inputs: BillingInputs,
+    context_df: pd.DataFrame,
+    billing_periods: pd.PeriodIndex,
+) -> None:
+    """第四章 七(一)2: a metered 裝置契約 user stays on 裝置契約電價 and pays no
+    超約, until 最高需量 passes the 裝置契約容量. From that month the bill moves
+    to 需量契約電價, at a 契約容量 the 電價表 does not give."""
+    if inputs.demand_kw is None:
+        return
+    installed = inputs.basic_fee_inputs["裝置契約"]
+    demand = inputs.demand_kw.reindex(context_df.index).fillna(0.0)
+    peaks = demand.groupby(billing_periods).max()
+    over = peaks[peaks > installed]
+    if not over.empty:
+        warnings.warn(
+            f"最高需量 {over.iloc[0]:g} kW in {over.index[0]} passes the 裝置契約 "
+            f"{installed:g} kW. From that month Taipower bills 需量契約電價; pass "
+            "contract_capacities with the new 契約容量 to bill it.",
+            UserWarning,
+            stacklevel=4,
+        )
 
 
 def _basic_fee_rate_for_label(

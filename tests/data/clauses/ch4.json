@@ -143,7 +143,7 @@
     {"id": "四-七-(一)-2", "lines": [739, 741], "kind": "billing",
      "summary": "用電異常時得裝表計量，但仍按裝置契約電價計費；如用電最高需量超出原裝置契約容量，自超約月份起改按需量契約電價計費",
      "tests": ["test_clauses_ch4.py::test_installed_contract_metered_under_its_capacity_keeps_the_installed_price",
-               "test_clauses_ch4.py::test_installed_contract_demand_over_capacity_moves_to_demand_price"]},
+               "test_clauses_ch4.py::test_installed_contract_demand_over_capacity_needs_a_demand_contract"]},
     {"id": "四-七-(二)", "lines": [742, 742], "kind": "not_billing",
      "summary": "(二)按需量契約容量計費之用戶，依下列原則處理",
      "reason": "heading of 七(二)1 and 2"},
