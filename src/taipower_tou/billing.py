@@ -424,7 +424,13 @@ def calculate_bill(
     monthly_usage = usage_for_billing.groupby(billing_periods).sum()
     monthly_usage.index = monthly_usage.index.to_timestamp()
 
-    basic_costs, _ = _calculate_basic_fees(plan_data, inputs, month_index, store)
+    basic_costs, _ = _calculate_basic_fees(
+        plan_data,
+        inputs,
+        month_index,
+        store,
+        _idle_months(usage_for_billing, inputs, billing_periods),
+    )
     surcharge = _calculate_surcharges(plan_data, inputs, monthly_usage)
     adjustment = _calculate_adjustments(
         plan_data,
@@ -545,6 +551,7 @@ def calculate_bill_breakdown(
         inputs,
         month_index,
         store,
+        _idle_months(usage_for_billing, inputs, billing_periods),
     )
     surcharge = _calculate_surcharges(plan_data, inputs, monthly_usage)
     adjustment, adjustment_details = _calculate_adjustments_breakdown(
@@ -608,11 +615,24 @@ def _month_season_label(
     return labels
 
 
+def _idle_months(
+    usage: pd.Series, inputs: BillingInputs, billing_periods: pd.PeriodIndex
+) -> pd.Series:
+    """Bills with no kWh and no demand (抄見度數與最高需量均為0)."""
+    used = usage.groupby(billing_periods).sum() > 0
+    if inputs.demand_kw is not None:
+        demand = inputs.demand_kw.reindex(usage.index).fillna(0.0)
+        used |= demand.groupby(billing_periods).max() > 0
+    used.index = used.index.to_timestamp()
+    return ~used
+
+
 def _calculate_basic_fees(
     plan_data: dict[str, Any],
     inputs: BillingInputs,
     month_index: pd.Index,
     store: PlanStore,
+    idle_months: pd.Series,
 ) -> tuple[pd.Series, pd.DataFrame]:
     rules = plan_data.get("billing_rules", {})
     formula = rules.get("basic_fee_formula")
@@ -679,6 +699,13 @@ def _calculate_basic_fees(
                         "cost": cost,
                     }
                 )
+
+    idle_ratio = rules.get("zero_usage_basic_fee_ratio")
+    if idle_ratio is not None:
+        scale = idle_months.map({True: float(idle_ratio), False: 1.0})
+        monthly = monthly * scale
+        for item in details:
+            item["cost"] = float(item["cost"]) * scale[item["period"]]
 
     if inputs.billing_cycle_months and inputs.billing_cycle_months > 1:
         monthly = monthly * inputs.billing_cycle_months

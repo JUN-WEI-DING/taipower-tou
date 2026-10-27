@@ -168,3 +168,42 @@ def test_over_contract_basic_fee(index, capacities, peaks, expected):
         contract_capacities=capacities,
     )
     assert bill["adjustment"] == pytest.approx(expected)
+
+
+HALF_WHEN_IDLE = [
+    "lighting_standard_2_tier",
+    "lighting_standard_3_tier",
+    "low_voltage_2_tier",
+    "low_voltage_three_stage",
+    "low_voltage_ev",
+    "high_voltage_2_tier",
+    "high_voltage_three_stage",
+    "high_voltage_batch",
+    "high_voltage_ev",
+    "extra_high_voltage_2_tier",
+    "extra_high_voltage_three_stage",
+    "extra_high_voltage_batch",
+]
+
+
+@pytest.mark.parametrize("plan", HALF_WHEN_IDLE)
+def test_idle_month_pays_half_the_basic_fee_of_a_used_month(plan):
+    """第三章 五(三)4, 第四章 五(五), 第五章 五(二)."""
+    inputs = {"contract_capacities": {"regular": 100}, "meter_phase": "three"}
+    used = _bill(plan, JULY, **inputs)
+    idle = _bill(plan, JULY, kwh=0.0, **inputs)
+    assert idle["total"] == pytest.approx(0.5 * used["basic_cost"])
+
+
+def test_low_voltage_power_idle_month_pays_half_the_basic_fee():
+    inputs = {"basic_fee_inputs": {"裝置契約": 100}}
+    used = _bill("low_voltage_power", JULY, **inputs)
+    idle = _bill("low_voltage_power", JULY, kwh=0.0, **inputs)
+    assert idle["total"] == pytest.approx(0.5 * used["basic_cost"])
+    assert used["basic_cost"] == pytest.approx(137.50 * 100)
+
+
+def test_simple_tou_idle_month_pays_the_full_basic_fee():
+    """第三章 五(二)4: 簡易型 未用電者，基本電費按核定電價計算."""
+    bill = _bill("residential_simple_2_tier", JULY, kwh=0.0)
+    assert bill["total"] == pytest.approx(75.0)

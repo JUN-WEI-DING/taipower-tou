@@ -700,7 +700,10 @@
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
           "weekend_ratio": 0.5,
-          "household_label": {"single": "按戶計收-單相", "three": "按戶計收-三相"}
+          "household_label": {
+            "single": "按戶計收-單相",
+            "three": "按戶計收-三相"
+          }
         }
       }
     },
@@ -947,7 +950,10 @@
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
           "weekend_ratio": 0.5,
-          "household_label": {"single": "按戶計收-單相", "three": "按戶計收-三相"}
+          "household_label": {
+            "single": "按戶計收-單相",
+            "three": "按戶計收-三相"
+          }
         }
       }
     },
@@ -986,7 +992,10 @@
           "period": "flat",
           "cost": 3.87
         }
-      ]
+      ],
+      "billing_rules": {
+        "zero_usage_basic_fee_ratio": 0.5
+      }
     },
     {
       "id": "low_voltage_2_tier",
@@ -1215,7 +1224,8 @@
           "off_peak_label": "離峰契約",
           "weekend_ratio": 0.5,
           "household_label": "按戶計收"
-        }
+        },
+        "zero_usage_basic_fee_ratio": 0.5
       }
     },
     {
@@ -1456,7 +1466,8 @@
           "off_peak_label": "離峰契約",
           "weekend_ratio": 0.5,
           "household_label": "按戶計收"
-        }
+        },
+        "zero_usage_basic_fee_ratio": 0.5
       }
     },
     {
@@ -1615,7 +1626,8 @@
           "type": "regular_only",
           "regular_label": "經常契約",
           "household_label": "按戶計收"
-        }
+        },
+        "zero_usage_basic_fee_ratio": 0.5
       }
     },
     {
@@ -2671,7 +2683,8 @@
           "type": "regular_only",
           "regular_label": "經常契約",
           "household_label": "按戶計收"
-        }
+        },
+        "zero_usage_basic_fee_ratio": 0.5
       }
     },
     {
