@@ -2631,7 +2631,7 @@
       "name": "高壓-電動車充換電設施電價",
       "type": "TOU",
       "category": "high_voltage",
-      "season_strategy": "seasons_high_voltage",
+      "season_strategy": "seasons",
       "basic_fees": [
         {
           "label": "按戶計收",
