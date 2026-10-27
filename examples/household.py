@@ -15,7 +15,7 @@ from taipower_tou import BillingInputs, calculate_bill
 
 
 def create_realistic_household_usage(
-    year: int = 2025,
+    year: int = 2026,
     month: int = 7,
     include_ac: bool = True,
     ac_hours_start: int = 14,
@@ -24,7 +24,7 @@ def create_realistic_household_usage(
     """Create realistic household electricity usage pattern.
 
     Args:
-        year: Year (default 2025)
+        year: Year (default 2026)
         month: Month 1-12 (default 7 for July)
         include_ac: Whether to include AC usage
         ac_hours_start: AC start hour (default 14)
@@ -235,10 +235,10 @@ def main() -> None:
     print()
 
     # Scenario 1: Summer month with AC
-    print("Scenario: July 2025 (Summer) with Air Conditioning")
+    print("Scenario: July 2026 (Summer) with Air Conditioning")
     print("-" * 70)
 
-    usage_july = create_realistic_household_usage(year=2025, month=7, include_ac=True)
+    usage_july = create_realistic_household_usage(year=2026, month=7, include_ac=True)
     show_consumption_analysis(usage_july)
     show_appliance_breakdown(usage_july)
 
@@ -255,10 +255,10 @@ def main() -> None:
 
     # Scenario 2: Winter month (no AC)
     print()
-    print("Scenario: January 2025 (Winter) - No AC")
+    print("Scenario: January 2026 (Winter) - No AC")
     print("-" * 70)
 
-    usage_jan = create_realistic_household_usage(year=2025, month=1, include_ac=False)
+    usage_jan = create_realistic_household_usage(year=2026, month=1, include_ac=False)
     bill_jan = calculate_monthly_bill(usage_jan)
 
     total_july = bill_july["total"].iloc[0]

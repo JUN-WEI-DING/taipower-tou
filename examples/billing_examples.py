@@ -11,7 +11,7 @@ def main() -> None:
     usage = pd.Series(
         [1.0, 2.0, 0.5],
         index=pd.to_datetime(
-            ["2025-07-15 10:00", "2025-07-15 23:00", "2025-07-16 09:00"]
+            ["2026-07-15 10:00", "2026-07-15 23:00", "2026-07-16 09:00"]
         ),
     )
 
@@ -29,7 +29,7 @@ def main() -> None:
     print(tou.calculate_bill(usage, "residential_non_tou", inputs=inputs))
 
     # Advanced with demand series + contract capacities
-    demand_index = pd.date_range("2025-07-15 00:00", periods=96, freq="15min")
+    demand_index = pd.date_range("2026-07-15 00:00", periods=96, freq="15min")
     demand_kw = pd.Series(120.0, index=demand_index)
     inputs = tou.BillingInputs(
         contract_capacities={

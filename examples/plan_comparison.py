@@ -22,7 +22,7 @@ def create_household_usage(summer_month: bool = True) -> pd.Series:
     month = 7 if summer_month else 1
     days = 31 if month in [1, 3, 5, 7, 8, 10, 12] else 30
 
-    dates = pd.date_range(f"2025-{month:02d}-01", periods=24 * days, freq="h")
+    dates = pd.date_range(f"2026-{month:02d}-01", periods=24 * days, freq="h")
     hour = dates.hour
     day_of_week = dates.day_of_week
 
@@ -208,7 +208,7 @@ def main() -> None:
     # Create typical household usage (July - summer)
     usage = create_household_usage(summer_month=True)
 
-    print("Sample Usage: July 2025 (31 days)")
+    print("Sample Usage: July 2026 (31 days)")
     print(f"  Total: {usage.sum():.1f} kWh")
     print("  Pattern: Higher usage on weekday afternoons (2-5 PM)")
     print()

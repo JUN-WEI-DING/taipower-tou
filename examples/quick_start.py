@@ -22,7 +22,7 @@ def main():
     print("=" * 60)
 
     # Create 1 hour of usage (1 kWh)
-    dates = pd.date_range("2025-07-15 14:00", periods=1, freq="h")
+    dates = pd.date_range("2026-07-15 14:00", periods=1, freq="h")
     usage = pd.Series([1.0], index=dates)
 
     # Get plan and calculate
@@ -45,7 +45,7 @@ def main():
     print("=" * 60)
 
     # Create 24 hours of usage
-    dates = pd.date_range("2025-07-15", periods=24, freq="h")
+    dates = pd.date_range("2026-07-15", periods=24, freq="h")
     # Simulate typical household: higher in evening
     usage = pd.Series([1.0] * 24, index=dates)
 
@@ -70,9 +70,9 @@ def main():
     print("=" * 60)
 
     check_times = [
-        datetime(2025, 7, 15, 14, 0),  # Weekday afternoon
-        datetime(2025, 7, 15, 2, 0),  # Weekday night
-        datetime(2025, 7, 13, 14, 0),  # Sunday afternoon
+        datetime(2026, 7, 15, 14, 0),  # Weekday afternoon
+        datetime(2026, 7, 15, 2, 0),  # Weekday night
+        datetime(2026, 7, 12, 14, 0),  # Sunday afternoon
     ]
 
     for dt in check_times:
@@ -107,7 +107,7 @@ def main():
     print("Example 5: Plan Comparison")
     print("=" * 60)
 
-    dates = pd.date_range("2025-07-01", periods=24 * 30, freq="h")  # July
+    dates = pd.date_range("2026-07-01", periods=24 * 30, freq="h")  # July
     usage = pd.Series([2.0] * len(dates), index=dates)
 
     plans_to_compare = [
@@ -115,7 +115,7 @@ def main():
         "residential_simple_3_tier",
     ]
 
-    print(f"Usage: {usage.sum():.0f} kWh (July 2025)")
+    print(f"Usage: {usage.sum():.0f} kWh (July 2026)")
     print()
 
     for plan_id in plans_to_compare:

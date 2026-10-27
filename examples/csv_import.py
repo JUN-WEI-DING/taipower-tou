@@ -17,7 +17,7 @@ import taipower_tou as tou
 
 def create_sample_csv(filename: str = "sample_usage.csv") -> None:
     """Create a sample CSV file for demonstration."""
-    dates = pd.date_range("2025-07-01", periods=24 * 7, freq="h")  # 1 week
+    dates = pd.date_range("2026-07-01", periods=24 * 7, freq="h")  # 1 week
     data = {
         "timestamp": dates.strftime("%Y-%m-%d %H:%M"),
         "usage_kwh": [1.0 + (i % 3) * 0.5 for i in range(len(dates))],

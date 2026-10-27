@@ -50,10 +50,10 @@ def example_billing_cycle_types() -> None:
     # Create sample usage data across multiple months
     dates = pd.to_datetime(
         [
-            "2025-02-15 10:00",
-            "2025-02-15 14:00",
-            "2025-03-15 10:00",
-            "2025-03-15 14:00",
+            "2026-02-15 10:00",
+            "2026-02-15 14:00",
+            "2026-03-15 10:00",
+            "2026-03-15 14:00",
         ]
     )
     usage = pd.Series([50.0, 50.0, 60.0, 60.0], index=dates)
@@ -91,10 +91,10 @@ def example_odd_month_billing() -> None:
     # Create usage for February-March period
     dates = pd.to_datetime(
         [
-            "2025-02-01 00:00",
-            "2025-02-15 00:00",
-            "2025-03-01 00:00",
-            "2025-03-15 00:00",
+            "2026-02-01 00:00",
+            "2026-02-15 00:00",
+            "2026-03-01 00:00",
+            "2026-03-15 00:00",
         ]
     )
     usage = pd.Series([80.0, 70.0, 90.0, 85.0], index=dates)
@@ -132,10 +132,10 @@ def example_even_month_billing() -> None:
     # Create usage for January-February period
     dates = pd.to_datetime(
         [
-            "2025-01-01 00:00",
-            "2025-01-15 00:00",
-            "2025-02-01 00:00",
-            "2025-02-15 00:00",
+            "2026-01-01 00:00",
+            "2026-01-15 00:00",
+            "2026-02-01 00:00",
+            "2026-02-15 00:00",
         ]
     )
     usage = pd.Series([75.0, 80.0, 85.0, 90.0], index=dates)
@@ -157,8 +157,8 @@ def example_year_crossing() -> None:
 
     dates = pd.to_datetime(
         [
-            "2024-12-15 00:00",
-            "2025-01-15 00:00",
+            "2025-12-15 00:00",
+            "2026-01-15 00:00",
         ]
     )
     usage = pd.Series([150.0, 160.0], index=dates)
@@ -167,14 +167,14 @@ def example_year_crossing() -> None:
 
     result = _billing_period_group_index(usage.index, BillingCycleType.ODD_MONTH)
     print(f"Grouped to: {result.unique()[0]}")
-    print("(December 2024 + January 2025 -> billed in January 2025)")
+    print("(December 2025 + January 2026 -> billed in January 2026)")
 
     print_subsection("EVEN_MONTH: December-January crossing")
     print("January usage is billed together with December of the PREVIOUS year")
 
     result = _billing_period_group_index(usage.index, BillingCycleType.EVEN_MONTH)
     print(f"Grouped to: {result.unique()[0]}")
-    print("(December 2024 + January 2025 -> billed in December 2024)")
+    print("(December 2025 + January 2026 -> billed in December 2025)")
 
 
 def example_tier_doubling() -> None:
@@ -189,7 +189,7 @@ def example_tier_doubling() -> None:
     print("  - Bimonthly tier 2: 241-660 kWh @ 2.55/2.26 NT/kWh")
 
     print_subsection("Example 1: 200 kWh usage (stays in tier 1)")
-    dates = pd.to_datetime(["2025-02-01 00:00"])
+    dates = pd.to_datetime(["2026-02-01 00:00"])
     usage = pd.Series([200.0], index=dates)
 
     bill = tou.calculate_bill(
@@ -202,7 +202,7 @@ def example_tier_doubling() -> None:
     print(f"(200 kWh × 1.78 NT/kWh = {200 * 1.78:.2f} NT)")
 
     print_subsection("Example 2: 300 kWh usage (crosses into tier 2)")
-    dates = pd.to_datetime(["2025-02-01 00:00"])
+    dates = pd.to_datetime(["2026-02-01 00:00"])
     usage = pd.Series([300.0], index=dates)
 
     bill = tou.calculate_bill(
@@ -231,8 +231,8 @@ def example_season_boundary_handling() -> None:
     # February is non-summer, March is summer
     dates = pd.to_datetime(
         [
-            "2025-02-15 00:00",  # Non-summer
-            "2025-03-15 00:00",  # Summer
+            "2026-02-15 00:00",  # Non-summer
+            "2026-03-15 00:00",  # Summer
         ]
     )
     usage = pd.Series([120.0, 130.0], index=dates)
@@ -254,8 +254,8 @@ def example_season_boundary_handling() -> None:
 
     dates = pd.to_datetime(
         [
-            "2025-10-15 00:00",  # Non-summer
-            "2025-11-15 00:00",  # Non-summer
+            "2026-10-15 00:00",  # Non-summer
+            "2026-11-15 00:00",  # Non-summer
         ]
     )
     usage = pd.Series([120.0, 130.0], index=dates)
@@ -281,9 +281,9 @@ def example_monthly_vs_bimonthly_comparison() -> None:
     # Create same usage pattern for both plans
     dates = pd.to_datetime(
         [
-            "2025-02-15 00:00",
-            "2025-03-15 00:00",
-            "2025-04-15 00:00",
+            "2026-02-15 00:00",
+            "2026-03-15 00:00",
+            "2026-04-15 00:00",
         ]
     )
     usage = pd.Series([150.0, 150.0, 150.0], index=dates)
@@ -314,13 +314,13 @@ def example_practical_use_case() -> None:
     print_section("Practical Use Case: Analyzing Quarterly Bills")
 
     print("Scenario: A household wants to analyze their electricity costs")
-    print("for Q1 2025 (January, February, March)")
+    print("for Q1 2026 (January, February, March)")
 
     print_subsection("Step 1: Create sample usage data")
 
-    # Simulate hourly data for Q1 2025
+    # Simulate hourly data for Q1 2026
     # For simplicity, use daily averages
-    dates_q1 = pd.date_range("2025-01-01", "2025-03-31", freq="D")
+    dates_q1 = pd.date_range("2026-01-01", "2026-03-31", freq="D")
     # Simulate seasonal pattern: higher in Jan/Feb (heating), lower in Mar
     import numpy as np
 

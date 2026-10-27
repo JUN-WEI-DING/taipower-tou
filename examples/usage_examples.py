@@ -19,7 +19,7 @@ def main() -> None:
     # taiwan_calendar: 依台電電價表規則判斷離峰日（週日及表列節日，不含補假）
     calendar = tou.taiwan_calendar()
     # is_holiday: 判斷日期是否為全日離峰日（可傳 date 或 datetime）
-    print("is_holiday:", tou.is_holiday(datetime(2025, 7, 13), calendar=calendar))
+    print("is_holiday:", tou.is_holiday(datetime(2026, 7, 12), calendar=calendar))
 
     # available_plans: 取得支援方案名稱列表
     print("available_plans:", tou.available_plans())
@@ -36,7 +36,7 @@ def main() -> None:
     print("plan name:", plan_by_name.profile.name)
 
     # period_at: 以方案名稱取得時間點的時段型別
-    dt = datetime(2025, 7, 15, 10, 0)
+    dt = datetime(2026, 7, 15, 10, 0)
     print(
         "period_at:",
         tou.period_at(dt, "residential_simple_2_tier", calendar_instance=calendar),
@@ -81,7 +81,7 @@ def main() -> None:
 
     # calculate_costs: 以 TariffPlan 計算每月費用
     # （usage 必須是 Series，index 為 DatetimeIndex）
-    usage = _sample_usage(datetime(2025, 7, 15, 16, 0), periods=4, freq_minutes=30)
+    usage = _sample_usage(datetime(2026, 7, 15, 16, 0), periods=4, freq_minutes=30)
     print("calculate_costs:", tou.calculate_costs(usage, simple_plan))
     # costs: 以方案名稱計算每月費用（內部會建立 TariffPlan）
     print(
@@ -107,7 +107,7 @@ def main() -> None:
     )
 
     # pricing_context（DatetimeIndex 版本）: 回傳 DataFrame（season/period）
-    index = pd.date_range(datetime(2025, 7, 15, 0, 0), periods=3, freq="12h")
+    index = pd.date_range(datetime(2026, 7, 15, 0, 0), periods=3, freq="12h")
     print(
         "pricing_context_index:\n",
         tou.pricing_context(
@@ -119,12 +119,12 @@ def main() -> None:
 
     # Non-TOU（分級電價）範例
     non_tou_usage = _sample_usage(
-        datetime(2025, 7, 1, 0, 0), periods=5, freq_minutes=60
+        datetime(2026, 7, 1, 0, 0), periods=5, freq_minutes=60
     )
     print("non_tou_costs:", tou.calculate_costs(non_tou_usage, non_tou_plan))
 
     # period_context（DatetimeIndex 版本）: 回傳 DataFrame（season/day_type/period）
-    start = datetime(2025, 7, 15)
+    start = datetime(2026, 7, 15)
     window = pd.date_range(start, start + timedelta(hours=6), freq="2h")
     print(
         "period_context_index:\n",
@@ -161,7 +161,7 @@ def main() -> None:
     custom_plan = tou.build_tariff_plan(custom_profile, custom_rates)
     print(
         "custom_plan_context:",
-        custom_plan.pricing_context(datetime(2025, 7, 1, 13, 0)),
+        custom_plan.pricing_context(datetime(2026, 7, 1, 13, 0)),
     )
 
 
