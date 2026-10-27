@@ -16,7 +16,9 @@ Demand Penalty). 流動電費 is cut to the 角 once (docs/references/README.md,
 Open questions). 功率因數 is worked from the cut items, with 按戶計收 left out
 (README, Power Factor Adjustment). A 表燈 非時間 or 簡易型 bill with a
 three-phase meter is adjusted, since 用電設備容量 is not an input (README,
-Rules the package does not apply).
+Rules the package does not apply). A 時間電價 meter reads each 時段 on its own
+register, each to the whole kWh (施行細則 第二十八條; README, Complete Bill
+Example).
 
 A random bill keeps clear of what the README does not say. A 高壓 month that
 straddles 5/16 or 10/15 compares energy alone. A contract below a 功率因數
@@ -398,6 +400,12 @@ def _exact(values):
     return Fraction(f"{math.fsum(values):.6f}")
 
 
+def _whole(kwh):
+    """施行細則 第二十八條: 有效電度以瓩小時（kWH）...為計量單位，小數點以下四捨五入
+    進整."""
+    return Fraction(math.floor(kwh + Fraction(1, 2)))
+
+
 def _cut(amount):
     """施行細則 第二十九條: 應計電費各項均計至角位，分位以下捨棄."""
     return Fraction(math.trunc(amount * 10), 10)
@@ -561,40 +569,59 @@ def _power_factor_applies(plan, case):
 
 
 def _quarter_hours(plan_id, index):
-    """Each quarter hour's demand category and price under a plan's table."""
+    """Each quarter hour's demand category, price, and register: its 時段,
+    with 週六半尖峰 apart from 半尖峰."""
     plan, table = PLANS[plan_id], TABLES[plan_id]
     days = {d: (_season(plan, d), _day(d)) for d in set(index.date)}
     quarters = index.hour * 4 + index.minute // 15
     cells = [(days[d][1], *table[(*days[d], q)]) for d, q in zip(index.date, quarters)]
     categories = np.array([_category(plan, day, period) for day, period, _ in cells])
-    return categories, np.array([price for _, _, price in cells])
+    registers = np.array(
+        [
+            "saturday_semi_peak"
+            if (day, period) == ("saturday", "semi_peak")
+            else period
+            for day, period, _ in cells
+        ]
+    )
+    return categories, np.array([price for _, _, price in cells]), registers
 
 
-@functools.lru_cache(maxsize=4)
-def _energy(case):
-    """Each demand category's 流動電費, total kWh, and each category's highest
-    kW."""
+@functools.lru_cache(maxsize=8)
+def _energy(case, rounding=True):
+    """Each demand category's 流動電費, the kWh billed and metered, and each
+    category's highest kW. Rounded, each 時段 register of the meter is read to
+    the whole kWh, spread over its prices by their kWh (README, Complete Bill
+    Example)."""
     plan, kwh = PLANS[case.plan], _exact(case.usage.to_numpy())
     if plan.tiers:
-        kwh = max(kwh, _minimum_kwh(case))
+        metered = _whole(kwh) if rounding else kwh
+        kwh = max(metered, _minimum_kwh(case))
         days = _bill_days(case)
         cost = Fraction(0)
         for column, season in enumerate(SEASONS):
             share = Fraction(sum(_season(plan, d) == season for d in days), len(days))
             if share:
                 cost += share * _tiered(kwh, plan.tiers, column, case.months)
-        return {"month": cost}, kwh, {}
-    categories, prices = _quarter_hours(case.plan, case.usage.index)
+        return {"month": cost}, kwh, metered, {}
+    categories, prices, registers = _quarter_hours(case.plan, case.usage.index)
     usage = case.usage.to_numpy()
+    scale = dict.fromkeys(set(registers), Fraction(1))
+    if rounding:
+        kwh = Fraction(0)
+        for register in scale:
+            read = _exact(usage[registers == register])
+            scale[register] = _whole(read) / read if read else Fraction(0)
+            kwh += _whole(read)
     costs = dict.fromkeys(set(categories), Fraction(0))
-    for category, price in set(zip(categories, prices)):
-        cell = (categories == category) & (prices == price)
-        costs[category] += Fraction(price) * _exact(usage[cell])
+    for category, price, register in set(zip(categories, prices, registers)):
+        cell = (categories == category) & (prices == price) & (registers == register)
+        costs[category] += Fraction(price) * _exact(usage[cell]) * scale[register]
     if case.demand is None:
-        return costs, kwh, {}
+        return costs, kwh, kwh, {}
     demand = case.demand.to_numpy()
     highest = {c: _exact([demand[categories == c].max()]) for c in costs}
-    return costs, kwh, highest
+    return costs, kwh, kwh, highest
 
 
 def oracle_bill(case, rounding=True, cut_flow_once=False):
@@ -605,7 +632,7 @@ def oracle_bill(case, rounding=True, cut_flow_once=False):
     cut = _cut if rounding else (lambda amount: amount)
     days = _bill_days(case)
     summer = _season(plan, days[0]) == "summer"
-    costs, kwh, highest = _energy(case)
+    costs, kwh, metered, highest = _energy(case, rounding)
     energy = sum(costs.values())
     over_2000 = (
         max(Fraction(0), kwh - 2000) * Fraction(plan.over_2000)
@@ -620,7 +647,7 @@ def oracle_bill(case, rounding=True, cut_flow_once=False):
     over = cut(_over_contract_fee(plan, case, summer, highest))
     outside = sum(costs.get(c, 0) for c in _outside(case.contracts))
     adjustment = over + cut(outside * Fraction(6, 10))
-    used = case.usage.sum() > 0
+    used = metered > 0
     if case.power_factor is not None and used and _power_factor_applies(plan, case):
         factor = min(case.power_factor, 95)
         base = basic - household + flow + (over if factor < 80 else 0)

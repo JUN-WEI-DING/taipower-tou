@@ -7,9 +7,12 @@
      "summary": "第四章 電費之計收",
      "reason": "chapter heading"},
     {"id": "第二十八條", "lines": [2, 6], "kind": "billing",
-     "summary": "用電最高需量以瓩為計量單位，小數以下捨棄",
+     "summary": "有效電度小數點以下四捨五入進整；用電最高需量以瓩為計量單位，小數以下捨棄",
      "tests": [
-       "test_business_rules.py::test_highest_demand_drops_the_fraction_of_a_kw"]},
+       "test_business_rules.py::test_highest_demand_drops_the_fraction_of_a_kw",
+       "test_business_rules.py::test_kwh_are_read_to_the_whole_kwh_half_up",
+       "test_business_rules.py::test_each_time_of_day_is_read_on_its_own_register",
+       "test_business_rules.py::test_a_register_over_two_seasons_keeps_each_seasons_share"]},
     {"id": "第二十九條", "lines": [7, 10], "kind": "billing",
      "summary": "應計電費各項計至角位，分位以下捨棄；電費總金額以元為單位，角位四捨五入",
      "tests": [
@@ -33,7 +36,8 @@
     {"id": "第三十六條", "lines": [28, 29], "kind": "billing",
      "summary": "電價調整月份按調整前後使用日數比例分攤度數",
      "tests": [
-       "test_price_dates.py::test_usage_outside_price_dates_warns_once"]},
+       "test_price_dates.py::test_usage_outside_price_dates_warns_once",
+       "test_business_rules.py::test_a_month_over_the_summer_edge_is_billed_by_each_seasons_days"]},
     {"id": "第三十七條", "lines": [30, 31], "kind": "not_billing",
      "reason": "the order in which days are counted around a change; see 第三十六條"},
     {"id": "第三十八條", "lines": [32, 32], "kind": "billing",

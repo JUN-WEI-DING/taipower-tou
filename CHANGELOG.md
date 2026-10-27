@@ -10,10 +10,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2026-10-27
 
 ### Fixed
+- A timezone-aware single `datetime` is priced in Taiwan time by `period_at`,
+  `period_context`, `pricing_context`, `get_period` and `get_context`, as a
+  `DatetimeIndex` already was. 2026-07-13 01:00 UTC, 09:00 on a Monday in
+  Taiwan, was 離峰 at 2.06 TWD on `residential_simple_2_tier` instead of
+  尖峰 at 5.16 TWD.
+- `TariffPlan.calculate_costs` and `costs` raise `CalendarError` for tiered
+  plans in years outside 2014–2100, as `calculate_bill` and
+  `monthly_breakdown` do. They priced 2013 and 2101 without a word.
+- `UncheckedYearWarning`, `UncheckedPriceWarning` and the `cache_dir` /
+  `api_timeout` `DeprecationWarning` name the caller's line. They named a line
+  inside the package or in `functools`, and Python's default filter hid the
+  `DeprecationWarning`.
+- `plan(p.name)` finds `p` for every plan. An exact ID or name wins over part
+  of a longer name. `高壓電力-二段式時間電價` also matched
+  `extra_high_voltage_2_tier` and raised an ambiguity error.
+- Plan IDs, names and the removed-plan hints match ignoring case and
+  surrounding spaces, so `" HIGH_VOLTAGE_POWER "` names `high_voltage_2_tier`.
+- The README's plan tables give the names `available_plans()` returns. Six of
+  the names they gave matched no plan: 表燈非營業（累進）, 表燈營業（累進）,
+  表燈標準二段式, 表燈標準三段式, 低壓電動車充電 and 高壓電動車充電. They are
+  accepted as other names for their plans.
+- The README's 簡易型二段式 schedule follows the 電價表: weekday 尖峰 is
+  09:00–24:00 in 夏月 and 06:00–11:00 and 14:00–24:00 otherwise, and
+  Saturdays are 離峰 all day. It showed 07:00–23:00 and a Saturday 半尖峰 at
+  3.19 TWD that the plan does not have.
+- The README gives 高壓 and 特高壓 plans their 5/16–10/15 夏月 and says that
+  `UncheckedPriceWarning` is raised once for usage before 2025-10-01 and once
+  more for usage after 2026-12-31. It also says that each timestamp labels
+  the start of its interval and that a bill does not change the
+  `BillingInputs` it is given.
 - `demand_kw` finer than 15 minutes is averaged over each quarter hour, as
   營業規章 第三條 defines 需量. The highest 5-minute reading was billed as
   the month's demand before. Readings of 230, 200 and 200 kW on a 200 kW
   contract paid 15652 TWD of 超約 instead of 4472.
+- `demand_kw` is read on its own timestamps, in Taiwan time. It was
+  reindexed to the timestamps of `usage`, so hourly usage dropped every
+  15-minute reading off the hour, and demand in another timezone than the
+  usage was dropped altogether. 220 kW at 14:15 on a 200 kW
+  `high_voltage_2_tier` contract paid no 超約 instead of 8944.0 TWD, with
+  hourly usage or with usage and demand in different timezones.
+- 高壓 and 特高壓 months that straddle 5/16 or 10/16 pay each season's basic
+  fee and 超約 for that season's share of the days, as a mid-month price
+  change does (營業規章 第二十七條, 營業規章施行細則 第三十六條). The whole
+  month took its 1st day's season before. With 200 kW 經常契約 and 50 kW
+  非夏月契約 on `high_voltage_2_tier`, 260 kW at 尖峰 on a 非夏月 day and
+  215 kW on a 夏月 day, May 2026 pays 43270.8 TWD of basic fee instead of
+  41725.0 and 5077.3 of 超約 instead of 3338.0, and October pays 43174.1
+  instead of 44720.0 and 4968.6 instead of 35776.0. A simulated factory
+  month on a 280 kW 經常契約 totals 1.9% more for May and 2.9% less for
+  October. Two-month bills over the 6/1 or 10/1 edge are weighted the
+  same way.
+- A month with no use is told apart as the 電價表 and 第三十八條 say. 底度
+  billed on an empty month is not use, so 功率因數 leaves it alone; an empty
+  30 A three-phase house on `residential_non_tou` paid 2.1 TWD more for
+  January and February at 70% and 3.2 less at 95%. `over_contract_kw`
+  above 0 is use, so the month pays the whole basic fee; it paid half. A
+  reading under 1 kW is 0 kW, so a
+  month with no kWh and a 0.6 kW reading pays half; it paid the whole fee.
+  A 裝置契約 bill halves on its 尖峰 kWh alone, so 4 kW of demand in a month
+  without 尖峰 kWh no longer makes it pay 2992.5 TWD instead of 1496.2.
+- The warning that demand passed the 裝置契約 compares whole kW of the
+  15-minute 最高需量, so 10.9 kW no longer passes a 10 kW 裝置契約.
+- Every meter under 1000 V has the 低壓 底度, including the three-phase
+  380 V meters 表燈 is supplied at (第三章 二). They had none, so an empty
+  July on `residential_non_tou` with a 30 A meter paid the 100 TWD minimum
+  instead of 60 kWh at 1.78, 106.8 TWD. A meter no 底度 rule covers warns
+  instead of being billed without one in silence.
+- A two-month 簡易型 bill pays the 1.04 TWD 加計 on its kWh over 4000, 2000
+  for each month, as tiered bills double their tiers. 2000 kWh in each
+  month paid 2080.0 TWD of 加計 instead of none, and 2200 kWh in each paid
+  2496.0 instead of 416.0.
+- `float32` usage is billed in `float64`. Its sums drifted, so 5005 kWh in a
+  month on `residential_simple_2_tier` paid 3125.1 TWD of 加計 instead of
+  3125.2.
+- `PartialPeriodWarning` is raised on every partial bill. It was raised once
+  per date range, so a second customer read on the same days got no
+  warning.
 - Off-peak days (離峰日) now follow the list in Taipower's 電價表 instead of
   the government office calendar. 補假 and 彈性放假 days are no longer
   off-peak, and listed days that fall on a Saturday are now off-peak. The
@@ -109,12 +182,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Unrounded totals, `pricing_context` and `calculate_costs` are unchanged.
 
 ### Changed
+- `calculate_bill_breakdown`'s `basic_details` has `season` and `share`
+  columns, and lists each fee once for each season of a bill that spans
+  two.
+- `get_period`, `get_context` and `TaiwanCalendar.is_holiday` are plain
+  functions instead of `functools.singledispatch` ones, so they no longer have
+  `.register`. They accept the same types as before.
 - `calculate_bill` and `calculate_bill_breakdown` round as Taipower bills
-  (營業規章施行細則 第二十九條). Each item is cut to the 角, 功率因數 is worked from
-  the cut items, and the total is rounded half up to the 元. A
-  `low_voltage_2_tier` July bill with 1.18 kWh at 尖峰 and a 10 kW 裝置契約
-  totals 1487 TWD instead of 1486.5372. `BillingInputs(taipower_rounding=False)`
-  keeps the unrounded amounts. `TariffPlan.calculate_costs` does not round.
+  (營業規章施行細則 第二十八、二十九條). Each bill's kWh are read to the whole
+  kWh, half up, each item is cut to the 角, 功率因數 is worked from the cut
+  items, and the total is rounded half up to the 元. A time-of-use bill
+  reads each of 尖峰, 半尖峰, 週六半尖峰 and 離峰 on its own, the package's
+  reading of 第二十八條. A `low_voltage_2_tier` July bill with 38 kWh at 尖峰
+  and a 10 kW 裝置契約 totals 1691 TWD instead of 1690.52.
+  `BillingInputs(taipower_rounding=False)` keeps the unrounded kWh and
+  amounts. `TariffPlan.calculate_costs` does not round.
 - Off-peak days use the list in force on each date. From 2014 the list is
   1/1, 春節 (除夕 to 初五), 2/28, 4/4, 清明, 5/1, 端午, 中秋 and 10/10. From
   2025-09-01 the list adds 除夕前1日, 9/28, 10/25 and 12/25.
@@ -141,6 +223,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Examples use 2026 dates, which the bundled prices cover.
 
 ### Added
+- `UnknownPlanError`, raised for a plan name that matches no plan or more than
+  one, a removed plan, and a plan that is not a string (`None` raised
+  `AttributeError`). `plan`, `calculate_bill`, `get_plan_requirements` and
+  `TariffFactory` raise it. It is a `PowerKitError`, so the README's
+  `except PowerKitError` example catches it, and also a `ValueError` and a
+  `KeyError`, which `plan` and `calculate_bill` raised before. Its message no
+  longer starts with "Unsupported plan name".
+- `InvalidBillingInput` is exported from `taipower_tou`.
 - `UncheckedYearWarning`, raised once per year for years after the last
   Taipower calendar this version was checked against (2027). Taipower can
   change the off-peak list, as it did on 2025-09-01.

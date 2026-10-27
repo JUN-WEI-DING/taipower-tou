@@ -6,7 +6,6 @@ import pandas as pd
 import pytest
 
 import taipower_tou as tou
-from taipower_tou.billing import _warn_partial_period
 
 INPUTS = tou.BillingInputs(
     taipower_rounding=False, meter_phase="single", meter_voltage_v=110, meter_ampere=10
@@ -41,7 +40,6 @@ BILLS = {
 @pytest.mark.parametrize("bill", BILLS)
 @pytest.mark.parametrize("entry", [tou.calculate_bill, tou.calculate_bill_breakdown])
 def test_bill_over_part_of_its_months_warns(bill, entry):
-    _warn_partial_period.cache_clear()
     with pytest.warns(tou.PartialPeriodWarning, match="calendar month"):
         BILLS[bill](entry)
 
@@ -56,7 +54,6 @@ def test_bill_over_part_of_its_months_warns(bill, entry):
     ids=["two-months", "two-bills", "two-monthly-bills"],
 )
 def test_bill_over_whole_months_does_not_warn(usage, plan):
-    _warn_partial_period.cache_clear()
     with warnings.catch_warnings():
         warnings.simplefilter("error", tou.PartialPeriodWarning)
         tou.calculate_bill(usage, plan, INPUTS)

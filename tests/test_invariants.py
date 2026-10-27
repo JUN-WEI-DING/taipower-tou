@@ -187,13 +187,16 @@ def test_items_are_cut_to_the_jiao_and_the_total_rounded_to_the_yuan(name):
 
 @pytest.mark.parametrize("name", PLANS)
 def test_rounding_moves_the_total_less_than_its_cuts(name):
-    """第二十九條 cuts five items (流動電費, 基本電費, 2000度 加計, 超約, 1.6倍
-    流動電費) by under a 角 each, works 功率因數 from the cut items and cuts it
-    too, then moves the total by half a 元 at most. high_voltage_ev then
-    takes 95% and rounds again."""
+    """施行細則 第二十八條 reads each 時段 register, four at most, to the whole
+    kWh, half a kWh from the kWh given at up to the highest 電價表 price, 12.47
+    (line 629), and 簡易型's 1.04 加計 (line 204). 第二十九條 cuts five items
+    (流動電費, 基本電費, 2000度 加計, 超約, 1.6倍 流動電費) by under a 角 each,
+    works 功率因數 from the cut items and cuts it too, then moves the total by
+    half a 元 at most. high_voltage_ev then takes 95% and rounds again."""
     _, _, inputs = _sample(name)
     share = abs(80 - min(inputs["power_factor"], 95)) / 1000
-    cuts = 0.1 * 5 * (1 + share) + 0.1
+    reading = 4 * 0.5 * (12.47 + 1.04)
+    cuts = (0.1 * 5 + reading) * (1 + share) + 0.1
     plan = PLANS[name]
     bound = 0.5 + cuts if plan.ratio == 1.0 else 0.5 + plan.ratio * (0.5 + cuts)
     moved = _base(name)["total"] - _base(name, rounding=False)["total"]

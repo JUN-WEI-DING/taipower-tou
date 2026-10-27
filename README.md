@@ -29,11 +29,11 @@ uv add taipower-tou  # add to a project
 
 ## Prices and Their Dates (電價版本與適用範圍)
 
-The bundled prices are Taipower's 電價表 effective 2025-10-01 (114/10/1). Taipower's 電價費率審議會 kept them unchanged through 2026-12-31. Usage dated before 2025-10-01, or after 2026-12-31, raises `UncheckedPriceWarning` once per process, because Taipower billed or may bill those days at other prices.
+The bundled prices are Taipower's 電價表 effective 2025-10-01 (114/10/1). Taipower's 電價費率審議會 kept them unchanged through 2026-12-31. Usage dated before 2025-10-01 raises `UncheckedPriceWarning` once per process, and usage dated after 2026-12-31 raises it once more, because Taipower billed or may bill those days at other prices.
 
 The prices are the main tables only. Customers in the 電價表's 附錄一 (適用電價調整係數行業或用戶, such as industries with frozen or halved increases, companies using 500 million kWh (5億度) or more a year, and data centers (IDC)) and 附錄二 (農漁業、學校、社福團體) pay other prices, and this package does not cover them. Plans you build with `build_tariff_plan` use your own prices and never raise `UncheckedPriceWarning`.
 
-內建電價是台電 114/10/1 生效的電價表，電價費率審議會決議維持到 2026-12-31。用電日期早於 2025-10-01 或晚於 2026-12-31 時，每個程式只會發出一次 `UncheckedPriceWarning`，因為那些日子台電用的是（或可能是）別的電價。
+內建電價是台電 114/10/1 生效的電價表，電價費率審議會決議維持到 2026-12-31。用電日期早於 2025-10-01 時，每個程式發出一次 `UncheckedPriceWarning`；晚於 2026-12-31 時再發出一次。因為那些日子台電用的是（或可能是）別的電價。
 
 內建的只有電價表主表。適用附錄一（電價調整係數行業或用戶，例如凍漲或調幅減半的行業、年用電 5 億度以上的公司、網路資料中心 IDC）或附錄二（農漁業、學校、社福團體）的用戶電價不同，本套件不含這些電價。用 `build_tariff_plan` 自訂的方案用的是您自己的電價，不會發出 `UncheckedPriceWarning`。
 
@@ -75,8 +75,8 @@ This section is for **tiered rate plans** where the rate per kWh increases progr
 | Plan ID | 中文名稱 | Description |
 |---------|---------|-------------|
 | `residential_non_tou` | 表燈非時間電價 | Standard residential tiered rates |
-| `lighting_non_business_tiered` | 表燈非營業（累進） | Non-business lighting with tiers |
-| `lighting_business_tiered` | 表燈營業（累進） | Business lighting with tiers |
+| `lighting_non_business_tiered` | 表燈非時間-住宅非營業 | Non-business lighting with tiers |
+| `lighting_business_tiered` | 表燈非時間-營業用 | Business lighting with tiers |
 
 ### Understanding Tiered Rates (瞭解累進費率)
 
@@ -258,15 +258,15 @@ When a billing period spans 夏月 (6/1–9/30) and 非夏月, Taipower's FAQ �
 
 ##### Billing Periods Are Calendar Months (計費期間以日曆月份計算)
 
-`calculate_bill` and `calculate_bill_breakdown` split usage into bills of `billing_cycle_months` calendar months, counted from the first month of usage. A Taipower bill runs from one meter reading to the next, and the reading is often mid-month. Usage that starts or ends mid-month leaves part of a bill's months empty and raises `PartialPeriodWarning`; those bills do not match Taipower's. Compare with a real bill only by passing usage for whole calendar months. `TariffPlan.calculate_costs` groups months into the odd- or even-month pairs in the table above and does not warn.
+`calculate_bill` and `calculate_bill_breakdown` split usage into bills of `billing_cycle_months` calendar months, counted from the first month of usage. A Taipower bill runs from one meter reading to the next, and the reading is often mid-month. Usage that starts or ends mid-month leaves part of a bill's months empty and raises `PartialPeriodWarning` on every such call; those bills do not match Taipower's. Compare with a real bill only by passing usage for whole calendar months. `TariffPlan.calculate_costs` groups months into the odd- or even-month pairs in the table above and does not warn.
 
-`calculate_bill` 與 `calculate_bill_breakdown` 依日曆月份切帳單，從用電資料的第一個月起，每 `billing_cycle_months` 個月一張。台電帳單的計費期間是從上次抄表日到這次抄表日，抄表日常在月中。用電資料從月中開始或在月中結束時，帳單有幾天沒有資料，會發出 `PartialPeriodWarning`，算出的帳單和台電的對不上。要和實際帳單比對，請提供完整日曆月份的用電資料。`TariffPlan.calculate_costs` 依上表的奇數月或偶數月分組，不會發出這個警告。
+`calculate_bill` 與 `calculate_bill_breakdown` 依日曆月份切帳單，從用電資料的第一個月起，每 `billing_cycle_months` 個月一張。台電帳單的計費期間是從上次抄表日到這次抄表日，抄表日常在月中。用電資料從月中開始或在月中結束時，帳單有幾天沒有資料，每次計算都會發出 `PartialPeriodWarning`，算出的帳單和台電的對不上。要和實際帳單比對，請提供完整日曆月份的用電資料。`TariffPlan.calculate_costs` 依上表的奇數月或偶數月分組，不會發出這個警告。
 
 ##### Minimum Usage and Minimum Fee (底度與最低電費)
 
-For `residential_non_tou` and the `lighting_*_tiered` plans with meter details in `BillingInputs`, a month is billed at least 2 kWh per ampere for a single-phase low-voltage meter or 6 kWh per ampere for a three-phase one, and a meter over 10 A counts as 10 A. A bill under 100 TWD a month is charged 100 TWD a month, so a two-month bill is at least 200 TWD.
+For `residential_non_tou` and the `lighting_*_tiered` plans with meter details in `BillingInputs`, a month is billed at least 2 kWh per ampere for a single-phase low-voltage meter or 6 kWh per ampere for a three-phase one, and a meter over 10 A counts as 10 A. Any meter under 1000 V is a low-voltage one, so 110, 220 and 380 V meters all are (營業規章 第三條). A meter that no 底度 rule covers, such as a three-phase 22,800 V one, warns and is billed without 底度. A bill under 100 TWD a month is charged 100 TWD a month, so a two-month bill is at least 200 TWD.
 
-表燈非時間電價方案若在 `BillingInputs` 提供電表規格，每月至少以底度計費：單相低壓電表每安培 2 度、三相每安培 6 度，超過 10 安培的電表以 10 安培計。每月電費未滿 100 元以 100 元計，兩個月一期至少 200 元。
+表燈非時間電價方案若在 `BillingInputs` 提供電表規格，每月至少以底度計費：單相低壓電表每安培 2 度、三相每安培 6 度，超過 10 安培的電表以 10 安培計。未滿 1000 伏特的電表都是低壓電表，110、220、380 伏特都算（營業規章 第三條）。沒有底度規則適用的電表，例如三相 22,800 伏特，會發出警告，並且不計底度。每月電費未滿 100 元以 100 元計，兩個月一期至少 200 元。
 
 #### Using Bimonthly Billing
 
@@ -332,10 +332,10 @@ This section is for **time-of-use (TOU) plans** where rates vary by time period 
 | Category | Plan IDs | 中文名稱 |
 |----------|----------|---------|
 | **Residential** | `residential_simple_2_tier`, `residential_simple_3_tier` | 簡易型二段式、三段式 |
-| **Lighting** | `lighting_standard_2_tier`, `lighting_standard_3_tier` | 表燈標準二段式、三段式 |
-| **Low Voltage** | `low_voltage_2_tier`, `low_voltage_three_stage`, `low_voltage_ev` | 低壓電力二段式、三段式、EV |
-| **High Voltage** | `high_voltage_2_tier`, `high_voltage_three_stage`, `high_voltage_ev`, `high_voltage_batch` | 高壓電力二段式、三段式、EV、批次生產 |
-| **Extra High Voltage** | `extra_high_voltage_2_tier`, `extra_high_voltage_three_stage`, `extra_high_voltage_batch` | 特高壓電力二段式、三段式、批次生產 |
+| **Lighting** | `lighting_standard_2_tier`, `lighting_standard_3_tier` | 標準型二段式、三段式 |
+| **Low Voltage** | `low_voltage_2_tier`, `low_voltage_three_stage`, `low_voltage_ev` | 低壓電力二段式、三段式、低壓電動車 |
+| **High Voltage** | `high_voltage_2_tier`, `high_voltage_three_stage`, `high_voltage_ev`, `high_voltage_batch` | 高壓電力二段式、三段式、高壓電動車、高壓批次生產 |
+| **Extra High Voltage** | `extra_high_voltage_2_tier`, `extra_high_voltage_three_stage`, `extra_high_voltage_batch` | 特高壓電力二段式、三段式、特高壓批次生產 |
 
 `low_voltage_power` is 低壓電力非時間電價, one price per season at any hour.
 The 電價表 has no 高壓 or 特高壓 非時間電價. 0.1.0's `high_voltage_power` and
@@ -349,7 +349,7 @@ In TOU plans, rates vary based on **when** you use electricity:
 
 | Factor | Options | Impact on Rate |
 |--------|---------|----------------|
-| **季節 Season** | 夏月 Summer (6-9月) / 非夏月 Non-Summer | Summer rates ≈ 20-40% higher |
+| **季節 Season** | 夏月 Summer (6/1-9/30; 高壓 and 特高壓 5/16-10/15, except `high_voltage_ev`) / 非夏月 Non-Summer | Summer rates ≈ 20-40% higher |
 | **日期 Day Type** | 週日+離峰日 / 週六 Saturday / 平日 Weekday | Off-peak days are off-peak all day |
 | **時段 Period** | 尖峰 Peak / 半尖峰 Semi-Peak / 離峰 Off-Peak | Peak most expensive, off-peak cheapest |
 
@@ -357,6 +357,10 @@ In TOU plans, rates vary based on **when** you use electricity:
 
 TOU plans need **hourly or finer** time-series data to calculate different rates for different periods.
 時間電價需要 **小時或更細** 的時間序列資料來計算不同時段的費率。
+
+Each timestamp in `usage` and `demand_kw` labels the start of its interval. In 15-minute data, the kWh at 08:45 were used from 08:45 to 09:00 and are priced at 08:45's period. A meter export that labels each interval by its end (09:00 for 08:45-09:00) must first be moved back one interval, for example with `usage.shift(-1, freq="15min")`.
+
+每個時間標記代表區間的開始。15 分鐘資料中 08:45 的度數是 08:45 到 09:00 用的，依 08:45 的時段計價。若電表匯出的資料以區間結束時間標記（08:45 到 09:00 標為 09:00），請先往前移一個區間，例如 `usage.shift(-1, freq="15min")`。
 
 #### Example A: Create Data Manually (範例 A：用 Python 手動建立資料)
 
@@ -537,6 +541,10 @@ print(bill)
 # 電能費      | 基本費    | 違約金  | 功率因數調整     | 總計
 ```
 
+`calculate_bill` and `calculate_bill_breakdown` do not change the `BillingInputs` you pass, so one `BillingInputs` can bill several months or plans. A field left as `None`, such as `billing_cycle_months`, takes each plan's default for that bill only.
+
+`calculate_bill` 與 `calculate_bill_breakdown` 不會修改傳入的 `BillingInputs`，同一個 `BillingInputs` 可以重複用於不同月份或方案。留空（`None`）的欄位，例如 `billing_cycle_months`，只在該次計算採用方案的預設值。
+
 **Important:** For penalty calculation, use **15-minute interval** demand data. See [Data Resolution Requirements](#data-resolution-requirements) below.
 **重要：** 違約金計算請使用 **15 分鐘間隔** 的需量資料。詳見下方的[資料解析度要求](#data-resolution-requirements)。
 
@@ -651,18 +659,21 @@ Energy Cost = Σ(Period_Usage_kWh × Period_Rate) for each time period
 
 | Factor | Options | Impact on Rate |
 |--------|---------|----------------|
-| **季節 Season** | 夏月 Summer (6-9月) / 非夏月 Non-Summer | Summer rates ≈ 20-40% higher |
+| **季節 Season** | 夏月 Summer (6/1-9/30; 高壓 and 特高壓 5/16-10/15, except `high_voltage_ev`) / 非夏月 Non-Summer | Summer rates ≈ 20-40% higher |
 | **日期 Day Type** | 週日+離峰日 Sunday+Off-peak days / 週六 Saturday / 平日 Weekday | Off-peak days are off-peak all day |
 | **時段 Period** | 尖峰 Peak / 半尖峰 Semi-Peak / 離峰 Off-Peak | Peak most expensive, off-peak cheapest |
 
 **Sample TOU Schedule (簡易型二段式):**
 
-| Day Type | Period | Hours | Rate (Summer) |
-|----------|--------|-------|---------------|
-| Weekday | Peak | 07:00-23:00 | 5.16 TWD/kWh |
-| Weekday | Off-peak | 23:00-07:00 | 2.06 TWD/kWh |
-| Saturday | Semi-peak | All day | 3.19 TWD/kWh |
-| Sunday/Holiday | Off-peak | All day | 2.06 TWD/kWh |
+From the 電價表 (`src/taipower_tou/data/詳細電價表.md` lines 184-204). Prices are TWD/kWh.
+
+| Day Type | Period | Summer (6/1-9/30) | Non-Summer |
+|----------|--------|-------------------|------------|
+| Weekday | Peak | 09:00-24:00, 5.16 | 06:00-11:00 and 14:00-24:00, 4.93 |
+| Weekday | Off-peak | 00:00-09:00, 2.06 | 00:00-06:00 and 11:00-14:00, 1.99 |
+| Saturday, Sunday and 離峰日 | Off-peak | All day, 2.06 | All day, 1.99 |
+
+Each month also pays 75.00 按戶計收, and a month's kWh over 2000 pay 1.04 more each. A two-month bill pays the 1.04 on its kWh over 4000, 2000 for each month, as tiered bills double their tiers.
 
 ---
 
@@ -691,6 +702,13 @@ Basic Fee = Contract Capacity(kW) × Unit Rate
 
 **Note:** Basic fee only applies to plans with contract capacity (industrial/commercial TOU plans).
 **說明：** 基本費僅適用於有契約容量的方案（工業/商業時間電價）。
+
+A month with no use pays half its basic fee on the 標準型, 低壓 and 高壓
+plans (電價表 第三章 五(三)4, 第四章 五(五), 第五章 五(二)). No use means 0 kWh
+and 0 kW of 最高需量, both read as 第二十八條 reads them, so a month with
+0.4 kWh and a 0.6 kW reading had none. A month given `over_contract_kw`
+above 0 had demand, so it pays the whole fee. A 裝置契約 bill looks only at
+its kWh, its 尖峰 kWh on a time-of-use plan, never at its demand.
 
 ---
 
@@ -753,6 +771,19 @@ A 裝置契約 customer with `demand_kw` pays no 超約. When the demand passes 
 裝置契約 kW, Taipower moves the bill to 需量契約電價, at a contract the tariff
 does not give, so the package warns and asks for `contract_capacities`.
 
+高壓 and 特高壓 夏月 runs from 5/16 to 10/15, so May and October are part
+非夏月 and part 夏月. The 電價表 does not say how such a month pays its basic
+fee and 超約. The package bills it like a month whose prices change
+mid-month (營業規章 第二十七條, 營業規章施行細則 第三十六條): each season's
+part pays that season's basic fee, and its own 超約 from its own highest
+demand at that season's contracts and prices, weighted by its share of the
+bill's days. This is the package's reading. With 200 kW 經常契約 and 50 kW
+非夏月契約 on `high_voltage_2_tier`, May 2026 pays 15/31 × 166.90 × 250 +
+16/31 × 223.60 × 200 = 43,270.8 TWD of basic fee. A two-month bill over the
+6/1 or 10/1 edge, such as a 表燈 bill for May and June, is weighted by days
+the same way, 31/61 and 30/61. The breakdown's `basic_details` lists each
+fee once per season, with that season's `share` of the bill's days.
+
 ---
 
 ### 3. Power Factor Adjustment (功率因數調整)
@@ -763,7 +794,7 @@ The tariff changes the month's bill (該月份電費), basic fee plus energy cos
 by 0.1% for each 1% of power factor away from 80%. The 按戶計收 basic fee
 is left out. Over-contract fees get no discount, but below 80% they get the
 surcharge with the rest of the bill (營業規章施行細則 第三十條). A month with no kWh
-counts as 80% (第三十八條).
+counts as 80% (第三十八條), even when it is billed its 底度.
 
 ```
 功率因數調整 = (基本電費 − 按戶計收 + 流動電費 [+ 超約, below 80%]) × (80% − 實際功率因數%) × 0.1%
@@ -800,11 +831,22 @@ a 230 kW peak on a weekday afternoon and 95% power factor.
 together in `adjustment` (13,155.70). Its total is 179,576, rounded to the
 元 as Taipower bills.
 
-Taipower cuts each bill item (energy, basic fee, 超約, 功率因數) to the 角,
-dropping the 分, and rounds the total half up to the 元 (營業規章施行細則
-第二十九條). `calculate_bill` does the same, and works 功率因數 from the cut
-items. Pass `BillingInputs(taipower_rounding=False)` to keep every amount
-unrounded, for example to compare plans or optimize a load.
+Taipower reads each bill's kWh to the whole kWh, half up, and its 最高需量
+to the whole kW, dropping the fraction (營業規章施行細則 第二十八條). It cuts
+each bill item (energy, basic fee, 超約, 功率因數) to the 角, dropping the 分,
+and rounds the total half up to the 元 (第二十九條). `calculate_bill` does
+the same. A plan without time-of-use prices has one reading, the bill's
+kWh. 第二十八條 does not say how a time-of-use meter is read, so the package
+reads each time, 尖峰, 半尖峰, 週六半尖峰 and 離峰, on its own and rounds
+each, since each is priced on its own kWh. This is the package's reading. A
+reading's whole kWh are spread over its intervals in proportion to their
+kWh, so a bill over two seasons keeps each season's share. The bill prices
+the read kWh and compares them with the 2000 kWh of 加計 and with the 底度,
+and a month that reads 0 kWh, such as one with 0.4 kWh, had no use.
+功率因數 is worked from the cut items. Pass
+`BillingInputs(taipower_rounding=False)` to keep every kWh and amount
+unrounded, for example to compare plans or optimize a load. 最高需量 is
+whole kW either way.
 
 A `high_voltage_ev` bill lists the `low_voltage_ev` amounts and pays 95% of
 their total rounded to the 元, as Taipower's 各類電價表及計算範例 works it
@@ -842,6 +884,13 @@ Taipower calculates demand penalties based on **15-minute average demand** (臺�
 Using hourly or coarser data for `demand_kw` may significantly underestimate peak demand and penalty charges. See Section 4 for detailed guidance.
 Finer readings, such as every 5 minutes, are averaged over each quarter hour before the month's highest is taken (營業規章 第三條).
 
+`demand_kw` is read on its own timestamps, not on those of `usage`, so
+hourly `usage` with 15-minute `demand_kw`, as recommended above, bills every
+quarter hour. Timezone-aware demand is read in Taiwan time, like usage. Each
+15-minute average is multiplied by `demand_adjustment_factor`, cut to the
+whole kW (第二十八條), and counts in the bill, season and time of its own
+timestamp. Readings outside the bills of `usage` are not billed.
+
 ## API Quickstart (API 使用範例)
 
 This guide covers the primary functions for querying plans, checking rates, and calculating costs.
@@ -861,6 +910,10 @@ for plan_id, chinese_name in plans.items():
 # residential_simple_2_tier: 簡易型二段式
 # ... (18 plans total)
 ```
+
+`tou.plan`, `calculate_bill` and the other entry points take a plan ID, its Chinese name above, or the plan's full name (`tou.plan(plan_id).name`), ignoring case and surrounding spaces.
+Part of a name works when no other plan contains it, so `"住宅用"` names `residential_non_tou`, while `"批次"` is in two plans' names.
+A name that matches no plan or more than one raises `UnknownPlanError`, which is a `PowerKitError`, a `ValueError` and a `KeyError`.
 
 **Get Plan Details:**
 View the structure (seasons, day types, schedules) of a specific plan.
@@ -1082,7 +1135,7 @@ Quick index of all public entry points exported by `taipower_tou`.
 
 ### Core helpers (核心入口)
 - `available_plans()` returns dict of {plan_id: chinese_name}
-- `plan(name, ...)` get a `TariffPlan` by plan ID
+- `plan(name, ...)` get a `TariffPlan` by plan ID or name
 - `plan_details(name, ...)` return structured plan schema
 - `period_at(target, plan_name, ...)` return period enum at timepoint
 - `period_context(target, plan_name, ...)` return season/day/period context
@@ -1116,7 +1169,8 @@ Quick index of all public entry points exported by `taipower_tou`.
 - `PeriodType`, `SeasonType`
 
 ### Errors (錯誤型別)
-- `PowerKitError`, `CalendarError`, `TariffError`, `InvalidUsageInput`
+- `PowerKitError`, `CalendarError`, `TariffError`, `InvalidUsageInput`, `InvalidBillingInput`,
+  `InvalidBasicFeeInput`, `MissingRequiredInput`, `UnknownPlanError`
 
 ## API Examples (公開 API 範例)
 
@@ -1171,7 +1225,7 @@ print(tou.monthly_breakdown(usage, "residential_simple_2_tier"))
 ### Billing helpers (帳單計算)
 
 ```python
-# High-voltage plans need complete contract capacities for formula-based basic fee
+# High-voltage plans bill the basic fee from contract_capacities
 inputs = BillingInputs(
     contract_capacities={
         "regular": 200,
@@ -1331,8 +1385,8 @@ Rates increase progressively based on monthly usage volume.
 | Category | Plan ID | 中文名稱 |
 |----------|---------|---------|
 | **Residential** | `residential_non_tou` | 表燈非時間電價 |
-| **Lighting** | `lighting_non_business_tiered` | 表燈非營業（累進） |
-| **Lighting** | `lighting_business_tiered` | 表燈營業（累進） |
+| **Lighting** | `lighting_non_business_tiered` | 表燈非時間-住宅非營業 |
+| **Lighting** | `lighting_business_tiered` | 表燈非時間-營業用 |
 
 ### Time-of-Use Plans (時間電價方案)
 
@@ -1343,15 +1397,15 @@ Rates vary by time period, season, and day type.
 |----------|---------|---------|
 | **Residential** | `residential_simple_2_tier` | 簡易型二段式 |
 | **Residential** | `residential_simple_3_tier` | 簡易型三段式 |
-| **Lighting** | `lighting_standard_2_tier` | 表燈標準二段式 |
-| **Lighting** | `lighting_standard_3_tier` | 表燈標準三段式 |
+| **Lighting** | `lighting_standard_2_tier` | 標準型二段式 |
+| **Lighting** | `lighting_standard_3_tier` | 標準型三段式 |
 | **Low Voltage** | `low_voltage_2_tier` | 低壓電力二段式 |
 | **Low Voltage** | `low_voltage_three_stage` | 低壓電力三段式 |
-| **Low Voltage** | `low_voltage_ev` | 低壓電動車充電 |
+| **Low Voltage** | `low_voltage_ev` | 低壓電動車 |
 | **Low Voltage** | `low_voltage_power` | 低壓電力非時間 |
 | **High Voltage** | `high_voltage_2_tier` | 高壓電力二段式 |
 | **High Voltage** | `high_voltage_three_stage` | 高壓電力三段式 |
-| **High Voltage** | `high_voltage_ev` | 高壓電動車充電 |
+| **High Voltage** | `high_voltage_ev` | 高壓電動車 |
 | **High Voltage** | `high_voltage_batch` | 高壓批次生產 |
 | **Extra High Voltage** | `extra_high_voltage_2_tier` | 特高壓電力二段式 |
 | **Extra High Voltage** | `extra_high_voltage_three_stage` | 特高壓電力三段式 |

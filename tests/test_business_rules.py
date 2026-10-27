@@ -97,20 +97,93 @@ def _evening_bill(kwh, **inputs):
 
 def test_bill_items_are_cut_to_the_jiao_and_the_total_rounded_half_up():
     """第二十九條: 應計電費各項均計至角位，分位以下捨棄；電費總金額...均以元為
-    單位，角位四捨五入進整. 1.18 kWh x 5.54 = 6.5372 is 6.5 TWD, and 1480.0 +
-    6.5 = 1486.5 rounds up to 1487, not to the even 1486."""
-    bill = _evening_bill(1.18, basic_fee_inputs={"裝置契約": 10})
-    assert bill["energy_cost"] == pytest.approx(6.5)
+    單位，角位四捨五入進整. 38 kWh x 5.54 = 210.52 is 210.5 TWD, and 1480.0 +
+    210.5 = 1690.5 rounds up to 1691, not to the even 1690."""
+    bill = _evening_bill(38, basic_fee_inputs={"裝置契約": 10})
+    assert bill["energy_cost"] == pytest.approx(210.5)
     assert bill["basic_cost"] == pytest.approx(1480.0)
-    assert bill["total"] == 1487
+    assert bill["total"] == 1691
 
 
 def test_power_factor_is_worked_from_the_cut_items_and_cut_itself():
-    """第二十九條 with 第四章 六: 70% adds 1% of 2750.0 + 6.5 = 27.565, cut to
-    27.5. A 20 kW 裝置契約 bill pays 105.00 + 137.50 x 20 = 2855.0."""
-    bill = _evening_bill(1.18, basic_fee_inputs={"裝置契約": 20}, power_factor=70)
+    """第二十九條 with 第四章 六: 1 kWh x 5.54 is 5.5 TWD, and 70% adds 1% of
+    2750.0 + 5.5 = 27.555, cut to 27.5. A 20 kW 裝置契約 bill pays 105.00 +
+    137.50 x 20 = 2855.0."""
+    bill = _evening_bill(1, basic_fee_inputs={"裝置契約": 20}, power_factor=70)
     assert bill["adjustment"] == pytest.approx(27.5)
-    assert bill["total"] == 2855 + 6.5 + 27.5
+    assert bill["total"] == 2855 + 5.5 + 27.5
+
+
+@pytest.mark.parametrize(
+    ("kwh", "energy", "basic"),
+    [(1.18, 5.5, 1480.0), (1.5, 11.0, 1480.0), (0.4, 0.0, 740.0)],
+    ids=["1.18-reads-1", "1.5-reads-2", "0.4-reads-0"],
+)
+def test_kwh_are_read_to_the_whole_kwh_half_up(kwh, energy, basic):
+    """第二十八條: 有效電度以瓩小時（kWH）...為計量單位，小數點以下四捨五入進整.
+    1.18 kWh at 尖峰 5.54 reads 1 kWh, 5.5 TWD, and 1.5 kWh reads 2, 11.08
+    cut to 11.0. 0.4 kWh reads 0, so the 裝置契約 bill has no 尖峰 kWh and pays
+    half its basic fee (第四章 五(五), line 712)."""
+    bill = _evening_bill(kwh, basic_fee_inputs={"裝置契約": 10})
+    assert bill["energy_cost"] == pytest.approx(energy)
+    assert bill["basic_cost"] == pytest.approx(basic)
+
+
+def test_each_time_of_day_is_read_on_its_own_register():
+    """README: a 時間電價 meter reads 尖峰, 半尖峰, 週六半尖峰 and 離峰 on registers
+    of their own, each rounded by 第二十八條. 1.4 kWh at 尖峰 and 1.4 kWh at
+    離峰 (00:00~09:00, 2.27, line 557) read 1 kWh each, 5.54 + 2.27 = 7.81,
+    cut to 7.8."""
+    usage = pd.Series(0.0, index=JULY)
+    usage[pd.Timestamp("2026-07-15 17:00")] = 1.4
+    usage[pd.Timestamp("2026-07-15 03:00")] = 1.4
+    inputs = tou.BillingInputs(
+        billing_cycle_months=1, basic_fee_inputs={"裝置契約": 10}
+    )
+    bill = tou.calculate_bill(usage, "low_voltage_2_tier", inputs).iloc[0]
+    assert bill["energy_cost"] == pytest.approx(7.8)
+
+
+MAY = pd.date_range("2026-05-01", "2026-05-31 23:45", freq="15min")
+NON_SUMMER_PEAK = pd.Timestamp("2026-05-12 10:00")
+SUMMER_PEAK = pd.Timestamp("2026-05-20 10:00")
+
+
+def test_a_register_over_two_seasons_keeps_each_seasons_share():
+    """高壓 夏月 starts on 5/16 (line 854). 0.6 kWh at 尖峰 on Friday 5/15 (非夏月
+    6.37) and 0.6 kWh on Wednesday 5/20 (夏月 6.75) read 1 kWh on the 尖峰
+    register (第二十八條), half in each season: 3.185 + 3.375 = 6.56, cut to
+    6.5."""
+    usage = pd.Series(0.0, index=MAY)
+    usage[pd.Timestamp("2026-05-15 10:00")] = 0.6
+    usage[SUMMER_PEAK] = 0.6
+    inputs = tou.BillingInputs(contract_capacities={"regular": 200})
+    bill = tou.calculate_bill(usage, "high_voltage_2_tier", inputs).iloc[0]
+    assert bill["energy_cost"] == pytest.approx(6.5)
+
+
+def test_a_month_over_the_summer_edge_is_billed_by_each_seasons_days():
+    """營業規章 第二十七條 bills a mid-month change 依變更前後按實際使用日數, and
+    施行細則 第三十六條 splits a month of changed prices by 使用日數. 高壓 May has
+    15 days of 非夏月 and 16 of 夏月 (line 854), so it pays 15/31 of the 非夏月
+    basic fee, 166.90 x (200 + 50), and 16/31 of the 夏月 one, 223.60 x 200
+    (line 855). Each part's 超約 is its own: 260 kW at 尖峰 on 5/12 is 10 kW
+    over 經常 + 非夏月 at 166.90, and 215 kW on 5/20 is 15 kW over 經常 at
+    223.60, both 2x within 10% (第五章 七(一)1 and 七(二), lines 1093-1133)."""
+    demand = pd.Series(100.0, index=MAY)
+    demand[NON_SUMMER_PEAK] = 260.0
+    demand[SUMMER_PEAK] = 215.0
+    inputs = tou.BillingInputs(
+        contract_capacities={"regular": 200, "non_summer": 50},
+        demand_kw=demand,
+        taipower_rounding=False,
+    )
+    usage = pd.Series(0.1, index=MAY)
+    bill = tou.calculate_bill(usage, "high_voltage_2_tier", inputs).iloc[0]
+    basic = 15 / 31 * 166.90 * 250 + 16 / 31 * REGULAR_SUMMER * 200
+    over = 15 / 31 * 10 * 2 * 166.90 + 16 / 31 * 15 * 2 * REGULAR_SUMMER
+    assert bill["basic_cost"] == pytest.approx(basic)
+    assert bill["adjustment"] == pytest.approx(over)
 
 
 def test_rounding_can_be_turned_off():

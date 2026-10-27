@@ -171,7 +171,8 @@ class TestResidentialSimple2TierAccuracy:
         weekday_off_peak_hours = weekday_days * 9
         weekend_hours = weekend_days * 24
 
-        peak_kwh = weekday_peak_hours * 2.5
+        # 施行細則 第二十八條 reads each register to the kWh, half up: 862.5 is 863.
+        peak_kwh = weekday_peak_hours * 2.5 + 0.5
         off_peak_kwh = weekday_off_peak_hours * 1.0 + weekend_hours * 1.5
 
         expected_energy_cost = peak_kwh * 5.16 + off_peak_kwh * 2.06
