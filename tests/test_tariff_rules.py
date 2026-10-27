@@ -20,6 +20,8 @@ LS_HOUSEHOLD_THREE = 262.50
 LS_REGULAR_SUMMER = 236.20
 LS_SEMI_PEAK_SUMMER = 173.20
 LS_WEEKEND_SUMMER = 47.20
+# 高壓 電動車 pays 95% of its bill (各類電價表及計算範例 114/10/1 page 16).
+SHARE = {"high_voltage_ev": 0.95}
 
 
 def _bill(plan, index, kwh=0.25, demand=None, **inputs):
@@ -195,7 +197,8 @@ def test_idle_month_pays_half_the_basic_fee_of_a_used_month(plan):
     inputs = {"contract_capacities": {"regular": 100}, "meter_phase": "three"}
     used = _bill(plan, JULY, **inputs)
     idle = _bill(plan, JULY, kwh=0.0, **inputs)
-    assert idle["total"] == pytest.approx(0.5 * used["basic_cost"])
+    share = SHARE.get(plan, 1.0)
+    assert idle["total"] == pytest.approx(0.5 * used["basic_cost"] * share)
 
 
 def test_low_voltage_power_idle_month_pays_half_the_basic_fee():

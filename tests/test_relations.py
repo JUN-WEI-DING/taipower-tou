@@ -77,10 +77,13 @@ def test_bill_energy_matches_plan_costs_for_tiered_plans(plan, start, end, cycle
 
 @pytest.mark.parametrize("plan", TOU)
 def test_bill_energy_matches_plan_costs_for_tou_plans(plan):
+    """高壓 電動車 bills its energy at the 低壓 prices and pays 95% of the
+    bill, so its plan costs each kWh 95%."""
     usage = _hourly("2026-05-01", "2026-06-30 23:00")
     bill = tou.calculate_bill(usage, plan, _meter())["energy_cost"]
     costs = tou.plan(plan).calculate_costs(usage)
-    assert bill.to_numpy() == pytest.approx(costs.to_numpy())
+    share = 0.95 if plan == "high_voltage_ev" else 1.0
+    assert bill.to_numpy() * share == pytest.approx(costs.to_numpy())
 
 
 @pytest.mark.parametrize("plan", TIERED + TOU)

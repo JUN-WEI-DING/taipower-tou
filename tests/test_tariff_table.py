@@ -138,15 +138,17 @@ def _fee_prices(fees, share=1.0):
 
 
 def _plans_json_fee_prices(plan_id):
+    """Each fee at the share of its bill the plan pays (bill_ratio)."""
     prices = set()
     data = _plan_data(plan_id)
+    share = data.get("billing_rules", {}).get("bill_ratio", 1.0)
     for fee in data.get("basic_fees", []):
         for season in ("summer", "non_summer"):
             value = fee.get(season, fee.get("cost"))
             if value is not None:
-                prices.add((season, round(value, 4)))
+                prices.add((season, round(value * share, 4)))
     if data.get("basic_fee") is not None:
-        prices |= {(season, round(data["basic_fee"], 4)) for season in MONTHS}
+        prices |= {(season, round(data["basic_fee"] * share, 4)) for season in MONTHS}
     return prices
 
 

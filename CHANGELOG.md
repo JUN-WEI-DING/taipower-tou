@@ -101,6 +101,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   It used the 5/16–10/15 of the other 高壓 tables. For 100 kW all day on a
   200 kW contract, May 2026 drops from 323629.4 to 317131.4 TWD and
   October from 336317.6 to 327665.0 TWD.
+- `high_voltage_ev` pays 95% of the 低壓 bill after that bill is rounded
+  to the 元, as page 16 of Taipower's 各類電價表及計算範例 (114/10/1) does,
+  89,729元×95%=85,243元. Every price was 95% before, so the page's 280 kW
+  bill with 25,000 off-peak kWh came to 85,242 TWD instead of 85,243. The
+  bill now lists the 低壓 amounts and `adjustment` takes the 5% off.
+  Unrounded totals, `pricing_context` and `calculate_costs` are unchanged.
 
 ### Changed
 - `calculate_bill` and `calculate_bill_breakdown` round as Taipower bills

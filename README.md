@@ -806,6 +806,10 @@ dropping the 分, and rounds the total half up to the 元 (營業規章施行細
 items. Pass `BillingInputs(taipower_rounding=False)` to keep every amount
 unrounded, for example to compare plans or optimize a load.
 
+A `high_voltage_ev` bill lists the `low_voltage_ev` amounts and pays 95% of
+their total rounded to the 元, as Taipower's 各類電價表及計算範例 works it
+(89,729元×95%=85,243元). `adjustment` takes off the 5%.
+
 ### Rules the package does not apply
 
 Tests mark each of these as an expected failure, since no input describes

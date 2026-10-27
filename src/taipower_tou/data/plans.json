@@ -2417,13 +2417,13 @@
         {
           "label": "按戶計收",
           "unit": "per_household_month",
-          "cost": 249.375
+          "cost": 262.5
         },
         {
           "label": "經常契約",
           "unit": "per_kw_month",
-          "summer": 44.84,
-          "non_summer": 32.87
+          "summer": 47.2,
+          "non_summer": 34.6
         }
       ],
       "rates": [
@@ -2431,49 +2431,49 @@
           "season": "summer",
           "period": "peak",
           "day_type": "weekday",
-          "cost": 11.8465
+          "cost": 12.47
         },
         {
           "season": "non_summer",
           "period": "peak",
           "day_type": "weekday",
-          "cost": 11.533
+          "cost": 12.14
         },
         {
           "season": "summer",
           "period": "off_peak",
           "day_type": "weekday",
-          "cost": 2.8975
+          "cost": 3.05
         },
         {
           "season": "non_summer",
           "period": "off_peak",
           "day_type": "weekday",
-          "cost": 2.755
+          "cost": 2.9
         },
         {
           "season": "summer",
           "period": "off_peak",
           "day_type": "saturday",
-          "cost": 2.8975
+          "cost": 3.05
         },
         {
           "season": "non_summer",
           "period": "off_peak",
           "day_type": "saturday",
-          "cost": 2.755
+          "cost": 2.9
         },
         {
           "season": "summer",
           "period": "off_peak",
           "day_type": "sunday_holiday",
-          "cost": 2.8975
+          "cost": 3.05
         },
         {
           "season": "non_summer",
           "period": "off_peak",
           "day_type": "sunday_holiday",
-          "cost": 2.755
+          "cost": 2.9
         }
       ],
       "schedules": [
@@ -2565,7 +2565,8 @@
           "type": "regular_only",
           "regular_label": "經常契約"
         },
-        "zero_usage_basic_fee_ratio": 0.5
+        "zero_usage_basic_fee_ratio": 0.5,
+        "bill_ratio": 0.95
       }
     },
     {

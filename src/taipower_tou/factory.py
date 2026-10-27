@@ -248,6 +248,12 @@ class TariffFactory:
             KeyError: If plan_id is not found
         """
         plan_data = self._store.resolve_plan(plan_id)
+        # 高壓 電動車 pays bill_ratio of its bill, so a kWh costs that share.
+        ratio = plan_data.get("billing_rules", {}).get("bill_ratio")
+        if ratio is not None:
+            plan_data["rates"] = [
+                {**rate, "cost": rate["cost"] * ratio} for rate in plan_data["rates"]
+            ]
         return _build_tariff_plan_from_data(
             plan_data,
             self._store,

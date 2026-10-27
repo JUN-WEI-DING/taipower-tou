@@ -1,8 +1,10 @@
 """第五章 高壓及特高壓電力電價 rules, with amounts worked from its text.
 
 Prices are from src/taipower_tou/data/詳細電價表.md (114/10/1): 二段式 lines
-856-880, 三段式 892-955, 批次 964-980, and 電動車 line 983 as 95% of the
-第四章 table at lines 627-637.
+856-880, 三段式 892-955, 批次 964-980, and 電動車 line 983 as the 第四章
+table at lines 627-637 at 95%. Taipower's 各類電價表及計算範例 (114/10/1)
+page 16 takes that 95% of the whole bill, 89,729元×95%=85,243元, so a
+高壓 電動車 bill has the 低壓 items and adjustment takes the 5% off.
 """
 
 from datetime import date, datetime
@@ -29,8 +31,9 @@ TWO_STAGE = {
 THREE_STAGE = {"high_voltage_three_stage": HV, "extra_high_voltage_three_stage": EHV}
 
 EV_SHARE = 0.95
-EV_HOUSEHOLD = EV_SHARE * 262.50
-EV_REGULAR = (EV_SHARE * 47.20, EV_SHARE * 34.60)
+EV_HOUSEHOLD = 262.50
+EV_REGULAR = (47.20, 34.60)
+SHARE = {"high_voltage_ev": EV_SHARE}
 
 
 def _july_energy(weekday, saturday, sunday):
@@ -65,8 +68,9 @@ JULY_ENERGY = {
     "extra_high_voltage_batch": _july_energy(
         [(6, 11.44), (18, 2.99)], [(6, 3.20), (18, 2.99)], [(24, 2.99)]
     ),
-    "high_voltage_ev": EV_SHARE
-    * _july_energy([(6, 12.47), (18, 3.05)], [(24, 3.05)], [(24, 3.05)]),
+    "high_voltage_ev": _july_energy(
+        [(6, 12.47), (18, 3.05)], [(24, 3.05)], [(24, 3.05)]
+    ),
 }
 JULY_REGULAR = {
     **{plan: fees["regular"][0] for plan, fees in {**TWO_STAGE, **THREE_STAGE}.items()},
@@ -82,6 +86,13 @@ def _bill(plan, index, kwh=0.25, demand=None, **inputs):
     return tou.calculate_bill(
         usage, plan, tou.BillingInputs(taipower_rounding=False, **inputs)
     ).iloc[0]
+
+
+def _adjustment(plan, bill, amount):
+    """The adjustment of a bill with amount of 超約 or 功率因數, less the
+    share of the whole bill its plan does not pay."""
+    whole = bill["basic_cost"] + bill["energy_cost"] + amount
+    return amount + (SHARE.get(plan, 1.0) - 1) * whole
 
 
 def _demand(index, peaks, kw=100.0):
@@ -104,7 +115,7 @@ def test_month_bill_is_basic_fee_plus_energy_by_period(plan):
     bill = _bill(plan, JULY, contract_capacities={"regular": 200})
     basic = HOUSEHOLD.get(plan, 0.0) + JULY_REGULAR[plan] * 200
     assert [bill["basic_cost"], bill["energy_cost"], bill["total"]] == pytest.approx(
-        [basic, JULY_ENERGY[plan], basic + JULY_ENERGY[plan]]
+        [basic, JULY_ENERGY[plan], SHARE.get(plan, 1.0) * (basic + JULY_ENERGY[plan])]
     )
 
 
@@ -190,7 +201,7 @@ def test_power_factor_adjusts_basic_and_energy(plan, power_factor, share):
         plan, JULY, contract_capacities={"regular": 200}, power_factor=power_factor
     )
     month = JULY_REGULAR[plan] * 200 + JULY_ENERGY[plan]
-    assert bill["adjustment"] == pytest.approx(share * month)
+    assert bill["adjustment"] == pytest.approx(_adjustment(plan, bill, share * month))
 
 
 def _over_cost(fees, season, over):
@@ -332,7 +343,10 @@ def test_ev_over_contract_is_the_months_highest_demand(month, peaks, over_kw):
         demand=_demand(index, peaks),
         contract_capacities={"regular": 200},
     )
-    assert bill["adjustment"] == pytest.approx(2 * over_kw * EV_REGULAR[season])
+    over = 2 * over_kw * EV_REGULAR[season]
+    assert bill["adjustment"] == pytest.approx(
+        _adjustment("high_voltage_ev", bill, over)
+    )
 
 
 @pytest.mark.parametrize("plan", JULY_REGULAR)
@@ -344,7 +358,8 @@ def test_over_contract_above_10_percent_pays_3x(plan):
         demand=_demand(JULY, {(15, 17): 230}),
         contract_capacities={"regular": 200},
     )
-    assert bill["adjustment"] == pytest.approx((20 * 2 + 10 * 3) * JULY_REGULAR[plan])
+    over = (20 * 2 + 10 * 3) * JULY_REGULAR[plan]
+    assert bill["adjustment"] == pytest.approx(_adjustment(plan, bill, over))
 
 
 @pytest.mark.parametrize("plan", ["high_voltage_2_tier", "high_voltage_three_stage"])

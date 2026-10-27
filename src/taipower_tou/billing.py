@@ -953,6 +953,18 @@ def _calculate_adjustments(
             )
 
     adjustment = over_costs + outside_energy + pf_cost
+    ratio = rules.get("bill_ratio")
+    if ratio is not None:
+        # 各類電價表及計算範例 page 16 rounds the whole bill to the 元 before
+        # taking its share, 89,729元×95%=85,243元. The items are within half
+        # a 元 of bill, so the caller's rounded total is bill + discount.
+        bill = _to_yuan(inputs, basic_costs + energy_costs + surcharge + adjustment)
+        discount = _to_yuan(inputs, bill * ratio) - bill
+        details.extend(
+            {"period": idx, "type": "bill_ratio", "amount": float(value)}
+            for idx, value in discount.items()
+        )
+        adjustment = adjustment + discount
     return adjustment, pd.DataFrame(details)
 
 
