@@ -23,7 +23,8 @@ from taipower_tou.factory import (
     _build_tariff_plan_from_data,
     _season_strategy,
 )
-from taipower_tou.models import BillingCycleType
+from taipower_tou.models import BillingCycleType, _label_value
+from taipower_tou.tariff import season_day_shares, tiered_energy_cost
 
 
 @dataclass
@@ -406,6 +407,7 @@ def calculate_bill(
         context,
         billing_periods,
         tariff_plan,
+        inputs.billing_cycle_months or 1,
     )
 
     month_index = energy_costs.index
@@ -519,6 +521,7 @@ def calculate_bill_breakdown(
         context,
         billing_periods,
         tariff_plan,
+        inputs.billing_cycle_months or 1,
     )
     month_index = energy_costs.index
 
@@ -563,28 +566,12 @@ def calculate_bill_breakdown(
         }
     )
 
-    period_usage = usage_for_billing.groupby(
-        [billing_periods, context["season"], context["period"]]
-    ).sum()
-    period_usage.index = period_usage.index.set_names(
-        ["period", "season", "period_type"]
-    )
-    period_usage = period_usage.reset_index()
-    period_usage["period"] = period_usage["period"].dt.to_timestamp()
-    period_usage = period_usage.rename(columns={0: "usage_kwh"})
-
-    period_costs = _calculate_period_costs(
+    details = _calculate_period_costs(
         usage_for_billing,
         context,
         billing_periods,
         tariff_plan,
-    )
-    period_costs = period_costs.reset_index()
-    period_costs = period_costs.rename(columns={0: "energy_cost"})
-    details = period_usage.merge(
-        period_costs,
-        on=["period", "season", "period_type"],
-        how="left",
+        inputs.billing_cycle_months or 1,
     )
 
     return {
@@ -1308,26 +1295,21 @@ def _calculate_energy_costs(
     context_df: pd.DataFrame,
     billing_periods: pd.PeriodIndex,
     tariff_plan: Any,
+    cycle_months: int,
 ) -> pd.Series:
     rates = tariff_plan.rates
     if rates.tiered_rates:
-        # 電價表: bills that cover two months double every tier's kWh.
-        tier_multiplier = (
-            1 if tariff_plan.billing_cycle_type == BillingCycleType.MONTHLY else 2
-        )
-        totals = {}
-        for period, group in usage.groupby(billing_periods):
-            if group.sum() == 0:
-                totals[period.to_timestamp()] = 0.0
-                continue
-            season = context_df.loc[group.index, "season"].mode().iloc[0]
-            season_label = season.value if hasattr(season, "value") else str(season)
-            totals[period.to_timestamp()] = _tiered_total_cost(
+        totals = {
+            period.to_timestamp(): tiered_energy_cost(
                 group.sum(),
-                season_label,
                 rates.tiered_rates,
-                tier_multiplier,
+                season_day_shares(
+                    period, cycle_months, tariff_plan.profile.season_strategy
+                ),
+                cycle_months,
             )
+            for period, group in usage.groupby(billing_periods)
+        }
         return pd.Series(totals).sort_index()
 
     unit_costs = pd.Series(
@@ -1344,91 +1326,53 @@ def _calculate_energy_costs(
     return totals
 
 
-def _tiered_total_cost(
-    total_usage_kwh: float,
-    season_label: str,
-    tiers: list[Any],
-    tier_multiplier: int,
-) -> float:
-    if total_usage_kwh == 0:
-        return 0.0
-    sorted_tiers = sorted(tiers, key=lambda x: x.start_kwh)
-    remaining_kwh = total_usage_kwh
-    total_cost = 0.0
-    last_limit_kwh = 0.0
-    for tier in sorted_tiers:
-        if remaining_kwh <= 0:
-            break
-        tier_end_kwh = tier.end_kwh * tier_multiplier
-        tier_limit_kwh = (
-            (tier_end_kwh - last_limit_kwh) if tier.end_kwh < 999999 else float("inf")
-        )
-        usage_in_tier_kwh = min(remaining_kwh, tier_limit_kwh)
-        unit_cost = (
-            tier.summer_cost if season_label == "summer" else tier.non_summer_cost
-        )
-        total_cost += usage_in_tier_kwh * unit_cost
-        remaining_kwh -= usage_in_tier_kwh
-        last_limit_kwh = tier_end_kwh
-    return total_cost
-
-
 def _calculate_period_costs(
     usage: pd.Series,
     context_df: pd.DataFrame,
     billing_periods: pd.PeriodIndex,
     tariff_plan: Any,
+    cycle_months: int,
 ) -> pd.DataFrame:
+    """Usage and energy cost per billing period, season and period type."""
     rates = tariff_plan.rates
-    records = []
-    for period, group in usage.groupby(billing_periods):
-        period_index = group.index
-        month_context = context_df.loc[period_index]
-        month_usage = group
-        if rates.tiered_rates:
-            season = month_context["season"].mode().iloc[0]
-            season_label = season.value if hasattr(season, "value") else str(season)
-            total_cost = _tiered_total_cost(
-                month_usage.sum(), season_label, rates.tiered_rates
+    columns = ["period", "season", "period_type", "usage_kwh", "energy_cost"]
+    if rates.tiered_rates:
+        records: list[dict[str, Any]] = []
+        for period, group in usage.groupby(billing_periods):
+            shares = season_day_shares(
+                period, cycle_months, tariff_plan.profile.season_strategy
             )
-            records.append(
+            records.extend(
                 {
                     "period": period.to_timestamp(),
-                    "season": season_label,
+                    "season": season,
                     "period_type": "tiered",
-                    "energy_cost": total_cost,
+                    "usage_kwh": group.sum() * share,
+                    "energy_cost": tiered_energy_cost(
+                        group.sum(), rates.tiered_rates, {season: share}, cycle_months
+                    ),
                 }
+                for season, share in shares.items()
             )
-            continue
+        return pd.DataFrame(records, columns=columns)
 
-        unit_costs = pd.Series(
-            [
-                rates.get_cost(season, period_type)
-                for season, period_type in zip(
-                    month_context["season"], month_context["period"]
-                )
-            ],
-            index=period_index,
-        )
-        costs = month_usage * unit_costs
-        grouped = costs.groupby(
-            [month_context["season"], month_context["period"]]
-        ).sum()
-        for (season, period_type), cost in grouped.items():
-            season_label = season.value if hasattr(season, "value") else str(season)
-            period_label = (
-                period_type.value if hasattr(period_type, "value") else str(period_type)
-            )
-            records.append(
-                {
-                    "period": period.to_timestamp(),
-                    "season": season_label,
-                    "period_type": period_label,
-                    "energy_cost": float(cost),
-                }
-            )
-
-    return pd.DataFrame(records)
+    unit_costs = np.array(
+        [
+            rates.get_cost(season, period_type)
+            for season, period_type in zip(context_df["season"], context_df["period"])
+        ],
+        dtype=float,
+    )
+    rows = pd.DataFrame(
+        {
+            "period": billing_periods.to_timestamp(),
+            "season": context_df["season"].map(_label_value).to_numpy(),
+            "period_type": context_df["period"].map(_label_value).to_numpy(),
+            "usage_kwh": usage.to_numpy(),
+            "energy_cost": usage.to_numpy() * unit_costs,
+        }
+    )
+    return rows.groupby(columns[:3], sort=False, as_index=False)[columns[3:]].sum()
 
 
 # ============================================================================
