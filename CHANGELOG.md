@@ -49,6 +49,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   not list, since 簡易型三段式 has 尖峰 only in 夏月. A January bill of
   1 kWh every hour drops from 2501.79 to 2264.91 TWD of energy. This bug was
   present in 0.1.0.
+- `low_voltage_power` charges its 4.08 / 3.87 TWD per kWh. Its energy cost
+  was always 0, since every hour fell in a period it has no price for.
+  This bug was present in 0.1.0.
+- 超約 from `demand_kw` is charged. It was always 0, because demand was
+  grouped under labels the formula did not look up. This bug was present
+  in 0.1.0. The excess now follows the 電價表: 二段式 summer peak leaves
+  out only 經常契約, each time leaves out the excess of the times before
+  it, the excesses add up, and each is billed at its own contract's rate.
+- 功率因數 adjusts the month's bill less the 按戶計收 fee, on every plan.
+  Lighting, low-voltage and `high_voltage_ev` plans adjusted the energy
+  cost alone, and other high-voltage plans included 按戶計收. The rule is
+  added to the 表燈非時間, 簡易型 and `low_voltage_power` plans. The
+  `apply_to` field of `power_factor_adjustment` is removed.
+- A month with no kWh and no demand pays half the basic fee on the
+  標準型, low-voltage and high-voltage plans. The rule was in plans.json
+  but never applied, and was missing from the low-voltage plans and
+  `high_voltage_ev`.
+- 標準型時間電價 charges 按戶計收 (129.10 TWD single-phase, 262.50
+  three-phase, chosen by `meter_phase`). It was never charged.
 
 ### Changed
 - Off-peak days use the list in force on each date. From 2014 the list is
@@ -63,6 +82,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bills at the edges of its rules against amounts worked from that text,
   bills computed two ways that must agree, and the Python examples in the
   README.
+- `tests/data/tariff_114_10_01.json` transcribes the 電價表's prices,
+  hours, tiers and basic fees with the source line of each number. Tests
+  check every plan against it at every half hour.
+- The README's over-contract, power factor and bill example sections
+  follow the 電價表. `high_voltage_power` and `extra_high_voltage_power`
+  are documented as the same as the 二段式 plans, since the 電價表 has no
+  高壓 or 特高壓 非時間電價.
 - Examples use 2026 dates, which the bundled prices cover.
 
 ### Added

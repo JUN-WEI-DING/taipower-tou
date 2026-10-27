@@ -333,9 +333,14 @@ This section is for **time-of-use (TOU) plans** where rates vary by time period 
 |----------|----------|---------|
 | **Residential** | `residential_simple_2_tier`, `residential_simple_3_tier` | 簡易型二段式、三段式 |
 | **Lighting** | `lighting_standard_2_tier`, `lighting_standard_3_tier` | 表燈標準二段式、三段式 |
-| **Low Voltage** | `low_voltage_2_tier`, `low_voltage_three_stage`, `low_voltage_ev`, `low_voltage_power` | 低壓電力二段式、三段式、EV、綜合 |
-| **High Voltage** | `high_voltage_2_tier`, `high_voltage_three_stage`, `high_voltage_ev`, `high_voltage_power`, `high_voltage_batch` | 高壓電力二段式、三段式、EV、綜合、包表 |
-| **Extra High Voltage** | `extra_high_voltage_2_tier`, `extra_high_voltage_three_stage`, `extra_high_voltage_power`, `extra_high_voltage_batch` | 特高壓電力二段式、三段式、綜合、包表 |
+| **Low Voltage** | `low_voltage_2_tier`, `low_voltage_three_stage`, `low_voltage_ev` | 低壓電力二段式、三段式、EV |
+| **High Voltage** | `high_voltage_2_tier`, `high_voltage_three_stage`, `high_voltage_ev`, `high_voltage_batch` | 高壓電力二段式、三段式、EV、批次生產 |
+| **Extra High Voltage** | `extra_high_voltage_2_tier`, `extra_high_voltage_three_stage`, `extra_high_voltage_batch` | 特高壓電力二段式、三段式、批次生產 |
+
+`low_voltage_power` is 低壓電力非時間電價, one price per season at any hour.
+`high_voltage_power` and `extra_high_voltage_power` bill exactly as
+`high_voltage_2_tier` and `extra_high_voltage_2_tier`. The 電價表 has no
+高壓 or 特高壓 非時間電價; these ids stay so existing code keeps working.
 
 ### Understanding TOU Rates (瞭解時間電價)
 
@@ -691,19 +696,27 @@ Basic Fee = Contract Capacity(kW) × Unit Rate
 
 ### 2. Demand Penalty (違約金) - Exceeding Contract Capacity
 
-**If your peak demand exceeds your contract capacity, you pay a penalty.**
-如果最高需量超過契約容量，需支付違約金。
+**If your peak demand exceeds your contract capacity, you pay extra basic fee.**
+如果最高需量超過契約容量，超出部分加收基本電費。
 
 ```
 最高需量 = 當月內任意15分鐘平均功率的最大值
 Peak Demand = Maximum 15-minute average power during the month
-
-超約容量 = 最高需量 - 契約容量
-Over-contract = Peak Demand - Contract Capacity
-
-違約金 = 超約容量 × 基本費單價 × 罰款倍率
-Penalty = Over-contract × Basic Fee Rate × Penalty Multiplier
 ```
+
+Each time of day has its own excess (超約瓩數). For a two-stage plan:
+
+| Time | Excess |
+|------|--------|
+| 尖峰 (summer) | peak-time demand − 經常契約 |
+| 尖峰 (non-summer) | peak-time demand − (經常 + 非夏月契約) |
+| 週六半尖峰 | Saturday demand − (經常 + 非夏月 + 週六半尖峰契約) |
+| 離峰 | off-peak demand − (all four contracts) |
+
+A later time leaves out the largest excess before it, so no kW is counted
+twice. Each excess is billed at its own contract's basic fee rate
+(超出部分依適用電價). Three-stage plans work the same way with 半尖峰契約 in
+place of 非夏月契約.
 
 **Penalty Rates:**
 
@@ -720,39 +733,49 @@ Penalty = Over-contract × Basic Fee Rate × Penalty Multiplier
   - First 20 kW (10%): 20 × Rate × 2
   - Remaining 10 kW: 10 × Rate × 3
 
+The 10% is taken of 經常契約. When several times exceed, the first 10% goes
+to the earliest of them in the order above. The tariff does not say how to
+split it; this is the package's reading.
+
 ---
 
 ### 3. Power Factor Adjustment (功率因數調整)
 
 **Power factor measures how efficiently you use electricity. Taipower rewards high PF and penalizes low PF.**
 
-```
-功率因數調整 = 基本費 × (基準功率因數% - 實際功率因數%) × 0.1%
+The tariff changes the month's bill (該月份電費), basic fee plus energy cost,
+by 0.1% for each 1% of power factor away from 80%. The 按戶計收 basic fee
+is left out. Over-contract fees get no discount.
 
-PF Adjustment = Basic Fee × (Base PF% - Actual PF%) × 0.1%
+```
+功率因數調整 = (基本電費 − 按戶計收 + 流動電費) × (80% − 實際功率因數%) × 0.1%
 ```
 
 | Power Factor | Result | Example |
 |--------------|--------|---------|
-| **> 80%** (base) | Discount | 95% PF → 1.5% discount on basic fee |
-| **< 80%** (base) | Surcharge | 75% PF → 0.5% surcharge on basic fee |
+| **> 80%** (base) | Discount | 95% PF → 1.5% off the month's bill |
+| **< 80%** (base) | Surcharge | 75% PF → 0.5% added to the month's bill |
 | **Max discount** | Up to 95% PF | Max discount = (95-80) × 0.1% = 1.5% |
 
 ---
 
 ### 4. Complete Bill Example (完整帳單範例)
 
-**Scenario:** High-voltage factory in July (summer)
+**Scenario:** `high_voltage_2_tier` in July 2026 (summer), 200 kW 經常契約,
+a 230 kW peak on a weekday afternoon and 95% power factor.
 
 | Item | Calculation | Amount (TWD) |
 |------|-------------|--------------|
-| Energy Cost (Peak) | 10,000 kWh × $5.16 | 51,600 |
-| Energy Cost (Off-peak) | 20,000 kWh × $2.06 | 41,200 |
-| **Energy Cost (Subtotal)** | 92,800 (sum) | **92,800** |
-| Basic Fee | 200 kW × $236.20 | 47,240 |
-| Penalty | (230-200) kW × $236.20 × 2 | 14,172 |
-| PF Discount | -47,240 × 1.5% | -709 |
-| **Total** | 153,503 (sum) | **153,503** |
+| Energy Cost (Peak) | 10,000 kWh × $6.75 | 67,500 |
+| Energy Cost (Off-peak) | 20,000 kWh × $2.71 | 54,200 |
+| **Energy Cost (Subtotal)** | 121,700 (sum) | **121,700** |
+| Basic Fee | 200 kW × $223.60 | 44,720 |
+| Penalty | (20 × 2 + 10 × 3) kW × $223.60 | 15,652 |
+| PF Discount | -(44,720 + 121,700) × 1.5% | -2,496.30 |
+| **Total** | 179,575.70 (sum) | **179,575.70** |
+
+`calculate_bill` gives the same total, with the penalty and the discount
+together in `adjustment` (13,155.70).
 
 ---
 
@@ -1274,16 +1297,16 @@ Rates vary by time period, season, and day type.
 | **Low Voltage** | `low_voltage_2_tier` | 低壓電力二段式 |
 | **Low Voltage** | `low_voltage_three_stage` | 低壓電力三段式 |
 | **Low Voltage** | `low_voltage_ev` | 低壓電動車充電 |
-| **Low Voltage** | `low_voltage_power` | 低壓電力綜合 |
+| **Low Voltage** | `low_voltage_power` | 低壓電力非時間 |
 | **High Voltage** | `high_voltage_2_tier` | 高壓電力二段式 |
 | **High Voltage** | `high_voltage_three_stage` | 高壓電力三段式 |
 | **High Voltage** | `high_voltage_ev` | 高壓電動車充電 |
-| **High Voltage** | `high_voltage_power` | 高壓電力綜合 |
-| **High Voltage** | `high_voltage_batch` | 高壓電力包表 |
+| **High Voltage** | `high_voltage_power` | 同高壓電力二段式 |
+| **High Voltage** | `high_voltage_batch` | 高壓批次生產 |
 | **Extra High Voltage** | `extra_high_voltage_2_tier` | 特高壓電力二段式 |
 | **Extra High Voltage** | `extra_high_voltage_three_stage` | 特高壓電力三段式 |
-| **Extra High Voltage** | `extra_high_voltage_power` | 特高壓電力綜合 |
-| **Extra High Voltage** | `extra_high_voltage_batch` | 特高壓電力包表 |
+| **Extra High Voltage** | `extra_high_voltage_power` | 同特高壓電力二段式 |
+| **Extra High Voltage** | `extra_high_voltage_batch` | 特高壓批次生產 |
 
 ## Performance (效能)
 
