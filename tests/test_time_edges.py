@@ -219,7 +219,7 @@ def _single_kwh(plan_id, freq, at):
     ids=["from-16:00", "from-22:00", "to-16:00", "to-22:00"],
 )
 def test_a_timestamp_labels_the_start_of_its_interval(freq, at, price):
-    """README lines 369-374 give hourly kWh labelled 06:00 as off-peak and
+    """README Step 1 gives hourly kWh labelled 06:00 as off-peak and
     09:00 as peak on 簡易型二段式, whose 夏月 尖峰 starts at 09:00 (line 191),
     so a reading covers the interval its timestamp starts. high_voltage_three_stage
     on Wednesday 2026-07-15 is 半尖峰 5.85 until 16:00 and from 22:00, and 尖峰
@@ -263,7 +263,7 @@ TAIPEI = timezone(timedelta(hours=8))
     ids=["wednesday-10:00", "summer-starts", "monday-09:00"],
 )
 def test_aware_datetime_is_priced_in_taiwan_time(zone, taiwan_time, expected):
-    """README line 882: Timezone-aware timestamps are converted to Taiwan time
+    """README Step 1: Timezone-aware timestamps are converted to Taiwan time
     (UTC+8) first. CHANGELOG 0.2.0: Timezone-aware input is evaluated in Taiwan
     local time. 簡易型二段式 夏月 weekdays are 尖峰 5.16 from 09:00 and 離峰 2.06
     before (lines 191-197). 2026-07-13 is a Monday, 2026-06-01 the first 夏月 day."""
@@ -323,11 +323,11 @@ def _demand_bill(usage, demand, **inputs):
     ids=["hourly-kwh-15min-demand", "naive-kwh-taipei-demand", "utc-kwh-naive-demand"],
 )
 def test_demand_counts_when_its_index_differs_from_the_usage_index(usage, demand):
-    """README lines 832-837: energy cost takes any resolution and demand needs
-    15 minutes, so hourly kWh with 15-minute demand is the advised input.
-    README line 882: naive timestamps are Taiwan time. 220 kW at 14:15 on
-    Wednesday 2026-07-15 is 20 kW over a 200 kW 經常契約 in 夏月尖峰時間
-    (第五章 七(一)1(1), lines 1093-1094), within 10% at 2x (lines 1132-1133)."""
+    """README Data Resolution Requirements: energy cost takes any resolution and demand
+    needs 15 minutes, so hourly kWh with 15-minute demand is the advised input. README
+    Step 1: naive timestamps are Taiwan time. 220 kW at 14:15 on Wednesday 2026-07-15 is
+    20 kW over a 200 kW 經常契約 in 夏月尖峰時間 (第五章 七(一)1(1), lines 1093-1094),
+    within 10% at 2x (lines 1132-1133)."""
     bill = _demand_bill(usage, demand)
     assert bill["adjustment"] == pytest.approx(20 * 2 * HV_REGULAR_SUMMER)
 
@@ -352,17 +352,17 @@ def test_one_minute_demand_is_averaged_over_each_quarter_hour(readings, over_kw)
 
 @pytest.mark.parametrize("freq", ["30min", "1h"])
 def test_demand_coarser_than_15_minutes_warns(freq):
-    """README line 1043: The library will automatically warn if detected
-    resolution is coarser than 15 minutes."""
+    """README Data Resolution Requirements: The library will automatically warn if
+    detected resolution is coarser than 15 minutes."""
     index = pd.date_range("2026-07-01", "2026-07-31 23:59", freq=freq)
     with pytest.warns(UserWarning, match="15-minute"):
         _demand_bill(pd.Series(1.0, index=JULY_15MIN), pd.Series(100.0, index=index))
 
 
 def test_hourly_demand_with_the_readme_adjustment_factor():
-    """README lines 1026-1041 scale hourly demand by demand_adjustment_factor.
-    190 kW x 1.15 = 218.5 kW, and 最高需量 drops its fraction of a kW
-    (營業規章施行細則 第二十八條), so 18 kW over a 200 kW contract at 2x."""
+    """README Data Resolution Requirements scales hourly demand by
+    demand_adjustment_factor. 190 kW x 1.15 = 218.5 kW, and 最高需量 drops its fraction
+    of a kW (營業規章施行細則 第二十八條), so 18 kW over a 200 kW contract at 2x."""
     demand = _demand(JULY_HOURLY, {"2026-07-01 14:00": 190.0})
     with pytest.warns(UserWarning, match="15-minute"):
         bill = _demand_bill(
@@ -422,10 +422,10 @@ NON_SUMMER_610 = 1.78 * 240 + 2.26 * 370
     ids=["may-june", "june-july", "december-january"],
 )
 def test_two_month_tiered_bill_from_an_odd_or_even_month(start, end, expected):
-    """README lines 259-261: bills of billing_cycle_months calendar months from
-    the first month of usage. CHANGELOG 0.2.0: 610 kWh over May-June 2026 on
-    residential_non_tou is 1316.2 TWD, each season's tiered cost weighted by its
-    share of the 61 days (30 in 夏月). June-July is all 夏月, and
+    """README Billing Periods Are Calendar Months: bills of billing_cycle_months
+    calendar months from the first month of usage. CHANGELOG 0.2.0: 610 kWh over
+    May-June 2026 on residential_non_tou is 1316.17 TWD unrounded, each season's tiered
+    cost weighted by its share of the 61 days (30 in 夏月). June-July is all 夏月, and
     December-January all 非夏月 across the new year."""
     bill = tou.calculate_bill(
         _whole_months(start, end, 610),
@@ -466,8 +466,8 @@ def test_two_month_tiered_bill_from_an_odd_or_even_month(start, end, expected):
 def test_tariff_plan_pairs_months_by_the_reading_month(
     cycle, start, end, label, expected
 ):
-    """README lines 222-227: odd-month readings bill 12月-1月 ... 6月-7月, read in
-    the later month, and even-month readings bill 1月-2月 ... 5月-6月."""
+    """README Two-Month Billing Cycle: odd-month readings bill 12月-1月 ... 6月-7月,
+    read in the later month, and even-month readings bill 1月-2月 ... 5月-6月."""
     costs = tou.plan("residential_non_tou", billing_cycle_type=cycle).calculate_costs(
         _whole_months(start, end, 610)
     )
@@ -576,10 +576,10 @@ def test_invalid_usage_raises_invalid_usage_input(bad, entry):
 
 
 def test_partial_period_warns_on_every_call():
-    """README line 261: usage that starts or ends mid-month raises
-    PartialPeriodWarning. Unlike UncheckedPriceWarning (once per process) and
-    UncheckedYearWarning (once per year), no limit is given. A second customer
-    with the same reading dates gets the same mismatched bill."""
+    """README Billing Periods Are Calendar Months: usage that starts or ends mid-month
+    raises PartialPeriodWarning. Unlike UncheckedPriceWarning (once per process) and
+    UncheckedYearWarning (once per year), no limit is given. A second customer with the
+    same reading dates gets the same mismatched bill."""
     usage = _whole_months("2026-03-10", "2026-04-09 23:00", 300, freq="h")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")

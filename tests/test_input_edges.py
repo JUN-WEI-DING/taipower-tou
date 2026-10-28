@@ -233,9 +233,9 @@ def test_empty_usage_is_refused(entry):
 
 
 def test_quarter_hour_demand_counts_when_usage_is_hourly():
-    """README 4. Advanced Bill Calculation recommends 15-minute demand_kw next
+    """README Data Resolution Requirements recommends 15-minute demand_kw next
     to hourly usage. 第三條: 需量 is the 十五分鐘平均瓩數, so 230 kW from 14:15
-    on a 200 kW contract is 30 kW over (lines 1093-1133)."""
+    on a 200 kW contract is 30 kW over."""
     bill = _high_voltage_bill(pd.Series(1.0, index=JULY_HOURS), demand_kw=_spike(JULY))
     assert bill["adjustment"] == pytest.approx(OVER_30_KW)
 
@@ -246,7 +246,7 @@ def test_quarter_hour_demand_counts_when_usage_is_hourly():
     ids=["taipei-demand", "utc-demand", "taipei-usage"],
 )
 def test_timezone_aware_demand_is_read_in_taiwan_time(usage_tz, demand_tz):
-    """README 2. Time & Rate Queries: timezone-aware timestamps are converted to
+    """README Step 1: timezone-aware timestamps are converted to
     Taiwan time and naive ones read as Taiwan time (CHANGELOG 0.2.0: timezone-
     aware input is evaluated in Taiwan local time). Each pair is the same
     230 kW quarter hour, 30 kW over."""
@@ -262,7 +262,7 @@ def test_timezone_aware_demand_is_read_in_taiwan_time(usage_tz, demand_tz):
     ("demand_peak", "warns"), [(10.0, False), (10.9, False), (11.0, True)]
 )
 def test_installed_contract_warns_when_whole_kw_demand_passes_it(demand_peak, warns):
-    """README 2. Demand Penalty: when demand passes the 裝置契約 kW the package
+    """README Demand Penalty: when demand passes the 裝置契約 kW the package
     warns (第四章 七(一)2, line 740). 第二十八條 counts 最高需量 in whole kW,
     so 10.9 kW is 10 kW and does not pass a 10 kW 裝置契約."""
     with warnings.catch_warnings(record=True) as record:
@@ -277,7 +277,7 @@ def test_installed_contract_warns_when_whole_kw_demand_passes_it(demand_peak, wa
     [("5min", False), ("15min", False), ("30min", True), ("h", True)],
 )
 def test_demand_coarser_than_15_minutes_warns(freq, warns):
-    """README 4. Advanced Bill Calculation: the library warns if demand data is
+    """README Data Resolution Requirements: the library warns if demand data is
     coarser than 15 minutes."""
     index = pd.date_range("2026-07-01", "2026-07-31 23:59", freq=freq)
     with warnings.catch_warnings(record=True) as record:
@@ -437,11 +437,10 @@ print(json.dumps([[w.category.__name__, w.filename] for w in record]))
 @pytest.mark.parametrize("case", FRESH_PROCESS_WARNINGS)
 def test_once_per_process_warning_names_the_callers_line(case):
     """UncheckedPriceWarning is raised once per process (README Prices and
-    Their Dates), UncheckedYearWarning once per year (README 2. Time & Rate
-    Queries) and PartialPeriodWarning once per usage span (billing.py:1305),
-    so each case runs in a fresh interpreter, whose -c code is <string>. Their
-    stacklevel (billing.py:1315, tariff.py:620, calendar.py:137) is meant to
-    name the caller's line."""
+    Their Dates) and UncheckedYearWarning once per year (README Off-Peak
+    Days), so each case runs in a fresh interpreter, whose -c code is
+    <string>. Each warning, PartialPeriodWarning too, names the caller's
+    line."""
     category, call = FRESH_PROCESS_WARNINGS[case]
     path = os.environ.get("PYTHONPATH")
     env = {**os.environ, "PYTHONPATH": os.pathsep.join(filter(None, [str(SRC), path]))}
@@ -496,7 +495,7 @@ def test_inputs_reused_for_another_plan_bill_that_plan_monthly():
     ids=["minimum-usage", "five-minute-demand"],
 )
 def test_bill_leaves_the_callers_series_and_dicts_unchanged(plan, inputs):
-    """README Billing helpers: calculate_bill returns the bill DataFrame, and no
+    """README Costs and bills: calculate_bill returns the bill DataFrame, and no
     argument is documented as an output. The 底度 rescale, the quarter-hour
     averaging of 5-minute demand and demand_adjustment_factor leave the
     caller's objects alone, and a second call bills the same."""
