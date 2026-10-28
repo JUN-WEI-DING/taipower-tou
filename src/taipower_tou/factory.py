@@ -9,6 +9,7 @@ from typing import Any
 
 from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar
 from taipower_tou.custom import (
+    CustomCalendar,
     build_tariff_plan,
     build_tariff_profile,
     build_tariff_rate,
@@ -193,7 +194,7 @@ class TariffFactory:
 
     def __init__(
         self,
-        calendar: TaiwanCalendar | None = None,
+        calendar: TaiwanCalendar | CustomCalendar | None = None,
         store: PlanStore | None = None,
     ) -> None:
         self._calendar = calendar or taiwan_calendar()
@@ -234,7 +235,7 @@ class TariffFactory:
     def create(
         cls,
         plan_id: str,
-        calendar: TaiwanCalendar | None = None,
+        calendar: TaiwanCalendar | CustomCalendar | None = None,
         billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
     ) -> Any:
         """Convenience method to create a plan without instantiating factory."""
@@ -302,7 +303,7 @@ def _normalize_tiers(tiers: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _build_tariff_plan_from_data(
     plan_data: dict[str, Any],
     store: PlanStore,
-    calendar: TaiwanCalendar,
+    calendar: TaiwanCalendar | CustomCalendar,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
 ) -> Any:
     """The TariffPlan of a plans.json entry, at the prices it lists."""

@@ -574,7 +574,7 @@ def _quarter_hours(plan_id, index):
     plan, table = PLANS[plan_id], TABLES[plan_id]
     days = {d: (_season(plan, d), _day(d)) for d in set(index.date)}
     quarters = index.hour * 4 + index.minute // 15
-    cells = [(days[d][1], *table[(*days[d], q)]) for d, q in zip(index.date, quarters)]
+    cells = [(days[d][1], *table[days[d] + (q,)]) for d, q in zip(index.date, quarters)]
     categories = np.array([_category(plan, day, period) for day, period, _ in cells])
     registers = np.array(
         [

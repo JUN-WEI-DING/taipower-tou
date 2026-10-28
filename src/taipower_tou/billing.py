@@ -14,6 +14,7 @@ import pandas as pd
 
 from taipower_tou import _warnings
 from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar, taiwan_wall_time
+from taipower_tou.custom import CustomCalendar
 from taipower_tou.errors import (
     InvalidBasicFeeInput,
     InvalidBillingInput,
@@ -469,7 +470,7 @@ def calculate_bill(
     usage: pd.Series,
     plan_id: str,
     inputs: BillingInputs | None = None,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
     strict: bool = False,
@@ -495,7 +496,7 @@ def calculate_bill(
 def calculate_bill_simple(
     usage: pd.Series,
     plan_id: str,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
     strict: bool = False,
@@ -516,7 +517,7 @@ def calculate_bill_breakdown(
     usage: pd.Series,
     plan_id: str,
     inputs: BillingInputs | None = None,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
     strict: bool = False,
@@ -548,7 +549,7 @@ def _bill(
     usage: pd.Series,
     plan_id: str,
     inputs: BillingInputs | None,
-    calendar_instance: TaiwanCalendar | None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None,
     cache_dir: Path | None,
     api_timeout: int | None,
     strict: bool,
@@ -1542,7 +1543,7 @@ def calculate_bill_from_list(
     start: str | date,
     freq: str = "1h",
     inputs: BillingInputs | None = None,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
     strict: bool = False,
@@ -1576,7 +1577,7 @@ def calculate_bill_from_dict(
     usage: dict[str | date, float],
     plan_id: str,
     inputs: BillingInputs | None = None,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
     strict: bool = False,

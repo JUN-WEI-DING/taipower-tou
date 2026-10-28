@@ -58,7 +58,7 @@ def calculate_costs(usage: Any, plan: TariffPlan) -> Any:
 
 def is_holiday(
     target: object,
-    calendar: TaiwanCalendar | None = None,
+    calendar: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> bool:
@@ -73,7 +73,7 @@ def is_holiday(
 
 
 def residential_simple_2_tier_plan(
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> TariffPlan:
@@ -87,7 +87,7 @@ def residential_simple_2_tier_plan(
 
 
 def high_voltage_2_tier_plan(
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> TariffPlan:
@@ -96,7 +96,7 @@ def high_voltage_2_tier_plan(
 
 
 def residential_non_tou_plan(
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
@@ -120,7 +120,7 @@ def available_plans() -> dict[str, str]:
 
 def plan(
     name: str,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
@@ -161,7 +161,7 @@ def plan(
 def period_at(
     target: object,
     plan_name: str,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> Any:
@@ -172,7 +172,7 @@ def period_at(
 def period_context(
     target: object,
     plan_name: str,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> Any:
@@ -183,7 +183,7 @@ def period_context(
 def costs(
     usage: Any,
     plan_name: str,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> Any:
@@ -195,7 +195,7 @@ def monthly_breakdown(
     usage: Any,
     plan_name: str,
     include_shares: bool = False,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
@@ -208,7 +208,7 @@ def monthly_breakdown(
 
 def plan_details(
     plan_name: str,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> dict[str, Any]:
@@ -221,7 +221,7 @@ def pricing_context(
     plan_name: str,
     usage: Any = None,
     include_details: bool = False,
-    calendar_instance: TaiwanCalendar | None = None,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> Any:

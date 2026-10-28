@@ -8,6 +8,7 @@ page 16 takes that 95% of the whole bill, 89,729元×95%=85,243元, so a
 """
 
 from datetime import date, datetime
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -20,8 +21,16 @@ MONTHS = {"july": (JULY, 0), "january": (JANUARY, 1)}
 
 # Per kW a month: 經常契約 (夏月, 非夏月), 非夏月 or 半尖峰契約, and
 # 週六半尖峰 or 離峰契約 (夏月, 非夏月). Lines 856-859, 892-895, 964-967.
-HV = {"regular": (223.60, 166.90), "second": 166.90, "weekend": (44.70, 33.30)}
-EHV = {"regular": (217.30, 160.60), "second": 160.60, "weekend": (43.40, 32.10)}
+HV: dict[str, Any] = {
+    "regular": (223.60, 166.90),
+    "second": 166.90,
+    "weekend": (44.70, 33.30),
+}
+EHV: dict[str, Any] = {
+    "regular": (217.30, 160.60),
+    "second": 160.60,
+    "weekend": (43.40, 32.10),
+}
 TWO_STAGE = {
     "high_voltage_2_tier": HV,
     "high_voltage_batch": HV,
@@ -154,7 +163,7 @@ def test_three_stage_basic_fee_formula(plan, month):
 
 
 @pytest.mark.parametrize("month", MONTHS)
-@pytest.mark.parametrize("plan", {**TWO_STAGE, **THREE_STAGE})
+@pytest.mark.parametrize("plan", [*TWO_STAGE, *THREE_STAGE])
 def test_weekend_only_contracts_pay_the_weekend_price_on_both(plan, month):
     """五(一)1 and 2 但書: 僅在週六半尖峰時間或離峰時間用電 → 基本電費按
     週六半尖峰契約容量與離峰契約容量計算."""

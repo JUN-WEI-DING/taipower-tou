@@ -15,6 +15,7 @@ import sys
 import warnings
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -405,7 +406,9 @@ def _whole_months(start, end, total, freq="D"):
     return pd.Series(total / len(index), index=index)
 
 
-RESIDENTIAL = dict(meter_phase="single", meter_voltage_v=110, meter_ampere=10)
+RESIDENTIAL: dict[str, Any] = dict(
+    meter_phase="single", meter_voltage_v=110, meter_ampere=10
+)
 # 住宅用 tiers doubled for two months (lines 138-146): 240 kWh at 1.78, then
 # 241-660 kWh at 2.55 (夏月) or 2.26 (非夏月).
 SUMMER_610 = 1.78 * 240 + 2.55 * 370
