@@ -18,8 +18,8 @@ from taipower_tou.models import BillingCycleType
 from taipower_tou.rates import TariffJSONLoader
 from taipower_tou.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
 
-# Shared plan ID to Chinese name mapping
-# Used by both PlanStore.resolve_plan() and available_plans()
+# The short names available_plans() gives. plans.json has the 電價表's full
+# names, and resolve_plan matches both.
 _PLAN_NAME_MAP: dict[str, str] = {
     "residential_non_tou": "表燈非時間電價",
     "lighting_non_business_tiered": "表燈非時間-住宅非營業",
@@ -63,18 +63,8 @@ _REMOVED_PLANS: dict[str, str] = {
 
 @dataclass
 class PlanRequirements:
-    """Required and optional inputs for a tariff plan.
-
-    Attributes:
-        requires_contract_capacity: Whether the plan requires contract capacity
-            input (typically for high_voltage and extra_high_voltage plans).
-        requires_meter_spec: Whether the plan requires meter specifications
-            (phase, voltage, ampere) for minimum usage calculation.
-        valid_basic_fee_labels: Set of valid labels for basic_fee_inputs.
-        uses_basic_fee_formula: Whether the plan uses a formula for basic fee
-            calculation.
-        formula_type: The type of formula ("two_stage", "three_stage", "regular_only").
-    """
+    """The inputs a plan's bill reads. get_plan_requirements describes each
+    field."""
 
     requires_contract_capacity: bool
     requires_meter_spec: bool
@@ -84,33 +74,17 @@ class PlanRequirements:
 
     @classmethod
     def from_plan_data(cls, plan_data: dict[str, Any]) -> PlanRequirements:
-        """Extract requirements from plan JSON data.
-
-        Args:
-            plan_data: The plan's JSON data dictionary.
-
-        Returns:
-            A PlanRequirements instance describing the plan's input requirements.
-        """
         category = plan_data.get("category", "")
         basic_fees = plan_data.get("basic_fees", [])
         rules = plan_data.get("billing_rules", {})
-
-        # High voltage and extra high voltage plans require contract capacity
         requires_contract_capacity = category in (
             "high_voltage",
             "extra_high_voltage",
         )
-
-        # Plans with minimum usage rules require meter specifications
         requires_meter_spec = "minimum_usage_rules_ref" in rules
-
-        # Extract all valid basic fee labels
         valid_basic_fee_labels = {
             fee.get("label", "") for fee in basic_fees if fee.get("label")
         }
-
-        # Check if plan uses formula-based basic fee calculation
         uses_basic_fee_formula = "basic_fee_formula" in rules
         formula_type = rules.get("basic_fee_formula", {}).get("type")
 
@@ -124,7 +98,7 @@ class PlanRequirements:
 
 
 class PlanStore:
-    """Centralized store for plan data from JSON."""
+    """The plans in the bundled plans.json, loaded once per store."""
 
     def __init__(self, filename: str = "plans.json") -> None:
         self._loader = TariffJSONLoader(filename=filename)
@@ -233,18 +207,17 @@ class TariffFactory:
         """Create a TariffPlan from the given plan_id.
 
         Args:
-            plan_id: The plan identifier or Chinese name (flexible matching supported)
-            billing_cycle_type: Billing cycle type for tiered rate plans
-                (MONTHLY, ODD_MONTH, EVEN_MONTH). Default is MONTHLY.
-
-        Returns:
-            A TariffPlan instance
+            plan_id: An ID or name, matched as PlanStore.resolve_plan matches.
+            billing_cycle_type: How a tiered plan pairs months.
 
         Raises:
-            UnknownPlanError: If no plan or more than one matches plan_id
+            UnknownPlanError: No plan or more than one matches plan_id, or the
+                plan was removed.
         """
         plan_data = self._store.resolve_plan(plan_id)
-        # 高壓 電動車 pays bill_ratio of its bill, so a kWh costs that share.
+        # 高壓電動車 pays bill_ratio of the 低壓 bill. calculate_bill takes the
+        # ratio off the rounded bill. A plan from here prices each kWh at that
+        # share of its 低壓 price.
         ratio = plan_data.get("billing_rules", {}).get("bill_ratio")
         if ratio is not None:
             plan_data["rates"] = [
@@ -275,7 +248,6 @@ class TariffFactory:
 def _season_strategy(
     plan_data: dict[str, Any], store: PlanStore
 ) -> TaiwanSeasonStrategy:
-    """Build season strategy from plan data."""
     strategy_name = plan_data.get("season_strategy", "seasons")
     definitions = store.definitions()
     seasons = definitions.get(strategy_name, [])
@@ -288,7 +260,7 @@ def _season_strategy(
 
 
 def _normalize_schedules(schedules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Normalize schedule data from JSON."""
+    """plans.json's slots grouped by season and day type."""
     if not schedules:
         return []
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
@@ -305,11 +277,8 @@ def _normalize_schedules(schedules: list[dict[str, Any]]) -> list[dict[str, Any]
 
 
 def _normalize_tiers(tiers: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Normalize tier data from JSON.
-
-    Note: Tier scaling for bimonthly billing is handled in
-    TariffPlan._calculate_tiered_costs()
-    """
+    """plans.json's tiers as ConsumptionTier fields. The open top tier ends at
+    999999 kWh, which tiered_energy_cost reads as no limit."""
     if not tiers:
         return []
 
@@ -336,11 +305,7 @@ def _build_tariff_plan_from_data(
     calendar: TaiwanCalendar,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
 ) -> Any:
-    """Build a TariffPlan from raw plan data dictionary.
-
-    This is the core factory function that creates a complete TariffPlan
-    from JSON data, including profile and rates.
-    """
+    """The TariffPlan of a plans.json entry, at the prices it lists."""
     season_strategy = _season_strategy(plan_data, store)
     day_type_strategy = TaiwanDayTypeStrategy(calendar)
 

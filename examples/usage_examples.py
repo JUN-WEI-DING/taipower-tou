@@ -1,4 +1,4 @@
-"""taipower_tou API usage examples with Chinese annotations."""
+"""taipower_tou 各 API 的用法，一個函式一個例子。"""
 
 from __future__ import annotations
 
@@ -21,12 +21,11 @@ def main() -> None:
     # is_holiday: 判斷日期是否為全日離峰日（可傳 date 或 datetime）
     print("is_holiday:", tou.is_holiday(datetime(2026, 7, 12), calendar=calendar))
 
-    # available_plans: 取得支援方案名稱列表
+    # available_plans: 取得 plan ID 與中文名稱的對照
     print("available_plans:", tou.available_plans())
 
-    # residential_simple_2_tier_plan / high_voltage_2_tier_plan
-    # / residential_non_tou_plan:
-    # 直接取得各方案的 TariffPlan
+    # residential_simple_2_tier_plan、high_voltage_2_tier_plan、
+    # residential_non_tou_plan: 直接取得各方案的 TariffPlan
     simple_plan = tou.residential_simple_2_tier_plan(calendar)
     tou.high_voltage_2_tier_plan(calendar)
     non_tou_plan = tou.residential_non_tou_plan(calendar)
@@ -79,11 +78,11 @@ def main() -> None:
         tou.plan_details("high_voltage_2_tier", calendar_instance=calendar),
     )
 
-    # calculate_costs: 以 TariffPlan 計算每月費用
+    # calculate_costs: 以 TariffPlan 計算每月流動電費，不含基本電費
     # （usage 必須是 Series，index 為 DatetimeIndex）
     usage = _sample_usage(datetime(2026, 7, 15, 16, 0), periods=4, freq_minutes=30)
     print("calculate_costs:", tou.calculate_costs(usage, simple_plan))
-    # costs: 以方案名稱計算每月費用（內部會建立 TariffPlan）
+    # costs: 以方案名稱計算每月流動電費
     print(
         "costs:",
         tou.costs(usage, "residential_simple_2_tier", calendar_instance=calendar),
@@ -106,7 +105,7 @@ def main() -> None:
         ),
     )
 
-    # pricing_context（DatetimeIndex 版本）: 回傳 DataFrame（season/period）
+    # pricing_context（DatetimeIndex 版本）: 回傳 DataFrame（season/period/rate/cost）
     index = pd.date_range(datetime(2026, 7, 15, 0, 0), periods=3, freq="12h")
     print(
         "pricing_context_index:\n",
@@ -117,7 +116,7 @@ def main() -> None:
         ),
     )
 
-    # Non-TOU（分級電價）範例
+    # 累進費率方案：calculate_costs 依累進級距計價
     non_tou_usage = _sample_usage(
         datetime(2026, 7, 1, 0, 0), periods=5, freq_minutes=60
     )

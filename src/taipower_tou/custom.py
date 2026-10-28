@@ -32,7 +32,11 @@ from taipower_tou.tariff import (
 
 
 class CustomCalendar:
-    """Calendar based on explicit holidays and optional weekend rules."""
+    """Off-peak days from a list of dates and of weekday numbers, 0 for Monday.
+
+    Unlike TaiwanCalendar, it covers any year, and is_holiday takes a
+    datetime's own date, not its date in Taiwan time.
+    """
 
     def __init__(
         self,

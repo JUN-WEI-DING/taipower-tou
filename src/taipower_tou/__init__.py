@@ -62,6 +62,10 @@ def is_holiday(
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> bool:
+    """Whether target is a 離峰日 on calendar, taiwan_calendar() by default.
+
+    See TaiwanCalendar.is_holiday.
+    """
     calendar_instance = calendar or taiwan_calendar(
         cache_dir=cache_dir, api_timeout=api_timeout
     )
@@ -73,7 +77,7 @@ def residential_simple_2_tier_plan(
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> TariffPlan:
-    """Create a residential simple 2-tier TOU plan."""
+    """plan("residential_simple_2_tier")."""
     return plan(
         "residential_simple_2_tier",
         calendar_instance,
@@ -87,7 +91,7 @@ def high_voltage_2_tier_plan(
     cache_dir: Path | None = None,
     api_timeout: int | None = None,
 ) -> TariffPlan:
-    """Create a high voltage 2-tier TOU plan."""
+    """plan("high_voltage_2_tier")."""
     return plan("high_voltage_2_tier", calendar_instance, cache_dir, api_timeout)
 
 
@@ -97,7 +101,7 @@ def residential_non_tou_plan(
     api_timeout: int | None = None,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
 ) -> TariffPlan:
-    """Create a residential non-TOU tiered plan."""
+    """plan("residential_non_tou", billing_cycle_type=billing_cycle_type)."""
     return plan(
         "residential_non_tou",
         calendar_instance,
@@ -108,11 +112,7 @@ def residential_non_tou_plan(
 
 
 def available_plans() -> dict[str, str]:
-    """Return dict of plan ID to Chinese name mapping.
-
-    Returns:
-        {plan_id: chinese_name} mapping
-    """
+    """Every plan ID with its Chinese name."""
     from taipower_tou.factory import _PLAN_NAME_MAP
 
     return dict(_PLAN_NAME_MAP)
@@ -125,26 +125,24 @@ def plan(
     api_timeout: int | None = None,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
 ) -> TariffPlan:
-    """Get a tariff plan by name.
+    """The tariff plan that name names.
 
-    Use the plan ID returned by `available_plans()`.
-    使用 `available_plans()` 返回的 plan ID。
+    Use a plan ID or name from `available_plans()`.
+    使用 `available_plans()` 的 plan ID 或中文名稱。
 
     Args:
-        name: The plan identifier (e.g., "residential_simple_2_tier")
-        calendar_instance: Optional calendar instance
-        cache_dir: Deprecated, has no effect
-        api_timeout: Deprecated, has no effect
-        billing_cycle_type: Billing cycle type for tiered rate plans
-            (MONTHLY, ODD_MONTH, EVEN_MONTH). Default is MONTHLY.
-            Only affects tiered rate plans, not TOU plans.
-
-    Returns:
-        A TariffPlan instance
+        name: A plan ID or name, ignoring case and surrounding spaces, or
+            part of exactly one plan's ID or name.
+        calendar_instance: Decides 離峰日. Defaults to taiwan_calendar(),
+            which covers 2014-2100.
+        cache_dir: Deprecated. It has no effect and warns.
+        api_timeout: Deprecated. It has no effect and warns.
+        billing_cycle_type: How calculate_costs and monthly_breakdown pair
+            months on a tiered plan. Time-of-use plans ignore it.
 
     Raises:
-        UnknownPlanError: If no plan or more than one matches name. It is
-            also a ValueError.
+        UnknownPlanError: No plan or more than one matches name, or the plan
+            was removed. It is also a KeyError and a ValueError.
 
     Example:
         >>> plan = tou.plan("residential_simple_2_tier")
@@ -236,28 +234,30 @@ def pricing_context(
 
 
 def get_plan_requirements(plan_name: str) -> dict[str, Any]:
-    """Get the requirements for a plan.
-
-    Returns a dict with information about what inputs are required
-    for the given plan. Useful for introspection before calculating bills.
-
-    Args:
-        plan_name: The plan identifier (flexible matching supported)
+    """The inputs a plan's bill reads, with plan_name matched as plan() does.
 
     Returns:
         A dict with:
-            - requires_contract_capacity: bool - Whether contract capacity is required
-            - requires_meter_spec: bool - Whether meter specs are required
-            - valid_basic_fee_labels: list[str] - Valid keys for basic_fee_inputs
-            - uses_basic_fee_formula: bool - Whether formula-based calculation is used
-            - formula_type: str | None - Type of formula if used
+            - requires_contract_capacity: True for 高壓 and 特高壓 plans.
+              calculate_bill raises MissingRequiredInput for them without a
+              contract.
+            - requires_meter_spec: True for plans with a 底度, which needs
+              meter_phase, meter_voltage_v and meter_ampere.
+            - valid_basic_fee_labels: The plan's basic fee labels, in no
+              fixed order. 簡易型 plans also take "basic_fee".
+            - uses_basic_fee_formula: True if the basic fee is per kW of
+              contract_capacities.
+            - formula_type: The contract_capacities keys the formula bills.
+              "two_stage" is regular, non_summer, saturday_semi_peak and
+              off_peak, "three_stage" has semi_peak for non_summer, and
+              "regular_only" is regular. None without a formula.
 
     Example:
         >>> reqs = get_plan_requirements("high_voltage_2_tier")
-        >>> print(reqs["requires_contract_capacity"])
+        >>> reqs["requires_contract_capacity"]
         True
-        >>> print(reqs["valid_basic_fee_labels"])
-        ['經常契約', '非夏月契約', '週六半尖峰契約', '離峰契約']
+        >>> sorted(reqs["valid_basic_fee_labels"])
+        ['經常契約', '週六半尖峰契約', '離峰契約', '非夏月契約']
     """
     store = PlanStore()
     plan_data = store.resolve_plan(plan_name)

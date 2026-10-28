@@ -80,22 +80,9 @@ class TaiwanDayTypeStrategy:
         return "weekday"
 
     def get_day_types_batch(self, dates: pd.Series) -> dict[date, str]:
-        """Batch get day types for multiple dates using vectorized calendar lookup.
-
-        This method is significantly faster than calling get_day_type() repeatedly
-        for large numbers of dates.
-
-        Args:
-            dates: pandas Series with date objects
-
-        Returns:
-            Dictionary mapping each date to its day type
-        """
-        # Create DatetimeIndex for vectorized lookup
+        """Each date's day type, from one calendar lookup for all of them."""
         dates_index = pd.DatetimeIndex(dates)
         is_saturday = dates_index.day_of_week == 5
-
-        # Use vectorized is_holiday if available (for DatetimeIndex)
         is_holiday_series = self._calendar.is_holiday(dates_index)
 
         day_types = {}
@@ -264,7 +251,9 @@ class _TariffEngine:
         return pd.concat([season_series, day_type_series, period_series], axis=1)
 
     def _preload_calendar_years(self, years: set[int]) -> None:
-        """Preload calendar data for all years in batch for optimization."""
+        """Let the calendar check and compute each year once, before the
+        per-day lookups. TaiwanCalendar raises CalendarError here for a year
+        it does not cover."""
         day_type_strategy = self.profile.day_type_strategy
         if hasattr(day_type_strategy, "_calendar"):
             calendar = day_type_strategy._calendar
@@ -423,6 +412,12 @@ class TariffPlan:
         return result
 
     def calculate_costs(self, usage_kwh: pd.Series) -> pd.Series:
+        """Energy cost per month, or per billing_cycle_type period on a tiered
+        plan, named by its reading month.
+
+        It has no basic fee, 加計, adjustment or rounding. calculate_bill adds
+        them.
+        """
         if pd is None:
             raise TariffError("pandas is required for cost calculation")
         _validate_usage_series(usage_kwh)
@@ -446,8 +441,6 @@ class TariffPlan:
 
     def _calculate_tiered_costs(self, usage_kwh: pd.Series) -> pd.Series:
         billing_costs: dict[pd.Timestamp, float] = {}
-
-        # Use billing period grouping instead of monthly grouping
         period_groups = usage_kwh.groupby(
             _billing_period_group_index(usage_kwh.index, self.billing_cycle_type)
         )
@@ -474,6 +467,9 @@ class TariffPlan:
         usage_kwh: pd.Series,
         include_shares: bool = False,
     ) -> pd.DataFrame:
+        """kWh and energy cost per month, season and period, as calculate_costs
+        prices them. A tiered plan has one "tiered" row per billing period,
+        under the season most of its readings fall in."""
         if pd is None:
             raise TariffError("pandas is required for cost calculation")
         _validate_usage_series(usage_kwh)
@@ -483,8 +479,6 @@ class TariffPlan:
         context = self.profile.evaluate(usage_kwh.index)
 
         if self.rates.tiered_rates:
-            # For tiered rates, use billing period grouping
-            # (bimonthly for non-monthly cycles)
             billing_period_index = _billing_period_group_index(
                 usage_kwh.index, self.billing_cycle_type
             )
@@ -658,52 +652,25 @@ def _billing_period_group_index(
     index: pd.DatetimeIndex,
     cycle_type: BillingCycleType,
 ) -> pd.PeriodIndex:
-    """根據抄表週期生成分組索引
-
-    Args:
-        index: 使用量資料的 DatetimeIndex
-        cycle_type: 抄表週期型別
-
-    Returns:
-        分組用的 PeriodIndex
-    """
+    """每筆用電所屬的抄表期，以抄表月命名，對照見 BillingCycleType。"""
     index = taiwan_wall_time(index)
     if cycle_type == BillingCycleType.MONTHLY:
         return index.to_period("M")
 
-    # For bimonthly billing, we need to group pairs of months
     months = index.to_period("M")
     year = months.year.to_numpy()
     month = months.month.to_numpy()
 
     if cycle_type == BillingCycleType.ODD_MONTH:
-        # Odd-month billing: meters read in odd months (1,3,5,7,9,11)
-        # Billing periods: (12,1)->1, (2,3)->3, (4,5)->5, (6,7)->7,
-        #                  (8,9)->9, (10,11)->11
-        # Group key is the odd month (meter reading month)
-        # For month 1: group 1 (Jan meter reading for Dec-Jan period)
-        # For months 2,3: group 3 (Mar meter reading for Feb-Mar period)
-        # For months 4,5: group 5, etc.
-        # For month 12: group 1 of next year (Dec belongs to Jan period)
+        # December joins the next year's January.
         dec_mask = month == 12
-        # Use floor division to round down to even, then add 1
-        # This gives: 2->2->3, 3->2->3, 4->4->5, 5->4->5, 6->6->7, etc.
         group = (month // 2) * 2 + 1
-        # Month 1 should map to group 1, not 2
         group = np.where(month == 1, 1, group)
-        # December maps to group 1 of next year
         group = np.where(dec_mask, 1, group)
         year = np.where(dec_mask, year + 1, year)
     else:  # EVEN_MONTH
-        # Even-month billing: meters read in even months (2,4,6,8,10,12)
-        # Billing periods: (1,2)->2, (3,4)->4, (5,6)->6, (7,8)->8,
-        #                  (9,10)->10, (11,12)->12
-        # Group key is the even month (meter reading month)
-        # No year-crossing for even-month billing (Jan+Feb are together, not Dec+Jan)
-        # Formula: ceiling division to even number: ((month + 1) // 2) * 2
         group = ((month + 1) // 2) * 2
 
-    # Build PeriodIndex by creating period strings and converting
     period_strs = [f"{int(y)}-{int(g)}" for y, g in zip(year, group)]
     return pd.PeriodIndex(period_strs, freq="M")
 

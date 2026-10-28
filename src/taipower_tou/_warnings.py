@@ -8,7 +8,8 @@ import sys
 import warnings
 
 _PACKAGE = os.path.dirname(os.path.abspath(__file__)) + os.sep
-# singledispatch wrappers sit between the package and its caller.
+# A pure-Python functools wrapper, such as singledispatchmethod, can sit
+# between package frames.
 _FUNCTOOLS = functools.__file__
 
 

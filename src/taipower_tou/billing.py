@@ -1,4 +1,4 @@
-"""Billing utilities based on plans.json rules."""
+"""Taipower bills from usage, by the 電價表 rules in plans.json."""
 
 from __future__ import annotations
 
@@ -39,6 +39,30 @@ from taipower_tou.tariff import (
 
 @dataclass
 class BillingInputs:
+    """What a bill needs besides usage.
+
+    Attributes:
+        basic_fee_inputs: Quantity per basic fee label that
+            get_plan_requirements lists, such as {"裝置契約": 10} in kW or
+            {"按戶計收-單相": 2} households. 簡易型 plans take
+            {"basic_fee": households}.
+        power_factor: 功率因數 in percent, 95 and not 0.95.
+        contract_capacity_kw: The 經常契約 kW, contract_capacities["regular"].
+        over_contract_kw: 超約 kW at 尖峰 for every bill, in place of demand_kw.
+        contract_capacities: kW of each contract, keyed "regular",
+            "non_summer" or "semi_peak", "saturday_semi_peak" and "off_peak".
+        demand_kw: 需量 readings in kW. Readings finer than 15 minutes are
+            averaged over each quarter hour, and 最高需量 counts whole kW.
+        meter_phase, meter_voltage_v, meter_ampere: The meter, for the 底度.
+            meter_phase, "single" or "three", also picks the 按戶計收 fee
+            and whether 功率因數 applies.
+        billing_cycle_months: 1 or 2 months per bill. None takes the plan's,
+            2 for 表燈非時間 and 1 otherwise.
+        demand_adjustment_factor: Multiplies each 需量 after the quarter-hour
+            average.
+        taipower_rounding: False keeps kWh and amounts unrounded.
+    """
+
     basic_fee_inputs: dict[str, float] = field(default_factory=dict)
     power_factor: float | None = None
     contract_capacity_kw: float | None = None
@@ -50,8 +74,8 @@ class BillingInputs:
     meter_ampere: float | None = None
     billing_cycle_months: int | None = None
     demand_adjustment_factor: float = 1.0
-    # 營業規章施行細則 第二十九條 rounding. False keeps every amount unrounded, for
-    # callers that compare or optimize bills.
+    # 營業規章施行細則 第二十八、二十九條 rounding of kWh and amounts. False is for
+    # callers that compare or optimize bills. 最高需量 is whole kW either way.
     taipower_rounding: bool = True
 
     @classmethod
@@ -65,24 +89,16 @@ class BillingInputs:
         demand_kw: pd.Series | None = None,
         demand_adjustment_factor: float = 1.0,
     ) -> BillingInputs:
-        """Create inputs for high voltage two-stage TOU plans.
+        """Inputs for a 高壓 二段式 or 批次生產 bill.
 
         Args:
-            regular: Regular contract capacity (kW)
-            non_summer: Non-summer contract capacity (kW)
-            saturday_semi_peak: Saturday semi-peak contract capacity (kW)
-            off_peak: Off-peak contract capacity (kW)
-            power_factor: Optional power factor percentage
-            demand_kw: Optional demand series for penalty calculation
-            demand_adjustment_factor: Adjustment factor for demand data
-
-        Example:
-            inputs = BillingInputs.for_high_voltage(
-                regular=100,
-                non_summer=50,
-                saturday_semi_peak=30,
-                off_peak=20,
-            )
+            regular: 經常契約 kW.
+            non_summer: 非夏月契約 kW.
+            saturday_semi_peak: 週六半尖峰契約 kW.
+            off_peak: 離峰契約 kW.
+            power_factor: 功率因數 in percent.
+            demand_kw: 需量 readings in kW, for 超約.
+            demand_adjustment_factor: Multiplies each 需量.
         """
         return cls(
             contract_capacities={
@@ -107,16 +123,16 @@ class BillingInputs:
         demand_kw: pd.Series | None = None,
         demand_adjustment_factor: float = 1.0,
     ) -> BillingInputs:
-        """Create inputs for high voltage three-stage TOU plans.
+        """Inputs for a 高壓 三段式 bill.
 
         Args:
-            regular: Regular contract capacity (kW)
-            semi_peak: Semi-peak contract capacity (kW)
-            saturday_semi_peak: Saturday semi-peak contract capacity (kW)
-            off_peak: Off-peak contract capacity (kW)
-            power_factor: Optional power factor percentage
-            demand_kw: Optional demand series for penalty calculation
-            demand_adjustment_factor: Adjustment factor for demand data
+            regular: 經常契約 kW.
+            semi_peak: 半尖峰契約 kW.
+            saturday_semi_peak: 週六半尖峰契約 kW.
+            off_peak: 離峰契約 kW.
+            power_factor: 功率因數 in percent.
+            demand_kw: 需量 readings in kW, for 超約.
+            demand_adjustment_factor: Multiplies each 需量.
         """
         return cls(
             contract_capacities={
@@ -141,17 +157,7 @@ class BillingInputs:
         demand_kw: pd.Series | None = None,
         demand_adjustment_factor: float = 1.0,
     ) -> BillingInputs:
-        """Create inputs for extra high voltage two-stage TOU plans.
-
-        Args:
-            regular: Regular contract capacity (kW)
-            non_summer: Non-summer contract capacity (kW)
-            saturday_semi_peak: Saturday semi-peak contract capacity (kW)
-            off_peak: Off-peak contract capacity (kW)
-            power_factor: Optional power factor percentage
-            demand_kw: Optional demand series for penalty calculation
-            demand_adjustment_factor: Adjustment factor for demand data
-        """
+        """Inputs for a 特高壓 二段式 or 批次生產 bill, as for_high_voltage."""
         return cls(
             contract_capacities={
                 "regular": regular,
@@ -175,17 +181,7 @@ class BillingInputs:
         demand_kw: pd.Series | None = None,
         demand_adjustment_factor: float = 1.0,
     ) -> BillingInputs:
-        """Create inputs for extra high voltage three-stage TOU plans.
-
-        Args:
-            regular: Regular contract capacity (kW)
-            semi_peak: Semi-peak contract capacity (kW)
-            saturday_semi_peak: Saturday semi-peak contract capacity (kW)
-            off_peak: Off-peak contract capacity (kW)
-            power_factor: Optional power factor percentage
-            demand_kw: Optional demand series for penalty calculation
-            demand_adjustment_factor: Adjustment factor for demand data
-        """
+        """Inputs for a 特高壓 三段式 bill, as for_high_voltage_three_stage."""
         return cls(
             contract_capacities={
                 "regular": regular,
@@ -206,20 +202,17 @@ class BillingInputs:
         ampere: float,
         basic_fee_multiplier: float = 1.0,
     ) -> BillingInputs:
-        """Create inputs for residential plans with meter specification.
+        """Inputs for a 表燈 bill on one meter.
 
         Args:
-            phase: Meter phase ("single" or "three")
-            voltage: Voltage level (110, 220, or other valid voltage)
-            ampere: Amperage rating
-            basic_fee_multiplier: Multiplier for per-household fees (default 1.0)
-
-        Example:
-            inputs = BillingInputs.for_residential(
-                phase="single",
-                voltage=110,
-                ampere=10,
-            )
+            phase: "single" or "three".
+            voltage: Meter volts. Any voltage under 1000 V is a 低壓 meter.
+                The 高壓 meters with a 底度 are 3300 and 6600 V single-phase
+                and 3300, 5700 and 11400 V three-phase. On a plan with a 底度,
+                other voltages warn.
+            ampere: Meter amperes, for the 底度.
+            basic_fee_multiplier: Households a 簡易型 plan bills its
+                basic_fee for. Other plans warn when it is not 1.
         """
         # Only 簡易型 plans bill "basic_fee", so a single household leaves it
         # out and the inputs fit every residential plan, strict mode too.
@@ -241,12 +234,12 @@ class BillingInputs:
         contract_kw: float,
         household_count: float = 1.0,
     ) -> BillingInputs:
-        """Create inputs for standard lighting TOU plans with contract capacity.
+        """Inputs for a 標準型 bill.
 
         Args:
-            phase: Meter phase for per-household fee ("single" or "three")
-            contract_kw: Contract capacity in kW
-            household_count: Number of households (default 1.0)
+            phase: "single" or "three", which picks the 按戶計收 fee.
+            contract_kw: 經常契約 kW.
+            household_count: Households billed 按戶計收.
         """
         label = "按戶計收-三相" if phase.lower() == "three" else "按戶計收-單相"
         return cls(
@@ -455,10 +448,10 @@ def _validate_billing_inputs(
 
 
 def _check_usage_resolution(plan_data: dict[str, Any], usage: pd.Series) -> None:
-    """README Step 1: time-of-use plans need hourly or finer usage. A
-    reading is priced at the period of its timestamp, so a day's kWh would
-    all be priced at 00:00. Irregular readings warn only when every gap
-    between them is a multiple of one step over an hour."""
+    """Warn for time-of-use usage that steps by more than an hour. A reading
+    is priced at the period of its timestamp, so a day's kWh would all be
+    priced at 00:00. Irregular readings warn only when every gap between
+    them is a multiple of one step over an hour."""
     if plan_data.get("type") != "TOU" or len(usage) < 2:
         return
     steps = np.unique(np.diff(usage.index.as_unit("ns").asi8))
@@ -481,6 +474,18 @@ def calculate_bill(
     api_timeout: int | None = None,
     strict: bool = False,
 ) -> pd.DataFrame:
+    """Each bill's energy_cost, basic_cost, surcharge (加計), adjustment and
+    total in TWD, indexed by the bill's first month.
+
+    usage is kWh per interval, labelled by the interval's start, in Taiwan
+    time if timezone-aware. Time-of-use plans need hourly or finer readings.
+    A bill is billing_cycle_months calendar months counted from the first
+    month of usage, so usage that starts or ends mid-month warns
+    PartialPeriodWarning. Amounts round as Taipower's bills do unless
+    inputs.taipower_rounding is False. strict raises instead of warning for
+    an input the plan does not bill, or a contract or meter it needs.
+    calculate_bill_breakdown itemizes adjustment.
+    """
     summary = _bill(
         usage, plan_id, inputs, calendar_instance, cache_dir, api_timeout, strict
     )["summary"]
@@ -495,6 +500,7 @@ def calculate_bill_simple(
     api_timeout: int | None = None,
     strict: bool = False,
 ) -> pd.DataFrame:
+    """calculate_bill without BillingInputs."""
     return calculate_bill(
         usage,
         plan_id,
@@ -515,6 +521,17 @@ def calculate_bill_breakdown(
     api_timeout: int | None = None,
     strict: bool = False,
 ) -> dict[str, pd.DataFrame]:
+    """calculate_bill's bills with their details, as a dict of frames.
+
+    - "summary": calculate_bill's columns and min_fee_adjustment, the part of
+      total that brings a bill up to its minimum fee.
+    - "details": kWh and unrounded energy cost per bill, season and
+      period_type.
+    - "basic_details": each basic fee per bill, label and season, with the
+      season's share of the bill's days.
+    - "adjustment_details": each over_contract, outside_contract_energy,
+      power_factor or bill_ratio amount per bill.
+    """
     return _bill(
         usage,
         plan_id,
@@ -755,9 +772,9 @@ def _calculate_basic_fees(
     idle_months: pd.Series,
     months: int,
 ) -> tuple[pd.Series, pd.DataFrame]:
-    """Each bill's 基本電費: a month of each season's fees, weighted by the
-    season's share of the bill's days as for a mid-month price change
-    (營業規章 第二十七條一), times the bill's months."""
+    """Each bill's 基本電費. A month of each season's fees is weighted by the
+    season's share of the bill's days, as for a mid-month price change
+    (營業規章 第二十七條一), and multiplied by the bill's months."""
     idle_ratio = plan_data.get("billing_rules", {}).get("zero_usage_basic_fee_ratio")
     details = []
     for ts in month_index:
@@ -898,8 +915,8 @@ def _calculate_surcharges(
     )
     surcharge = pd.Series(0.0, index=monthly_usage.index)
     if rule:
-        # 每月總度數超過2000度之部分: a two-month bill's threshold is 4000 kWh, as
-        # 第三章 五(一)2 doubles 分段度數 for 隔月抄表.
+        # 每月總度數超過2000度之部分. A two-month bill's threshold is 4000 kWh,
+        # as 第三章 五(一)2 doubles 分段度數 for 隔月抄表.
         threshold = rule.get("threshold_kwh", 2000) * months
         cost = rule.get("cost_per_kwh", 0.0)
         over = (monthly_usage - threshold).clip(lower=0.0)
@@ -990,7 +1007,8 @@ def _calculate_adjustments(
                 {"period": idx, "type": "over_contract", "amount": float(amount)}
             )
         if outside:
-            # 八(六): 1.6倍計收流動電費 for the kWh outside the contract's times.
+            # 1.6倍計收流動電費 for the kWh outside the contract's times
+            # (第三章 七(六), 第四章 八(六), 第五章 八(六)).
             in_outside = np.isin(_times(context_df), list(outside))
             extra = pd.Series(
                 usage.to_numpy() * unit_costs(rates, context_df) * in_outside,
@@ -1198,15 +1216,9 @@ def _quarter_hour_demand(demand: pd.Series) -> pd.Series:
 
 
 def _check_demand_resolution(demand: pd.Series) -> None:
-    """Check demand data resolution and warn if coarser than 15 minutes.
-
-    Taiwan Power Company calculates demand penalties based on 15-minute
-    interval data. Using hourly or coarser data may underestimate peak demand
-    and result in inaccurate penalty calculations.
-
-    Args:
-        demand: pandas Series with DatetimeIndex containing demand values in kW
-    """
+    """Warn when demand readings are more than 15 minutes apart. 需量 is a
+    15-minute average (營業規章 第三條), so coarser readings can miss the
+    最高需量."""
     if len(demand) < 2:
         return
 
@@ -1276,10 +1288,10 @@ def _over_contract_fee(
     season: str,
     outside: set[str],
 ) -> float:
-    """A month's 超約 fee at a season's prices (第三章 五(三)5, 第四章 七(二),
-    第五章 七(二)): 超出部分依適用電價, 在契約容量10%以下部分按2倍、超過部分按
-    3倍, or 4.8倍 at a time a 週六半尖峰 or 離峰 contract alone does not cover
-    (第八章 二(一)8)."""
+    """A month's 超約 fee at a season's prices. 超出部分依適用電價，在契約容量10%
+    以下部分按2倍、超過部分按3倍 (第三章 五(三)5, 第四章 七(二), 第五章 七(二)).
+    Use outside the times a 週六半尖峰 or 離峰 contract alone covers pays 4.8倍
+    (第三章 七(六), 第四章 八(六), 第五章 八(六))."""
     formula = plan_data.get("billing_rules", {}).get("basic_fee_formula", {})
     base_label = oc_rule.get("base_fee_label", "經常契約")
     ratio = oc_rule.get("threshold_ratio", 0.10)
@@ -1314,10 +1326,10 @@ def _read_demand(
     times: np.ndarray,
     billing_periods: pd.PeriodIndex,
 ) -> pd.DataFrame | None:
-    """Each 需量 as Taipower reads it, in Taiwan wall time: the 十五分鐘平均瓩數
-    (營業規章 第三條) in whole kW (施行細則 第二十八條: 小數以下捨棄), with the
-    bill, season and time it falls in. Demand on the usage's own Taiwan wall
-    times takes the usage's context, times and bills."""
+    """Each 需量 as Taipower reads it, in Taiwan wall time, with the bill,
+    season and time it falls in. 需量 is the 十五分鐘平均瓩數 (營業規章 第三條),
+    times demand_adjustment_factor, cut to whole kW (施行細則 第二十八條).
+    Demand on the usage's own timestamps reuses the usage's context."""
     demand = inputs.demand_kw
     if demand is None:
         return None
@@ -1486,29 +1498,13 @@ def _calculate_period_costs(
     return rows.groupby(columns[:3], sort=False, as_index=False)[columns[3:]].sum()
 
 
-# ============================================================================
-# Flexible Input Support (Non-Pandas Entry Points)
-# ============================================================================
-
-
 def _normalize_usage_to_series(
     usage: Any,
     start: Any = None,
     freq: str | None = None,
 ) -> pd.Series:
-    """Convert various input formats to pandas.Series with DatetimeIndex.
-
-    Args:
-        usage: Input data - pd.Series, list of floats, or dict of timestamp:value
-        start: Start date (required if usage is list), e.g. "2024-01-01"
-        freq: Frequency string (e.g., "15min", "1h", "1D")
-
-    Returns:
-        pandas.Series with DatetimeIndex
-
-    Raises:
-        InvalidUsageInput: If input format is invalid or missing required params
-    """
+    """usage as a Series on a DatetimeIndex. A list needs start and freq, and
+    a dict maps timestamps to kWh."""
     if isinstance(usage, pd.Series):
         if not isinstance(usage.index, pd.DatetimeIndex):
             raise InvalidUsageInput("usage index must be a pandas.DatetimeIndex")
@@ -1529,7 +1525,6 @@ def _normalize_usage_to_series(
         return pd.Series(usage, index=index)
 
     if isinstance(usage, dict):
-        # Convert dict keys to timestamps
         try:
             index = pd.to_datetime(list(usage.keys()))
         except Exception as e:
@@ -1552,29 +1547,16 @@ def calculate_bill_from_list(
     api_timeout: int | None = None,
     strict: bool = False,
 ) -> pd.DataFrame:
-    """Calculate bill from a list of usage values.
+    """calculate_bill for kWh readings that start at start, one every freq.
 
-    This is a convenience function that avoids the need to create pandas objects.
-
-    Args:
-        usage: List of usage values in kWh
-        plan_id: The plan identifier (flexible matching supported)
-        start: Start date for the usage data (e.g., "2024-01-01")
-        freq: Frequency of the data (e.g., "15min", "1h", "1D")
-        inputs: Optional billing inputs
-        calendar_instance: Optional calendar instance
-        cache_dir: Deprecated, has no effect
-        api_timeout: Deprecated, has no effect
-        strict: If True, raise errors on invalid/missing inputs
-
-    Returns:
-        DataFrame with billing breakdown
+    freq is a pandas frequency such as "15min" or "1h". Time-of-use plans
+    need "1h" or finer.
 
     Example:
         result = calculate_bill_from_list(
             usage=[1.0, 1.5, 2.0, 1.8, ...],
             plan_id="residential_simple_2_tier",
-            start="2024-01-01",
+            start="2026-07-01",
             freq="1h",
         )
     """
@@ -1599,30 +1581,14 @@ def calculate_bill_from_dict(
     api_timeout: int | None = None,
     strict: bool = False,
 ) -> pd.DataFrame:
-    """Calculate bill from a dictionary of timestamp -> usage values.
-
-    This is a convenience function for irregularly-spaced or
-    pre-aggregated usage data.
-
-    Args:
-        usage: Dictionary mapping timestamps to usage values in kWh.
-                Timestamps can be strings or datetime objects.
-        plan_id: The plan identifier (flexible matching supported)
-        inputs: Optional billing inputs
-        calendar_instance: Optional calendar instance
-        cache_dir: Deprecated, has no effect
-        api_timeout: Deprecated, has no effect
-        strict: If True, raise errors on invalid/missing inputs
-
-    Returns:
-        DataFrame with billing breakdown
+    """calculate_bill for a dict of timestamp, as a string or datetime, to kWh.
 
     Example:
         result = calculate_bill_from_dict(
             usage={
-                "2024-01-01 00:00": 1.0,
-                "2024-01-01 01:00": 1.5,
-                "2024-01-01 02:00": 2.0,
+                "2026-07-01 00:00": 1.0,
+                "2026-07-01 01:00": 1.5,
+                "2026-07-01 02:00": 2.0,
             },
             plan_id="residential_simple_2_tier",
         )

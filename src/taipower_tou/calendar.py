@@ -64,9 +64,9 @@ class _OffPeakRule:
 
 
 # The 電價表 off-peak list is unchanged from the 102/10/1 table through mid-2025.
-# The 114/9/1 revision added 除夕前1日, 9/28, 10/25 and 12/25 without
-# backdating: the revised 114年 calendar (114/8/26修) marks 2025-10-25 and
-# 2025-12-25 off-peak but keeps 2025-01-27 a weekday.
+# The 114/9/1 revision added 除夕前1日, 9/28, 10/25 and 12/25 from that day on.
+# The revised 114年 calendar (114/8/26修) marks 2025-10-25 and 2025-12-25
+# off-peak but keeps 2025-01-27, 除夕前1日, a weekday.
 _RULES = (
     _OffPeakRule(
         effective_from=date(2014, 1, 1),
@@ -174,7 +174,10 @@ class TaiwanCalendar:
             _listed_offpeak_days(year)
 
     def is_holiday(self, target: object) -> Any:
-        """Whether a day is 離峰日, or a boolean Series for a DatetimeIndex."""
+        """Whether a day is 離峰日, or a boolean Series for a DatetimeIndex.
+
+        A timezone-aware datetime or index is read in Taiwan time.
+        """
         if pd is not None and isinstance(target, pd.DatetimeIndex):
             local = taiwan_wall_time(target)
             listed: set[date] = set()
