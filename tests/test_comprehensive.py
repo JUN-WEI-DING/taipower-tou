@@ -34,7 +34,7 @@ def test_different_data_sizes():
         ),
         (
             "超大資料 (1,000,000條)",
-            pd.date_range("2025-01-01", periods=1000000, freq="h"),
+            pd.date_range("2025-01-01", periods=1000000, freq="15min"),
             [1.0] * 1000000,
         ),
     ]
@@ -294,6 +294,7 @@ def test_billing_accuracy():
     usage = pd.Series([100.0] * 48, index=dates)  # 每半小時100kW
 
     inputs = BillingInputs(
+        taipower_rounding=False,
         contract_capacities={
             "regular": 200.0,
             "non_summer": 0.0,

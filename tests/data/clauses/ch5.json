@@ -1,0 +1,715 @@
+{
+ "chapter": "第五章 高壓及特高壓電力電價",
+ "lines": [
+  825,
+  1175
+ ],
+ "clauses": [
+  {
+   "id": "五",
+   "lines": [
+    825,
+    825
+   ],
+   "kind": "not_billing",
+   "summary": "第五章 高壓及特高壓電力電價",
+   "reason": "chapter heading"
+  },
+  {
+   "id": "五-一-(一)",
+   "lines": [
+    826,
+    829
+   ],
+   "kind": "not_billing",
+   "summary": "適用範圍：契約容量在100瓩以上者；生產性質用電場所得另選按批次生產時間電價",
+   "reason": "who may take these plans; the caller picks the plan, and the library bills whatever contract it is given"
+  },
+  {
+   "id": "五-一-(二)",
+   "lines": [
+    830,
+    832
+   ],
+   "kind": "not_billing",
+   "summary": "專供電動車充換電，高壓供電、契約容量100瓩以上者，得選按電動車充換電設施電價",
+   "reason": "who may take the EV plan; it turns on equipment capacities that no bill amount uses"
+  },
+  {
+   "id": "五-二-(一)",
+   "lines": [
+    833,
+    837
+   ],
+   "kind": "not_billing",
+   "summary": "供電方式：高壓3,300至22,800伏特，特高壓69,000至345,000伏特，每戶概以單一方式供電",
+   "reason": "the supply voltage decides whether the caller picks a high_voltage_* or extra_high_voltage_* plan; no amount within a plan depends on it"
+  },
+  {
+   "id": "五-二-(二)",
+   "lines": [
+    838,
+    839
+   ],
+   "kind": "not_billing",
+   "summary": "契約容量與供電方式之適用範圍參照營業規章第四十六條",
+   "reason": "refers to the 營業規章 for which supply suits which capacity; no amount depends on it"
+  },
+  {
+   "id": "五-三",
+   "lines": [
+    840,
+    841
+   ],
+   "kind": "not_billing",
+   "summary": "契約容量之決定：參照第八章之規定",
+   "reason": "points to 第八章, whose clauses are in ch8.json"
+  },
+  {
+   "id": "五-四",
+   "lines": [
+    842,
+    849
+   ],
+   "kind": "billing",
+   "summary": "用戶得選按二段式、三段式、批次生產或電動車充換電設施電價計費",
+   "tests": [
+    "test_tariff_table.py::test_removed_non_tou_high_voltage_plans_name_their_replacement"
+   ]
+  },
+  {
+   "id": "五-四-(一)",
+   "lines": [
+    850,
+    886
+   ],
+   "kind": "billing",
+   "summary": "二段式時間電價 (高壓供電、特高壓供電) 基本電費與流動電費",
+   "tests": [
+    "test_tariff_table.py::test_every_half_hour_has_the_tariff_period_and_price",
+    "test_tariff_table.py::test_basic_fee_prices",
+    "test_clauses_ch5.py::test_high_voltage_summer_season_runs_may_16_to_october_15",
+    "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period"
+   ]
+  },
+  {
+   "id": "五-四-(二)-尖峰時間固定",
+   "lines": [
+    887,
+    923
+   ],
+   "kind": "billing",
+   "summary": "三段式時間電價 基本電費與流動電費 (尖峰時間固定)",
+   "tests": [
+    "test_tariff_table.py::test_every_half_hour_has_the_tariff_period_and_price",
+    "test_tariff_table.py::test_basic_fee_prices",
+    "test_tariff_text.py::test_high_voltage_summer_runs_may_16_to_october_15",
+    "test_tariff_text.py::test_three_stage_weekday_and_saturday_semi_peak_prices_differ",
+    "test_clauses_ch5.py::test_high_voltage_summer_season_runs_may_16_to_october_15",
+    "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period"
+   ]
+  },
+  {
+   "id": "五-四-(二)-尖峰時間可變動",
+   "lines": [
+    924,
+    957
+   ],
+   "kind": "billing",
+   "summary": "三段式時間電價 流動電費 (尖峰時間可變動，夏月尖峰時間指定30天)",
+   "tests": [
+    "test_clauses_ch5.py::test_variable_peak_bills_peak_only_on_the_designated_days"
+   ]
+  },
+  {
+   "id": "五-四-(三)",
+   "lines": [
+    958,
+    981
+   ],
+   "kind": "billing",
+   "summary": "批次生產時間電價 基本電費與流動電費",
+   "tests": [
+    "test_tariff_table.py::test_every_half_hour_has_the_tariff_period_and_price",
+    "test_tariff_table.py::test_basic_fee_prices",
+    "test_clauses_ch5.py::test_high_voltage_summer_season_runs_may_16_to_october_15",
+    "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period"
+   ]
+  },
+  {
+   "id": "五-四-(四)",
+   "lines": [
+    982,
+    984
+   ],
+   "kind": "billing",
+   "summary": "電動車充換電設施電價：按第四章第四條第(三)款「電動車充換電設施電價」95%計算",
+   "tests": [
+    "test_tariff_table.py::test_every_half_hour_has_the_tariff_period_and_price",
+    "test_tariff_table.py::test_basic_fee_prices",
+    "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period",
+    "test_clauses_ch5.py::test_ev_basic_fee_is_per_household_and_per_regular_contract",
+    "test_clauses_ch5.py::test_high_voltage_ev_summer_runs_june_1_to_september_30",
+    "test_worked_examples.py::test_worked_bill_matches_the_printed_total"
+   ]
+  },
+  {
+   "id": "五-四-註-1",
+   "lines": [
+    985,
+    999
+   ],
+   "kind": "billing",
+   "summary": "離峰日：如下表所列日期",
+   "tests": [
+    "test_offpeak_days.py::test_period_context_day_types_match_official_calendar"
+   ]
+  },
+  {
+   "id": "五-四-註-2",
+   "lines": [
+    1000,
+    1003
+   ],
+   "kind": "billing",
+   "summary": "尖峰時間可變動之指定時間：夏月指定日期下午4時至10時，前一日下午4時前通知，全年30日180小時",
+   "tests": [
+    "test_clauses_ch5.py::test_variable_peak_bills_peak_only_on_the_designated_days"
+   ]
+  },
+  {
+   "id": "五-四-註-3",
+   "lines": [
+    1004,
+    1007
+   ],
+   "kind": "not_billing",
+   "summary": "與使用遽變負荷、電氣爐、軋鋼馬達等特殊器具用戶，個別約定調整各時段起迄時間",
+   "reason": "the hours are set by individual agreement with one customer, keeping each period's hours; the tariff gives no hours to bill and the library has no input for them"
+  },
+  {
+   "id": "五-四-註-4",
+   "lines": [
+    1008,
+    1008
+   ],
+   "kind": "not_billing",
+   "summary": "適用電價調整係數者，參照附錄一規定計算",
+   "reason": "refers to 附錄一, which this package does not bill (NOT_BILLED in test_clause_coverage.py)"
+  },
+  {
+   "id": "五-四-(五)",
+   "lines": [
+    1009,
+    1013
+   ],
+   "kind": "not_billing",
+   "summary": "供電容量之限制：可供容量用罄時得停止受理非夏月、半尖峰、週六半尖峰或離峰電力之申請",
+   "reason": "when Taipower stops taking applications; no amount depends on it"
+  },
+  {
+   "id": "五-五-(一)",
+   "lines": [
+    1014,
+    1015
+   ],
+   "kind": "billing",
+   "summary": "每月電費為基本電費與流動電費之總和",
+   "tests": [
+    "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period"
+   ]
+  },
+  {
+   "id": "五-五-(一)-1",
+   "lines": [
+    1016,
+    1041
+   ],
+   "kind": "billing",
+   "summary": "二段式：基本電費按契約容量計算，流動電費依各時間實用電度；週六半尖峰或離峰契約按〔(週六半尖峰＋離峰)－（經常＋非夏月）×0.5〕，負值按0",
+   "tests": [
+    "test_tariff_rules.py::test_two_stage_basic_fee_formula",
+    "test_tariff_rules.py::test_weekend_contract_below_half_the_others_costs_nothing",
+    "test_clauses_ch5.py::test_two_stage_and_batch_basic_fee_formula",
+    "test_clauses_ch5.py::test_weekend_only_contracts_pay_the_weekend_price_on_both",
+    "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period"
+   ]
+  },
+  {
+   "id": "五-五-(一)-2",
+   "lines": [
+    1042,
+    1054
+   ],
+   "kind": "billing",
+   "summary": "三段式：當月經常、半尖峰契約電價，週六半尖峰或離峰契約按〔(週六半尖峰＋離峰)－（經常＋半尖峰）×0.5〕，負值按0",
+   "tests": [
+    "test_clauses_ch5.py::test_three_stage_basic_fee_formula",
+    "test_clauses_ch5.py::test_weekend_only_contracts_pay_the_weekend_price_on_both",
+    "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period"
+   ]
+  },
+  {
+   "id": "五-五-(一)-3",
+   "lines": [
+    1055,
+    1055
+   ],
+   "kind": "billing",
+   "summary": "批次生產時間電價：比照二段式時間電價規定",
+   "tests": [
+    "test_clauses_ch5.py::test_two_stage_and_batch_basic_fee_formula",
+    "test_clauses_ch5.py::test_weekend_only_contracts_pay_the_weekend_price_on_both",
+    "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period"
+   ]
+  },
+  {
+   "id": "五-五-(一)-4-a",
+   "lines": [
+    1056,
+    1062
+   ],
+   "kind": "billing",
+   "summary": "電動車：基本電費按戶及按契約容量計算＝夏月(非夏月)經常契約電價×經常契約容量",
+   "tests": [
+    "test_clauses_ch5.py::test_ev_basic_fee_is_per_household_and_per_regular_contract",
+    "test_clauses_ch5.py::test_month_bill_is_basic_fee_plus_energy_by_period"
+   ]
+  },
+  {
+   "id": "五-五-(一)-4-b",
+   "lines": [
+    1063,
+    1063
+   ],
+   "kind": "billing",
+   "summary": "按戶計收之基本電費，不列計功率因數調整費",
+   "tests": [
+    "test_clauses_ch5.py::test_power_factor_adjusts_basic_and_energy"
+   ]
+  },
+  {
+   "id": "五-五-(二)",
+   "lines": [
+    1064,
+    1065
+   ],
+   "kind": "billing",
+   "summary": "當月份未用電者（抄見度數與最高需量均為0），基本電費按核定電價50%計算",
+   "tests": [
+    "test_tariff_rules.py::test_no_usage_pays_half_the_basic_fee",
+    "test_tariff_rules.py::test_idle_month_pays_half_the_basic_fee_of_a_used_month",
+    "test_clauses_ch5.py::test_month_with_demand_but_no_kwh_pays_the_full_basic_fee"
+   ]
+  },
+  {
+   "id": "五-五-(三)",
+   "lines": [
+    1066,
+    1069
+   ],
+   "kind": "not_billing",
+   "summary": "公用電車、公用自來水、學校、庇護工場、社福機構、護理之家依電業法第52條及優惠電價收費辦法",
+   "reason": "these customers bill under 電業法第52條 and the 優惠電價收費辦法, outside this tariff"
+  },
+  {
+   "id": "五-五-(四)",
+   "lines": [
+    1070,
+    1071
+   ],
+   "kind": "not_billing",
+   "summary": "農業動力用電電費按「農業動力用電範圍標準」計收",
+   "reason": "農業動力 bills under the 農業動力用電範圍標準, outside this tariff"
+  },
+  {
+   "id": "五-五-(五)",
+   "lines": [
+    1072,
+    1073
+   ],
+   "kind": "billing",
+   "summary": "儲冷式空調系統離峰時間用電之流動電費按適用電價60%計收",
+   "tests": [
+    "test_clauses_ch5.py::test_cold_storage_air_conditioning_pays_60_percent_off_peak"
+   ]
+  },
+  {
+   "id": "五-五-(六)",
+   "lines": [
+    1074,
+    1076
+   ],
+   "kind": "billing",
+   "summary": "自備161,000伏特變電設備基本電費折扣2%，345,000伏特折扣4.2%",
+   "tests": [
+    "test_clauses_ch5.py::test_own_substation_discounts_the_extra_high_voltage_basic_fee"
+   ]
+  },
+  {
+   "id": "五-五-(七)",
+   "lines": [
+    1077,
+    1080
+   ],
+   "kind": "billing",
+   "summary": "常閉環路或兩回線以上經常供電具備用性質者，依第七章第一節第三條第(一)款第1目加計基本電費",
+   "tests": [
+    "test_clauses_ch5.py::test_backup_line_adds_the_backup_basic_fee"
+   ]
+  },
+  {
+   "id": "五-五-(八)",
+   "lines": [
+    1081,
+    1082
+   ],
+   "kind": "not_billing",
+   "summary": "遲延繳付電費加計遲延繳付費用",
+   "reason": "late-payment fees are added to a later bill, not computed from usage"
+  },
+  {
+   "id": "五-五-(九)",
+   "lines": [
+    1083,
+    1084
+   ],
+   "kind": "billing",
+   "summary": "停止供電或限制用電時按營業規章第三十九條扣減電費",
+   "tests": ["test_business_rules.py::test_outage_hours_take_3_per_mille_of_the_basic_fee_off"]
+  },
+  {
+   "id": "五-六",
+   "lines": [
+    1085,
+    1088
+   ],
+   "kind": "billing",
+   "summary": "功率因數不及80%每低1%電費增加0.1%，超過80%每超過1%減少0.1%，超過95%部分不予扣減",
+   "tests": [
+    "test_tariff_rules.py::test_power_factor_adjusts_the_months_bill",
+    "test_clauses_ch5.py::test_power_factor_adjusts_basic_and_energy"
+   ]
+  },
+  {
+   "id": "五-七-(一)",
+   "lines": [
+    1089,
+    1092
+   ],
+   "kind": "billing",
+   "summary": "當月用電最高需量超出契約容量時，其超出部分按下式計算",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_ev_over_contract_is_the_months_highest_demand"
+   ]
+  },
+  {
+   "id": "五-七-(一)-1-(1)",
+   "lines": [
+    1093,
+    1095
+   ],
+   "kind": "billing",
+   "summary": "二段式：夏月尖峰時間超約瓩數＝當月尖峰時間用電最高需量－經常契約容量",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_over_contract_above_10_percent_pays_3x"
+   ]
+  },
+  {
+   "id": "五-七-(一)-1-(2)",
+   "lines": [
+    1096,
+    1097
+   ],
+   "kind": "billing",
+   "summary": "非夏月尖峰時間超約瓩數＝尖峰時間最高需量－（經常＋非夏月契約容量）",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "五-七-(一)-1-(3)",
+   "lines": [
+    1098,
+    1100
+   ],
+   "kind": "billing",
+   "summary": "週六半尖峰時間超約瓩數＝週六半尖峰最高需量－（經常＋非夏月＋週六半尖峰契約容量）",
+   "tests": [
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "五-七-(一)-1-(4)",
+   "lines": [
+    1101,
+    1103
+   ],
+   "kind": "billing",
+   "summary": "離峰時間超約瓩數＝離峰最高需量－（經常＋非夏月＋週六半尖峰＋離峰契約容量）",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "五-七-(一)-1-(5)",
+   "lines": [
+    1104,
+    1107
+   ],
+   "kind": "billing",
+   "summary": "超出部分不重複計算：週六半尖峰扣除尖峰，離峰扣除尖峰或週六半尖峰之較大者",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "五-七-(一)-2-(1)",
+   "lines": [
+    1108,
+    1110
+   ],
+   "kind": "billing",
+   "summary": "三段式：尖峰時間超約瓩數＝尖峰時間最高需量－經常契約容量",
+   "tests": [
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_over_contract_above_10_percent_pays_3x"
+   ]
+  },
+  {
+   "id": "五-七-(一)-2-(2)",
+   "lines": [
+    1111,
+    1112
+   ],
+   "kind": "billing",
+   "summary": "半尖峰時間超約瓩數＝半尖峰最高需量－（經常＋半尖峰契約容量）",
+   "tests": [
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "五-七-(一)-2-(3)",
+   "lines": [
+    1113,
+    1115
+   ],
+   "kind": "billing",
+   "summary": "週六半尖峰時間超約瓩數＝週六半尖峰最高需量－（經常＋半尖峰＋週六半尖峰契約容量）",
+   "tests": [
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "五-七-(一)-2-(4)",
+   "lines": [
+    1116,
+    1118
+   ],
+   "kind": "billing",
+   "summary": "離峰時間超約瓩數＝離峰最高需量－（經常＋半尖峰＋週六半尖峰＋離峰契約容量）",
+   "tests": [
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "五-七-(一)-2-(5)",
+   "lines": [
+    1119,
+    1125
+   ],
+   "kind": "billing",
+   "summary": "超出部分不重複計算：半尖峰扣除尖峰；週六半尖峰扣除尖峰或半尖峰之較大者；離峰扣除三者之較大者",
+   "tests": [
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "五-七-(一)-3",
+   "lines": [
+    1126,
+    1126
+   ],
+   "kind": "billing",
+   "summary": "批次生產時間電價：比照二段式時間電價規定",
+   "tests": [
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_over_contract_above_10_percent_pays_3x"
+   ]
+  },
+  {
+   "id": "五-七-(一)-4",
+   "lines": [
+    1127,
+    1128
+   ],
+   "kind": "billing",
+   "summary": "電動車：超約瓩數＝當月用電最高需量－經常契約容量",
+   "tests": [
+    "test_clauses_ch5.py::test_ev_over_contract_is_the_months_highest_demand",
+    "test_clauses_ch5.py::test_over_contract_above_10_percent_pays_3x"
+   ]
+  },
+  {
+   "id": "五-七-(二)",
+   "lines": [
+    1129,
+    1131
+   ],
+   "kind": "billing",
+   "summary": "超出部分依適用電價按下列標準計收基本電費，不給予功率因數扣減及基本電費折扣",
+   "tests": [
+    "test_clauses_ch5.py::test_over_contract_gets_no_power_factor_discount",
+    "test_clauses_ch5.py::test_own_substation_discounts_the_extra_high_voltage_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time"
+   ]
+  },
+  {
+   "id": "五-七-(二)-1",
+   "lines": [
+    1132,
+    1132
+   ],
+   "kind": "billing",
+   "summary": "在契約容量10%以下部分按2倍計收基本電費",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_two_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_three_stage_over_contract_by_time",
+    "test_clauses_ch5.py::test_ev_over_contract_is_the_months_highest_demand",
+    "test_clauses_ch5.py::test_over_contract_above_10_percent_pays_3x",
+    "test_clauses_ch8.py::test_weekend_only_contract_is_the_contract_for_its_times"
+   ]
+  },
+  {
+   "id": "五-七-(二)-2",
+   "lines": [
+    1133,
+    1133
+   ],
+   "kind": "billing",
+   "summary": "超過契約容量10%部分按3倍計收基本電費",
+   "tests": [
+    "test_tariff_rules.py::test_over_contract_basic_fee",
+    "test_clauses_ch5.py::test_over_contract_above_10_percent_pays_3x"
+   ]
+  },
+  {
+   "id": "五-八-(一)",
+   "lines": [
+    1134,
+    1136
+   ],
+   "kind": "billing",
+   "summary": "本章電價均內含5%營業稅；依法免計營業稅用戶每月應繳總金額為電費總金額除以1.05",
+   "tests": [
+    "test_clauses_ch5.py::test_tax_exempt_customer_pays_the_total_divided_by_1_05"
+   ]
+  },
+  {
+   "id": "五-八-(二)",
+   "lines": [
+    1137,
+    1140
+   ],
+   "kind": "billing",
+   "summary": "高壓供電以低壓電表計度者：低壓電表抄見度數/0.98＋變壓器容量×720×0.01",
+   "tests": [
+    "test_clauses_ch5.py::test_low_voltage_meter_adds_transformer_losses"
+   ]
+  },
+  {
+   "id": "五-八-(三)",
+   "lines": [
+    1141,
+    1144
+   ],
+   "kind": "not_billing",
+   "summary": "二段式或三段式尖峰時間固定以1年為一計算週期，1年內不得申請改變計費方式",
+   "reason": "when a customer may change plan; the caller picks the plan of each bill, and no amount depends on it"
+  },
+  {
+   "id": "五-八-(三)-1",
+   "lines": [
+    1145,
+    1146
+   ],
+   "kind": "not_billing",
+   "summary": "週期起始日於非夏月者，得於下一個計算週期起始日或夏月期間結束後變更",
+   "reason": "when a customer may change plan; the caller picks the plan of each bill, and no amount depends on it"
+  },
+  {
+   "id": "五-八-(三)-2",
+   "lines": [
+    1147,
+    1148
+   ],
+   "kind": "not_billing",
+   "summary": "週期起始日於夏月者，得於當年10月15日前或下一個計算週期結束後變更",
+   "reason": "when a customer may change plan; the caller picks the plan of each bill, and no amount depends on it"
+  },
+  {
+   "id": "五-八-(四)",
+   "lines": [
+    1149,
+    1156
+   ],
+   "kind": "not_billing",
+   "summary": "三段式尖峰時間可變動以1年為一計算週期，夏月期間不得再選用其他需量反應或輔助服務",
+   "reason": "when a customer may change plan; the caller picks the plan of each bill, and no amount depends on it; the 需量反應 rule limits which programs a customer may join"
+  },
+  {
+   "id": "五-八-(五)",
+   "lines": [
+    1157,
+    1159
+   ],
+   "kind": "not_billing",
+   "summary": "批次生產或電動車充換電設施電價以1年為一計算週期，1年內不得申請改變計費方式",
+   "reason": "when a customer may change plan; the caller picks the plan of each bill, and no amount depends on it"
+  },
+  {
+   "id": "五-八-(六)",
+   "lines": [
+    1160,
+    1164
+   ],
+   "kind": "billing",
+   "summary": "僅訂週六半尖峰或離峰契約容量之用戶於其他時間之用電，按相關時段單價4.8倍計收基本電費、1.6倍計收流動電費",
+   "tests": [
+    "test_clauses_ch5.py::test_weekend_only_contract_used_outside_its_times"
+   ]
+  },
+  {
+   "id": "五-八-(七)",
+   "lines": [
+    1165,
+    1166
+   ],
+   "kind": "billing",
+   "summary": "尖峰時間可變動時間電價需量契約容量比照尖峰時間固定之供電時間劃分及其規定",
+   "tests": [
+    "test_clauses_ch5.py::test_variable_peak_bills_peak_only_on_the_designated_days"
+   ]
+  },
+  {
+   "id": "五-八-(八)",
+   "lines": [
+    1167,
+    1175
+   ],
+   "kind": "not_billing",
+   "summary": "電動車用戶實際用電不符第一條第二款規定時，自不符月份起改按高壓電力二段式時間電價計費",
+   "reason": "a change of plan when the customer stops qualifying for the EV tariff, decided by equipment capacities the library has no input for; the caller bills those months with high_voltage_2_tier"
+  }
+ ]
+}

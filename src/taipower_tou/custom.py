@@ -32,7 +32,11 @@ from taipower_tou.tariff import (
 
 
 class CustomCalendar:
-    """Calendar based on explicit holidays and optional weekend rules."""
+    """Off-peak days from a list of dates and of weekday numbers, 0 for Monday.
+
+    Unlike TaiwanCalendar, it covers any year, and is_holiday takes a
+    datetime's own date, not its date in Taiwan time.
+    """
 
     def __init__(
         self,
@@ -58,7 +62,7 @@ class CustomCalendar:
 
         @is_holiday.register
         def _(self, target: pd.DatetimeIndex) -> pd.Series:
-            is_weekend = target.dayofweek.isin(sorted(self._weekend_days))
+            is_weekend = target.day_of_week.isin(sorted(self._weekend_days))
             if not self._holidays:
                 return pd.Series(is_weekend, index=target, name="is_holiday")
 
@@ -154,6 +158,7 @@ def build_tariff_rate(
     season_strategy: SeasonStrategy | None = None,
 ) -> TariffRate:
     period_cost_map: dict[tuple[Any, Any], float] = {}
+    day_type_cost_map: dict[tuple[str, str, str], float] = {}
     if period_costs:
         if isinstance(period_costs, Mapping):
             for (season, period), cost in period_costs.items():
@@ -165,6 +170,13 @@ def build_tariff_rate(
                 season = _resolve_season(item["season"], season_strategy)
                 period = _resolve_period(item["period"])
                 period_cost_map[(season, period)] = float(item["cost"])
+                if item.get("day_type") is not None:
+                    key = (
+                        _label_value(season),
+                        _label_value(period),
+                        str(item["day_type"]),
+                    )
+                    day_type_cost_map[key] = float(item["cost"])
 
     tiers: list[ConsumptionTier] = []
     if tiered_rates:
@@ -181,7 +193,11 @@ def build_tariff_rate(
                     )
                 )
 
-    return TariffRate(period_costs=period_cost_map, tiered_rates=tiers)
+    return TariffRate(
+        period_costs=period_cost_map,
+        tiered_rates=tiers,
+        day_type_costs=day_type_cost_map,
+    )
 
 
 def build_tariff_plan(

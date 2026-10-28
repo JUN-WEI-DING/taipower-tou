@@ -18,14 +18,6 @@ from taipower_tou.models import BillingCycleType
 from taipower_tou.tariff import _billing_period_group_index
 
 
-@pytest.fixture
-def empty_cache_file(tmp_path):
-    """Create an empty cache file to avoid network calls."""
-    cache_file = tmp_path / "2025.json"
-    cache_file.write_text("[]", encoding="utf-8")
-    return tmp_path
-
-
 class TestBillingCycleGrouping:
     """Test month grouping for ODD_MONTH and EVEN_MONTH billing cycles."""
 
@@ -423,11 +415,10 @@ class TestYearCrossing:
         assert periods[1].month == 2
         assert periods[1].year == 2025
 
-    def test_year_crossing_with_billing(self, empty_cache_file):
+    def test_year_crossing_with_billing(self):
         """Test actual billing calculation across year boundary."""
         # December 2024 (non-summer) + January 2025 (non-summer)
         # Both non-summer, so rates are consistent
-        # Note: calculate_bill uses standard tiers (no doubling)
         index = pd.to_datetime(
             [
                 "2024-12-15 00:00",
@@ -437,6 +428,7 @@ class TestYearCrossing:
         usage = pd.Series([120.0, 130.0], index=index)  # 250 kWh total
 
         inputs = tou.BillingInputs(
+            taipower_rounding=False,
             meter_phase="single",
             meter_voltage_v=110,
             meter_ampere=10,
@@ -445,22 +437,20 @@ class TestYearCrossing:
             usage,
             "residential_non_tou",
             inputs=inputs,
-            cache_dir=empty_cache_file,
         )
 
         # Should be grouped into single billing period (2-month cycle)
         assert len(result) == 1
 
-        # With standard tiers (no doubling in calculate_bill):
-        # 120 * 1.78 + 130 * 2.26 = 213.6 + 293.8 = 507.4
-        expected = 120 * 1.78 + 130 * 2.26
+        # Two-month bill, so tiers double: 240 * 1.78 + 10 * 2.26
+        expected = 240 * 1.78 + 10 * 2.26
         assert result["energy_cost"].iloc[0] == pytest.approx(expected, rel=0.01)
 
 
 class TestComparison:
     """Compare monthly vs bimonthly billing results."""
 
-    def test_monthly_bimonthly_rate_difference(self, empty_cache_file):
+    def test_monthly_bimonthly_rate_difference(self):
         """Test TariffPlan with different cycle types produces different results."""
         # Compare MONTHLY vs ODD_MONTH billing for same usage
 
@@ -499,7 +489,7 @@ class TestComparison:
         assert cost_monthly.iloc[0] == pytest.approx(expected_monthly, rel=0.01)
         assert cost_odd.iloc[0] == pytest.approx(expected_odd, rel=0.01)
 
-    def test_billing_period_count_monthly(self, empty_cache_file):
+    def test_billing_period_count_monthly(self):
         """Test that monthly billing produces correct number of periods."""
         index = pd.to_datetime(
             [
@@ -514,13 +504,12 @@ class TestComparison:
         result = tou.calculate_bill_simple(
             usage,
             "residential_simple_2_tier",
-            cache_dir=empty_cache_file,
         )
 
         # Should have 3 separate billing periods
         assert len(result) == 3
 
-    def test_billing_period_count_bimonthly(self, empty_cache_file):
+    def test_billing_period_count_bimonthly(self):
         """Test that bimonthly billing produces correct number of periods."""
         index = pd.to_datetime(
             [
@@ -535,6 +524,7 @@ class TestComparison:
         # residential_non_tou has bimonthly (ODD_MONTH) billing
         # Feb+Mar = 1 period, Apr+May = 1 period
         inputs = tou.BillingInputs(
+            taipower_rounding=False,
             meter_phase="single",
             meter_voltage_v=110,
             meter_ampere=10,
@@ -543,20 +533,14 @@ class TestComparison:
             usage,
             "residential_non_tou",
             inputs=inputs,
-            cache_dir=empty_cache_file,
         )
 
         # Should have 2 billing periods
         assert len(result) == 2
 
-    def test_season_impact_on_bimonthly_billing(self, empty_cache_file):
+    def test_season_impact_on_bimonthly_billing(self):
         """Test that season affects bimonthly billing when periods cross seasons."""
-        # Feb (non-summer) + Mar (summer) for ODD_MONTH
-        # The period is grouped to March, so summer rates apply
-        # Note: calculate_bill uses standard tiers (no doubling)
-        # However, for bimonthly billing, when the period groups to March (summer),
-        # it uses the non_summer rate since Feb has more usage weight
-        # Let me verify actual behavior...
+        # Feb and Mar are both non-summer (summer is 6/1-9/30)
 
         index = pd.to_datetime(
             [
@@ -567,6 +551,7 @@ class TestComparison:
         usage = pd.Series([150.0, 150.0], index=index)  # 300 kWh total
 
         inputs = tou.BillingInputs(
+            taipower_rounding=False,
             meter_phase="single",
             meter_voltage_v=110,
             meter_ampere=10,
@@ -575,23 +560,16 @@ class TestComparison:
             usage,
             "residential_non_tou",
             inputs=inputs,
-            cache_dir=empty_cache_file,
         )
 
-        # Feb-Mar grouped to March (summer)
-        # The actual behavior: it uses non_summer rate (2.26) not summer (2.55)
-        # This is because the season is determined from the tiered cost calculation
-        # which may use a different logic
-        # Standard tiers with non-summer rate:
-        # 120*1.78 + 180*2.26 = 213.6 + 406.8 = 620.4
-        expected = 120 * 1.78 + 180 * 2.26
+        # Two-month bill, so tiers double: 240 * 1.78 + 60 * 2.26
+        expected = 240 * 1.78 + 60 * 2.26
         assert result["energy_cost"].iloc[0] == pytest.approx(expected, rel=0.01)
 
-    def test_bimonthly_non_summer_period(self, empty_cache_file):
+    def test_bimonthly_non_summer_period(self):
         """Test bimonthly billing entirely in non-summer."""
         # Oct (non-summer) + Nov (non-summer) for ODD_MONTH
         # Groups to November (non-summer)
-        # Note: calculate_bill uses standard tiers (no doubling)
 
         index = pd.to_datetime(
             [
@@ -602,6 +580,7 @@ class TestComparison:
         usage = pd.Series([150.0, 150.0], index=index)  # 300 kWh total
 
         inputs = tou.BillingInputs(
+            taipower_rounding=False,
             meter_phase="single",
             meter_voltage_v=110,
             meter_ampere=10,
@@ -610,10 +589,8 @@ class TestComparison:
             usage,
             "residential_non_tou",
             inputs=inputs,
-            cache_dir=empty_cache_file,
         )
 
-        # Oct-Nov grouped to November (non-summer)
-        # Standard tiers: 120*1.78 + 180*2.26 = 213.6 + 406.8 = 620.4
-        expected = 120 * 1.78 + 180 * 2.26
+        # Two-month bill, so tiers double: 240 * 1.78 + 60 * 2.26
+        expected = 240 * 1.78 + 60 * 2.26
         assert result["energy_cost"].iloc[0] == pytest.approx(expected, rel=0.01)

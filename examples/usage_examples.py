@@ -1,9 +1,8 @@
-"""taipower_tou API usage examples with Chinese annotations."""
+"""taipower_tou 各 API 的用法，一個函式一個例子。"""
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import pandas as pd
 
@@ -17,20 +16,16 @@ def _sample_usage(start: datetime, periods: int, freq_minutes: int) -> pd.Series
 
 
 def main() -> None:
-    cache_dir = Path(".cache")
+    # taiwan_calendar: 依台電電價表規則判斷離峰日（週日及表列節日，不含補假）
+    calendar = tou.taiwan_calendar()
+    # is_holiday: 判斷日期是否為全日離峰日（可傳 date 或 datetime）
+    print("is_holiday:", tou.is_holiday(datetime(2026, 7, 12), calendar=calendar))
 
-    # taiwan_calendar: 建立臺灣假日行事曆，cache_dir 可指定快取位置
-    # api_timeout 可調整 API 請求超時秒數
-    calendar = tou.taiwan_calendar(cache_dir=cache_dir)
-    # is_holiday: 判斷日期是否為假日（可傳 date 或 datetime）
-    print("is_holiday:", tou.is_holiday(datetime(2025, 7, 13), calendar=calendar))
-
-    # available_plans: 取得支援方案名稱列表
+    # available_plans: 取得 plan ID 與中文名稱的對照
     print("available_plans:", tou.available_plans())
 
-    # residential_simple_2_tier_plan / high_voltage_2_tier_plan
-    # / residential_non_tou_plan:
-    # 直接取得各方案的 TariffPlan
+    # residential_simple_2_tier_plan、high_voltage_2_tier_plan、
+    # residential_non_tou_plan: 直接取得各方案的 TariffPlan
     simple_plan = tou.residential_simple_2_tier_plan(calendar)
     tou.high_voltage_2_tier_plan(calendar)
     non_tou_plan = tou.residential_non_tou_plan(calendar)
@@ -40,7 +35,7 @@ def main() -> None:
     print("plan name:", plan_by_name.profile.name)
 
     # period_at: 以方案名稱取得時間點的時段型別
-    dt = datetime(2025, 7, 15, 10, 0)
+    dt = datetime(2026, 7, 15, 10, 0)
     print(
         "period_at:",
         tou.period_at(dt, "residential_simple_2_tier", calendar_instance=calendar),
@@ -83,11 +78,11 @@ def main() -> None:
         tou.plan_details("high_voltage_2_tier", calendar_instance=calendar),
     )
 
-    # calculate_costs: 以 TariffPlan 計算每月費用
+    # calculate_costs: 以 TariffPlan 計算每月流動電費，不含基本電費
     # （usage 必須是 Series，index 為 DatetimeIndex）
-    usage = _sample_usage(datetime(2025, 7, 15, 16, 0), periods=4, freq_minutes=30)
+    usage = _sample_usage(datetime(2026, 7, 15, 16, 0), periods=4, freq_minutes=30)
     print("calculate_costs:", tou.calculate_costs(usage, simple_plan))
-    # costs: 以方案名稱計算每月費用（內部會建立 TariffPlan）
+    # costs: 以方案名稱計算每月流動電費
     print(
         "costs:",
         tou.costs(usage, "residential_simple_2_tier", calendar_instance=calendar),
@@ -110,8 +105,8 @@ def main() -> None:
         ),
     )
 
-    # pricing_context（DatetimeIndex 版本）: 回傳 DataFrame（season/period）
-    index = pd.date_range(datetime(2025, 7, 15, 0, 0), periods=3, freq="12h")
+    # pricing_context（DatetimeIndex 版本）: 回傳 DataFrame（season/period/rate/cost）
+    index = pd.date_range(datetime(2026, 7, 15, 0, 0), periods=3, freq="12h")
     print(
         "pricing_context_index:\n",
         tou.pricing_context(
@@ -121,14 +116,14 @@ def main() -> None:
         ),
     )
 
-    # Non-TOU（分級電價）範例
+    # 累進費率方案：calculate_costs 依累進級距計價
     non_tou_usage = _sample_usage(
-        datetime(2025, 7, 1, 0, 0), periods=5, freq_minutes=60
+        datetime(2026, 7, 1, 0, 0), periods=5, freq_minutes=60
     )
     print("non_tou_costs:", tou.calculate_costs(non_tou_usage, non_tou_plan))
 
     # period_context（DatetimeIndex 版本）: 回傳 DataFrame（season/day_type/period）
-    start = datetime(2025, 7, 15)
+    start = datetime(2026, 7, 15)
     window = pd.date_range(start, start + timedelta(hours=6), freq="2h")
     print(
         "period_context_index:\n",
@@ -165,7 +160,7 @@ def main() -> None:
     custom_plan = tou.build_tariff_plan(custom_profile, custom_rates)
     print(
         "custom_plan_context:",
-        custom_plan.pricing_context(datetime(2025, 7, 1, 13, 0)),
+        custom_plan.pricing_context(datetime(2026, 7, 1, 13, 0)),
     )
 
 

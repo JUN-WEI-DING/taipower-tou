@@ -2,22 +2,25 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import date
 from functools import lru_cache
 from typing import Any
 
 from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar
 from taipower_tou.custom import (
+    CustomCalendar,
     build_tariff_plan,
     build_tariff_profile,
     build_tariff_rate,
 )
+from taipower_tou.errors import UnknownPlanError
 from taipower_tou.models import BillingCycleType
 from taipower_tou.rates import TariffJSONLoader
 from taipower_tou.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
 
-# Shared plan ID to Chinese name mapping
-# Used by both PlanStore.resolve_plan() and available_plans()
+# The short names available_plans() gives. plans.json has the 電價表's full
+# names, and resolve_plan matches both.
 _PLAN_NAME_MAP: dict[str, str] = {
     "residential_non_tou": "表燈非時間電價",
     "lighting_non_business_tiered": "表燈非時間-住宅非營業",
@@ -30,35 +33,39 @@ _PLAN_NAME_MAP: dict[str, str] = {
     "low_voltage_2_tier": "低壓電力二段式",
     "low_voltage_three_stage": "低壓電力三段式",
     "low_voltage_ev": "低壓電動車",
-    "high_voltage_power": "高壓電力",
     "high_voltage_2_tier": "高壓電力二段式",
     "high_voltage_three_stage": "高壓電力三段式",
     "high_voltage_batch": "高壓批次生產",
     "high_voltage_ev": "高壓電動車",
-    "extra_high_voltage_power": "特高壓電力",
     "extra_high_voltage_2_tier": "特高壓電力二段式",
     "extra_high_voltage_three_stage": "特高壓電力三段式",
     "extra_high_voltage_batch": "特高壓批次生產",
 }
 
-# Reverse mapping for Chinese name to plan ID lookup
-_CHINESE_NAME_MAP: dict[str, str] = {v: k for k, v in _PLAN_NAME_MAP.items()}
+# Names earlier READMEs gave these plans.
+_PLAN_ALIASES: dict[str, str] = {
+    "表燈非營業（累進）": "lighting_non_business_tiered",
+    "表燈營業（累進）": "lighting_business_tiered",
+    "表燈標準二段式": "lighting_standard_2_tier",
+    "表燈標準三段式": "lighting_standard_3_tier",
+    "低壓電動車充電": "low_voltage_ev",
+    "高壓電動車充電": "high_voltage_ev",
+}
+
+# 0.1.0 copied the 二段式 plans under these names. The 電價表 has no 高壓 or
+# 特高壓 非時間電價.
+_REMOVED_PLANS: dict[str, str] = {
+    "high_voltage_power": "high_voltage_2_tier",
+    "高壓電力": "high_voltage_2_tier",
+    "extra_high_voltage_power": "extra_high_voltage_2_tier",
+    "特高壓電力": "extra_high_voltage_2_tier",
+}
 
 
 @dataclass
 class PlanRequirements:
-    """Required and optional inputs for a tariff plan.
-
-    Attributes:
-        requires_contract_capacity: Whether the plan requires contract capacity
-            input (typically for high_voltage and extra_high_voltage plans).
-        requires_meter_spec: Whether the plan requires meter specifications
-            (phase, voltage, ampere) for minimum usage calculation.
-        valid_basic_fee_labels: Set of valid labels for basic_fee_inputs.
-        uses_basic_fee_formula: Whether the plan uses a formula for basic fee
-            calculation.
-        formula_type: The type of formula ("two_stage", "three_stage", "regular_only").
-    """
+    """The inputs a plan's bill reads. get_plan_requirements describes each
+    field."""
 
     requires_contract_capacity: bool
     requires_meter_spec: bool
@@ -68,33 +75,17 @@ class PlanRequirements:
 
     @classmethod
     def from_plan_data(cls, plan_data: dict[str, Any]) -> PlanRequirements:
-        """Extract requirements from plan JSON data.
-
-        Args:
-            plan_data: The plan's JSON data dictionary.
-
-        Returns:
-            A PlanRequirements instance describing the plan's input requirements.
-        """
         category = plan_data.get("category", "")
         basic_fees = plan_data.get("basic_fees", [])
         rules = plan_data.get("billing_rules", {})
-
-        # High voltage and extra high voltage plans require contract capacity
         requires_contract_capacity = category in (
             "high_voltage",
             "extra_high_voltage",
         )
-
-        # Plans with minimum usage rules require meter specifications
         requires_meter_spec = "minimum_usage_rules_ref" in rules
-
-        # Extract all valid basic fee labels
         valid_basic_fee_labels = {
             fee.get("label", "") for fee in basic_fees if fee.get("label")
         }
-
-        # Check if plan uses formula-based basic fee calculation
         uses_basic_fee_formula = "basic_fee_formula" in rules
         formula_type = rules.get("basic_fee_formula", {}).get("type")
 
@@ -108,7 +99,7 @@ class PlanRequirements:
 
 
 class PlanStore:
-    """Centralized store for plan data from JSON."""
+    """The plans in the bundled plans.json, loaded once per store."""
 
     def __init__(self, filename: str = "plans.json") -> None:
         self._loader = TariffJSONLoader(filename=filename)
@@ -122,66 +113,72 @@ class PlanStore:
     def definitions(self) -> dict[str, Any]:
         return self._load().get("definitions", {})
 
+    def price_dates(self) -> tuple[date, date]:
+        """First and last day the bundled prices cover.
+
+        The last day is how far Taipower's 電價費率審議會 has decided prices.
+        """
+        dates = self._load()["price_dates"]
+        return (
+            date.fromisoformat(dates["effective_from"]),
+            date.fromisoformat(dates["decided_through"]),
+        )
+
     def get_plan(self, plan_id: str) -> dict[str, Any]:
         for plan in self._load().get("plans", []):
             if plan.get("id") == plan_id:
                 return plan
-        raise KeyError(f"Plan not found: {plan_id}")
+        raise UnknownPlanError(f"Plan not found: {plan_id}")
 
     def resolve_plan(self, plan_id: str) -> dict[str, Any]:
-        """Resolve plan ID with flexible matching.
+        """Return a copy of the data of the plan that plan_id names.
 
-        Supports:
-        - Exact plan ID match (e.g., "residential_simple_2_tier")
-        - Chinese name match (e.g., "簡易型二段式")
-        - Partial keyword match (e.g., "二段式" matches any 2-tier plan)
-
-        Args:
-            plan_id: Plan identifier or Chinese name
-
-        Returns:
-            Copy of the plan data dictionary
+        An ID, a name from available_plans() or plans.json, or a name earlier
+        READMEs used matches exactly, ignoring case and surrounding spaces.
+        Otherwise a plan matches when its ID or name is the only one that
+        contains plan_id. "批次" is in two plans' names and matches neither.
 
         Raises:
-            KeyError: If no matching plan is found
+            UnknownPlanError: No plan or more than one matches, the plan was
+                removed, or plan_id is not a string.
         """
-        # Try exact match first
-        try:
-            return dict(self.get_plan(plan_id))
-        except KeyError:
-            pass
+        if not isinstance(plan_id, str):
+            raise UnknownPlanError(
+                f"A plan is named by a string, not {plan_id!r}. "
+                "Use available_plans() to list all valid plan IDs."
+            )
+        query = plan_id.strip()
+        key = query.lower()
+        plans = {plan["id"]: plan for plan in self._load().get("plans", [])}
+        exact = {pid.lower(): pid for pid in plans}
+        exact.update({plan["name"].lower(): pid for pid, plan in plans.items()})
+        exact.update({name.lower(): pid for pid, name in _PLAN_NAME_MAP.items()})
+        exact.update({name.lower(): pid for name, pid in _PLAN_ALIASES.items()})
+        if key in exact:
+            return dict(plans[exact[key]])
 
-        # Try Chinese name mapping (using shared map)
-        mapped_id = _CHINESE_NAME_MAP.get(plan_id.strip())
-        if mapped_id:
-            return dict(self.get_plan(mapped_id))
-
-        # Try partial matching by checking plan names in JSON
-        plan_id_lower = plan_id.lower()
-        all_plans = self._load().get("plans", [])
-        matches = []
-
-        for plan in all_plans:
-            pid = plan.get("id", "")
-            name = plan.get("name", "")
-
-            # Check if query is substring of ID or name
-            if plan_id_lower in pid.lower() or plan_id_lower in name:
-                matches.append((pid, plan))
-
-        if len(matches) == 1:
-            return dict(matches[0][1])
-
-        if len(matches) > 1:
-            match_ids = ", ".join(m[0] for m in matches)
-            raise KeyError(
-                f"Ambiguous plan name '{plan_id}'. "
-                f"Multiple matches: {match_ids}. "
-                f"Please use the exact plan ID."
+        replacement = _REMOVED_PLANS.get(key)
+        if replacement:
+            raise UnknownPlanError(
+                f"Plan {query} was removed in 0.2.0: the 電價表 has no 高壓 or "
+                f"特高壓 非時間電價. It billed exactly as {replacement}; use that."
             )
 
-        raise KeyError(
-            f"Plan not found: {plan_id}. "
+        matches = [
+            pid
+            for pid, plan in plans.items()
+            if key and (key in pid or key in plan["name"].lower())
+        ]
+        if len(matches) == 1:
+            return dict(plans[matches[0]])
+        if matches:
+            raise UnknownPlanError(
+                f"Ambiguous plan name '{query}'. "
+                f"Multiple matches: {', '.join(matches)}. "
+                f"Please use the exact plan ID."
+            )
+        raise UnknownPlanError(
+            f"Plan not found: {query}. "
             f"Use available_plans() to list all valid plan IDs."
         )
 
@@ -197,7 +194,7 @@ class TariffFactory:
 
     def __init__(
         self,
-        calendar: TaiwanCalendar | None = None,
+        calendar: TaiwanCalendar | CustomCalendar | None = None,
         store: PlanStore | None = None,
     ) -> None:
         self._calendar = calendar or taiwan_calendar()
@@ -211,17 +208,22 @@ class TariffFactory:
         """Create a TariffPlan from the given plan_id.
 
         Args:
-            plan_id: The plan identifier or Chinese name (flexible matching supported)
-            billing_cycle_type: Billing cycle type for tiered rate plans
-                (MONTHLY, ODD_MONTH, EVEN_MONTH). Default is MONTHLY.
-
-        Returns:
-            A TariffPlan instance
+            plan_id: An ID or name, matched as PlanStore.resolve_plan matches.
+            billing_cycle_type: How a tiered plan pairs months.
 
         Raises:
-            KeyError: If plan_id is not found
+            UnknownPlanError: No plan or more than one matches plan_id, or the
+                plan was removed.
         """
         plan_data = self._store.resolve_plan(plan_id)
+        # 高壓電動車 pays bill_ratio of the 低壓 bill. calculate_bill takes the
+        # ratio off the rounded bill. A plan from here prices each kWh at that
+        # share of its 低壓 price.
+        ratio = plan_data.get("billing_rules", {}).get("bill_ratio")
+        if ratio is not None:
+            plan_data["rates"] = [
+                {**rate, "cost": rate["cost"] * ratio} for rate in plan_data["rates"]
+            ]
         return _build_tariff_plan_from_data(
             plan_data,
             self._store,
@@ -233,7 +235,7 @@ class TariffFactory:
     def create(
         cls,
         plan_id: str,
-        calendar: TaiwanCalendar | None = None,
+        calendar: TaiwanCalendar | CustomCalendar | None = None,
         billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
     ) -> Any:
         """Convenience method to create a plan without instantiating factory."""
@@ -247,7 +249,6 @@ class TariffFactory:
 def _season_strategy(
     plan_data: dict[str, Any], store: PlanStore
 ) -> TaiwanSeasonStrategy:
-    """Build season strategy from plan data."""
     strategy_name = plan_data.get("season_strategy", "seasons")
     definitions = store.definitions()
     seasons = definitions.get(strategy_name, [])
@@ -260,7 +261,7 @@ def _season_strategy(
 
 
 def _normalize_schedules(schedules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Normalize schedule data from JSON."""
+    """plans.json's slots grouped by season and day type."""
     if not schedules:
         return []
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
@@ -277,11 +278,8 @@ def _normalize_schedules(schedules: list[dict[str, Any]]) -> list[dict[str, Any]
 
 
 def _normalize_tiers(tiers: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Normalize tier data from JSON.
-
-    Note: Tier scaling for bimonthly billing is handled in
-    TariffPlan._calculate_tiered_costs()
-    """
+    """plans.json's tiers as ConsumptionTier fields. The open top tier ends at
+    999999 kWh, which tiered_energy_cost reads as no limit."""
     if not tiers:
         return []
 
@@ -305,24 +303,24 @@ def _normalize_tiers(tiers: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _build_tariff_plan_from_data(
     plan_data: dict[str, Any],
     store: PlanStore,
-    calendar: TaiwanCalendar,
+    calendar: TaiwanCalendar | CustomCalendar,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
 ) -> Any:
-    """Build a TariffPlan from raw plan data dictionary.
-
-    This is the core factory function that creates a complete TariffPlan
-    from JSON data, including profile and rates.
-    """
+    """The TariffPlan of a plans.json entry, at the prices it lists."""
     season_strategy = _season_strategy(plan_data, store)
     day_type_strategy = TaiwanDayTypeStrategy(calendar)
 
+    # A plan without schedules has one period all day, such as the flat
+    # period of low_voltage_power's 非時間電價.
+    rate_periods = {item["period"] for item in plan_data.get("rates", [])}
+    default_period = rate_periods.pop() if len(rate_periods) == 1 else "off_peak"
     schedules = _normalize_schedules(plan_data.get("schedules", []))
     if not schedules:
         schedules = [
             {
                 "season": "summer",
                 "day_type": "weekday",
-                "slots": [{"start": "00:00", "end": "24:00", "period": "off_peak"}],
+                "slots": [{"start": "00:00", "end": "24:00", "period": default_period}],
             }
         ]
 
@@ -331,7 +329,7 @@ def _build_tariff_plan_from_data(
         season_strategy=season_strategy,
         day_type_strategy=day_type_strategy,
         schedules=schedules,
-        default_period="off_peak",
+        default_period=default_period,
     )
 
     rates = plan_data.get("rates", [])
@@ -342,4 +340,5 @@ def _build_tariff_plan_from_data(
         tiered_rates=tiered if tiered else None,
         season_strategy=season_strategy,
     )
+    rate = replace(rate, price_dates=store.price_dates())
     return build_tariff_plan(profile, rate, billing_cycle_type)

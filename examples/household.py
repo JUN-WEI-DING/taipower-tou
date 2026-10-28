@@ -1,49 +1,37 @@
-"""Household Usage Example - Typical Taiwan household electricity cost calculation.
+"""A simulated household's month on residential_simple_2_tier.
 
-This example simulates a realistic household scenario with:
-- Air conditioner usage in summer
-- Refrigerator and appliances running 24/7
-- Peak hours (evening) vs off-peak (night/morning)
-- Weekend vs weekday patterns
+The usage has a base load all day, morning and evening use, more daytime use
+at weekends, and air conditioning in summer.
 """
 
 from __future__ import annotations
 
 import pandas as pd
 
-from taipower_tou import BillingInputs, calculate_bill
+import taipower_tou as tou
+
+PLAN = "residential_simple_2_tier"
 
 
 def create_realistic_household_usage(
-    year: int = 2025,
+    year: int = 2026,
     month: int = 7,
     include_ac: bool = True,
     ac_hours_start: int = 14,
     ac_hours_end: int = 23,
 ) -> pd.Series:
-    """Create realistic household electricity usage pattern.
-
-    Args:
-        year: Year (default 2025)
-        month: Month 1-12 (default 7 for July)
-        include_ac: Whether to include AC usage
-        ac_hours_start: AC start hour (default 14)
-        ac_hours_end: AC end hour (default 23)
-
-    Returns:
-        pd.Series with hourly usage in kWh
-    """
-    days = 31 if month in [1, 3, 5, 7, 8, 10, 12] else 30
-    dates = pd.date_range(f"{year}-{month:02d}-01", periods=24 * days, freq="h")
+    """Hourly kWh for one month, with AC from ac_hours_start to ac_hours_end
+    on summer days."""
+    start = pd.Timestamp(year, month, 1)
+    dates = pd.date_range(start, periods=24 * start.days_in_month, freq="h")
 
     usage_values = []
     for dt in dates:
         hour = dt.hour
-        dow = dt.dayofweek
-        is_summer = month in [6, 7, 8, 9]  # June-September
+        dow = dt.day_of_week
+        is_summer = month in [6, 7, 8, 9]
         is_weekend = dow >= 5
 
-        # Initialize all loads
         base_load = 0.15  # Refrigerator, WiFi router, standby devices
         morning_load = 0.0
         daytime_load = 0.0
@@ -51,29 +39,24 @@ def create_realistic_household_usage(
         night_load = 0.0
         ac_load = 0.0
 
-        # Morning routine (6-9 AM)
         if 6 <= hour < 9:
             morning_load = 0.8 if is_weekend else 1.2  # Shower pump, cooking
 
-        # Daytime low usage (9 AM - 5 PM)
         if 9 <= hour < 17:
             if is_weekend:
                 daytime_load = 1.0
             else:
                 daytime_load = 0.3  # Most people at work
 
-        # Evening peak (5 PM - 11 PM)
         if 17 <= hour < 23:
             if is_weekend:
                 evening_load = 1.5
             else:
                 evening_load = 2.0
 
-        # Night (11 PM - 6 AM)
         if hour >= 23 or hour < 6:
             night_load = 0.2
 
-        # Air conditioning (summer only)
         if include_ac and is_summer:
             if ac_hours_start <= hour < ac_hours_end:
                 if is_weekend:
@@ -81,7 +64,6 @@ def create_realistic_household_usage(
                 else:
                     ac_load = 2.5  # Weekday AC use (higher temp)
 
-        # Total hourly usage
         total = (
             base_load
             + morning_load
@@ -96,15 +78,9 @@ def create_realistic_household_usage(
 
 
 def calculate_monthly_bill(usage: pd.Series) -> pd.DataFrame:
-    """Calculate complete monthly bill with all charges."""
-    inputs = BillingInputs.for_residential(
-        phase="single",
-        voltage=110,
-        ampere=20,
-    )
-
-    bill = calculate_bill(usage, "residential_simple_2_tier", inputs=inputs)
-    return bill
+    """The month's bill, with its basic fee."""
+    inputs = tou.BillingInputs.for_residential(phase="single", voltage=110, ampere=20)
+    return tou.calculate_bill(usage, PLAN, inputs=inputs)
 
 
 def show_consumption_analysis(usage: pd.Series) -> None:
@@ -113,30 +89,19 @@ def show_consumption_analysis(usage: pd.Series) -> None:
     print("Consumption Analysis")
     print("=" * 70)
 
-    # Total usage
     total_kwh = usage.sum()
     daily_avg = total_kwh / len(usage) * 24
-
-    # Peak vs off-peak breakdown
-    peak_hours = usage.index.hour.isin(range(9, 24))
-    off_peak_hours = usage.index.hour.isin(range(0, 9))
-
-    peak_usage = usage[peak_hours].sum()
-    off_peak_usage = usage[off_peak_hours].sum()
-
-    # Weekend vs weekday
-    weekday_usage = usage[usage.index.dayofweek < 5].sum()
-    weekend_usage = usage[usage.index.dayofweek >= 5].sum()
+    # 尖峰 is on weekdays only. Saturdays and 離峰日 are 離峰 all day.
+    by_period = tou.monthly_breakdown(usage, PLAN).groupby("period")["usage_kwh"].sum()
+    weekday_usage = usage[usage.index.day_of_week < 5].sum()
+    weekend_usage = usage[usage.index.day_of_week >= 5].sum()
 
     print(f"Total Monthly Usage:      {total_kwh:8.2f} kWh")
     print(f"Daily Average:            {daily_avg:8.2f} kWh/day")
     print()
-    peak_pct = peak_usage / total_kwh * 100
-    off_peak_pct = off_peak_usage / total_kwh * 100
-    print(f"Peak Hours (9AM-12AM):     {peak_usage:8.2f} kWh ({peak_pct:5.1f}%)")
-    # Line too long - split into two
-    print(f"Off-Peak (12AM-9AM):       {off_peak_usage:8.2f} kWh")
-    print(f"                           ({off_peak_pct:5.1f}%)")
+    for period, kwh in by_period.items():
+        share = kwh / total_kwh * 100
+        print(f"{period + ':':<26}{kwh:8.2f} kWh ({share:5.1f}%)")
     print()
     print(f"Weekday Usage:            {weekday_usage:8.2f} kWh")
     print(f"Weekend Usage:            {weekend_usage:8.2f} kWh")
@@ -150,18 +115,11 @@ def show_appliance_breakdown(usage: pd.Series) -> None:
     print("Estimated Appliance Breakdown")
     print("=" * 70)
 
-    # Rough estimation based on hourly patterns
     total_kwh = usage.sum()
-
-    # Base load (24/7)
-    base_load_kwh = 0.15 * len(usage)  # 0.15 kWh/hour * hours
-
-    # AC usage (estimate)
+    base_load_kwh = 0.15 * len(usage)
     ac_hours = (usage.index.hour >= 14) & (usage.index.hour < 23)
     ac_hours_count = ac_hours.sum()
     ac_kwh = 2.0 * ac_hours_count  # Approx 2 kW when running
-
-    # Other usage
     other_kwh = total_kwh - base_load_kwh - ac_kwh
 
     base_pct = base_load_kwh / total_kwh * 100
@@ -185,15 +143,12 @@ def suggest_cost_saving_tips(usage: pd.Series, bill: pd.DataFrame) -> None:
     print("Money-Saving Tips")
     print("=" * 70)
 
-    # Calculate potential savings from shifting usage
-    peak_hours = usage.index.hour.isin(range(9, 24))
-    peak_usage = usage[peak_hours].sum()
-
-    # If 20% of peak usage shifted to off-peak
-    shifted_kwh = peak_usage * 0.2
-    summer_peak_rate = 5.16
-    summer_off_peak_rate = 2.06
-    potential_savings = shifted_kwh * (summer_peak_rate - summer_off_peak_rate)
+    breakdown = tou.monthly_breakdown(usage, PLAN).set_index("period")
+    peak, off_peak = breakdown.loc["peak"], breakdown.loc["off_peak"]
+    peak_rate = peak["cost"] / peak["usage_kwh"]
+    off_peak_rate = off_peak["cost"] / off_peak["usage_kwh"]
+    shifted_kwh = peak["usage_kwh"] * 0.2
+    potential_savings = shifted_kwh * (peak_rate - off_peak_rate)
 
     print("💡 Shift 20% of peak usage to off-peak:")
     print(f"    Save ~{potential_savings:.2f} TWD/month")
@@ -201,20 +156,18 @@ def suggest_cost_saving_tips(usage: pd.Series, bill: pd.DataFrame) -> None:
     print("   - Set AC timer to cool room before peak hours")
     print()
 
-    # AC tips
     total_kwh = usage.sum()
     ac_kwh = 2.0 * ((usage.index.hour >= 14) & (usage.index.hour < 23)).sum()
     ac_pct = ac_kwh / total_kwh * 100
 
-    print(f"💡 AC accounts for ~{ac_pct:.0f}% of your bill")
+    print(f"💡 AC accounts for ~{ac_pct:.0f}% of your kWh")
     print("   - Set AC to 26-28°C instead of 24-25°C")
     print("   - Use fan during cooler hours")
     print("   - Close curtains during hot hours")
     print()
 
-    # Weekend vs weekday
-    weekday_avg = usage[usage.index.dayofweek < 5].sum() / 30 / 24
-    weekend_avg = usage[usage.index.dayofweek >= 5].sum() / 30 / 24
+    weekday_avg = usage[usage.index.day_of_week < 5].mean()
+    weekend_avg = usage[usage.index.day_of_week >= 5].mean()
 
     if weekday_avg > weekend_avg:
         print("💡 Weekday usage is higher: Consider weekend activities")
@@ -224,21 +177,15 @@ def suggest_cost_saving_tips(usage: pd.Series, bill: pd.DataFrame) -> None:
     print("=" * 70)
 
 
-# =============================================================================
-# Main demonstration
-# =============================================================================
-
-
 def main() -> None:
     print("Household Electricity Cost Calculator")
     print("=" * 70)
     print()
 
-    # Scenario 1: Summer month with AC
-    print("Scenario: July 2025 (Summer) with Air Conditioning")
+    print("Scenario: July 2026 (Summer) with Air Conditioning")
     print("-" * 70)
 
-    usage_july = create_realistic_household_usage(year=2025, month=7, include_ac=True)
+    usage_july = create_realistic_household_usage(year=2026, month=7, include_ac=True)
     show_consumption_analysis(usage_july)
     show_appliance_breakdown(usage_july)
 
@@ -253,12 +200,11 @@ def main() -> None:
 
     suggest_cost_saving_tips(usage_july, bill_july)
 
-    # Scenario 2: Winter month (no AC)
     print()
-    print("Scenario: January 2025 (Winter) - No AC")
+    print("Scenario: January 2026 (Winter) - No AC")
     print("-" * 70)
 
-    usage_jan = create_realistic_household_usage(year=2025, month=1, include_ac=False)
+    usage_jan = create_realistic_household_usage(year=2026, month=1, include_ac=False)
     bill_jan = calculate_monthly_bill(usage_jan)
 
     total_july = bill_july["total"].iloc[0]

@@ -1,0 +1,26 @@
+{
+  "chapter": "營業規章施行細則 第一章 總則",
+  "source": "docs/references/營業規章施行細則第一章.txt",
+  "lines": [1, 89],
+  "clauses": [
+    {"id": "修正沿革", "lines": [1, 55], "kind": "not_billing",
+     "summary": "台灣電力公司 營業規章施行細則 修正沿革",
+     "reason": "title and amendment history, which ends at 108/9/17"},
+    {"id": "目錄", "lines": [56, 67], "kind": "not_billing",
+     "summary": "目錄",
+     "reason": "table of contents"},
+    {"id": "第一章", "lines": [68, 68], "kind": "not_billing",
+     "summary": "第一章 總則",
+     "reason": "chapter heading"},
+    {"id": "第一條", "lines": [69, 70], "kind": "not_billing",
+     "reason": "the article the 施行細則 is made under"},
+    {"id": "第二條", "lines": [71, 75], "kind": "not_billing",
+     "reason": "a rule on registering one's own generator"},
+    {"id": "第三條", "lines": [76, 86], "kind": "not_billing",
+     "summary": "合格汽電共生系統之餘電及再生能源發電設備之電能，得由本公司收購",
+     "reason": "Taipower buys surplus power from 汽電共生 and 再生能源 at their own rates; that pays the generator and is not this bill"},
+    {"id": "第四條", "lines": [87, 89], "kind": "not_billing",
+     "summary": "線路設置費及複驗費單價均內含5%營業稅，免計營業稅用戶除以1.05",
+     "reason": "VAT on 線路設置費 and 複驗費, which are not part of the electricity bill; the bill's VAT is 第三十九條"}
+  ]
+}

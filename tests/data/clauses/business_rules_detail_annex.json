@@ -1,0 +1,16 @@
+{
+  "chapter": "營業規章施行細則 附表一 電度表零件更換計費標準、附表二 電度表賠償單價表",
+  "source": "docs/references/營業規章施行細則附表.txt",
+  "lines": [1, 216],
+  "clauses": [
+    {"id": "附表一", "lines": [1, 20], "kind": "not_billing",
+     "summary": "電度表零件更換計費標準：校驗費40元，塗裝費20元，零件按單價計費",
+     "reason": "what a customer pays to repair a meter it broke (第八十九條); not part of the electricity bill"},
+    {"id": "附表二", "lines": [21, 211], "kind": "not_billing",
+     "summary": "電度表賠償單價表",
+     "reason": "what a customer pays for a lost or unrepairable meter (第八十九條); not part of the electricity bill"},
+    {"id": "附表二-註", "lines": [212, 216], "kind": "not_billing",
+     "summary": "賠償單價係按電度表價格扣除四成折舊後金額訂定",
+     "reason": "how 附表二's prices are set; not part of the electricity bill"}
+  ]
+}

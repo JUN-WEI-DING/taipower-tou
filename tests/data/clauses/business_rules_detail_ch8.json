@@ -1,0 +1,26 @@
+{
+  "chapter": "營業規章施行細則 第八章 供電線路遷移工料費",
+  "source": "docs/references/營業規章施行細則第八章.txt",
+  "lines": [1, 41],
+  "clauses": [
+    {"id": "第八章", "lines": [1, 1], "kind": "not_billing",
+     "summary": "第八章 供電線路遷移工料費",
+     "reason": "chapter heading"},
+    {"id": "第一百廿五條", "lines": [2, 5], "kind": "not_billing",
+     "reason": "供電線路遷移工料費, paid by whoever asks to move a line, not part of the electricity bill"},
+    {"id": "第一百廿六條", "lines": [6, 15], "kind": "not_billing",
+     "reason": "供電線路遷移工料費, paid by whoever asks to move a line, not part of the electricity bill"},
+    {"id": "第一百廿七條", "lines": [16, 18], "kind": "not_billing",
+     "reason": "供電線路遷移工料費, paid by whoever asks to move a line, not part of the electricity bill"},
+    {"id": "第一百廿八條", "lines": [19, 27], "kind": "not_billing",
+     "reason": "供電線路遷移工料費, paid by whoever asks to move a line, not part of the electricity bill"},
+    {"id": "第一百廿九條", "lines": [28, 31], "kind": "not_billing",
+     "reason": "供電線路遷移工料費, paid by whoever asks to move a line, not part of the electricity bill"},
+    {"id": "第一百卅條", "lines": [32, 36], "kind": "not_billing",
+     "reason": "供電線路遷移工料費, paid by whoever asks to move a line, not part of the electricity bill"},
+    {"id": "第一百卅一條", "lines": [37, 38], "kind": "not_billing",
+     "reason": "供電線路遷移工料費, paid by whoever asks to move a line, not part of the electricity bill"},
+    {"id": "第一百卅二條", "lines": [39, 41], "kind": "not_billing",
+     "reason": "供電線路遷移工料費, paid by whoever asks to move a line, not part of the electricity bill"}
+  ]
+}

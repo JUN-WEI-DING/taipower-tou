@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import time
+from datetime import date, time
 from enum import Enum
 from typing import Any
 
@@ -20,14 +20,17 @@ class PeriodType(Enum):
 
 
 class BillingCycleType(Enum):
-    """抄表週期型別，用於累進費率方案的兩個月抄表計算
+    """累進費率方案的抄表週期，決定 TariffPlan.calculate_costs 與
+    monthly_breakdown 把哪兩個月算成一期。臺電對一般住宅及小商店隔月抄表收費。
 
-    臺電對一般住宅及小商店實施隔月抄表收費制度：
-    - MONTHLY: 每月抄表（預設）
-    - ODD_MONTH: 奇數月抄表 (1,3,5,7,9,11月)，計費週期為 (12,1)->1, (2,3)->3, (4,5)->5,
-             (6,7)->7, (8,9)->9, (10,11)->11（前月+當月於奇數月結算）
-    - EVEN_MONTH: 偶數月抄表 (2,4,6,8,10,12月)，計費週期為 (1,2)->2, (3,4)->4, (5,6)->6,
-              (7,8)->8, (9,10)->10, (11,12)->12（前月+當月於偶數月結算）
+    - MONTHLY: 每月一期（預設）
+    - ODD_MONTH: 奇數月抄表，(12,1)->1, (2,3)->3, (4,5)->5, (6,7)->7,
+      (8,9)->9, (10,11)->11
+    - EVEN_MONTH: 偶數月抄表，(1,2)->2, (3,4)->4, (5,6)->6, (7,8)->8,
+      (9,10)->10, (11,12)->12
+
+    每期以抄表月命名。calculate_bill 不用這個設定，它從用電資料的第一個月起，
+    每 BillingInputs.billing_cycle_months 個月切一張帳單。
     """
 
     MONTHLY = "monthly"
@@ -61,6 +64,13 @@ class TariffRate:
         default_factory=dict
     )
     tiered_rates: list[ConsumptionTier] = field(default_factory=list)
+    # Prices listed per day type, keyed by season, period and day type labels.
+    # A three-stage plan's weekday and Saturday 半尖峰 differ, so these take
+    # precedence over period_costs.
+    day_type_costs: dict[tuple[str, str, str], float] = field(default_factory=dict)
+    # The first and last day Taipower's bundled prices cover, or None for
+    # prices the caller supplies.
+    price_dates: tuple[date, date] | None = None
 
     def rate_structure(self) -> str:
         has_periods = bool(self.period_costs)
@@ -73,7 +83,16 @@ class TariffRate:
             return "tou"
         return "unknown"
 
-    def get_cost(self, season: SeasonType | str, period: PeriodType | str) -> float:
+    def get_cost(
+        self,
+        season: SeasonType | str,
+        period: PeriodType | str,
+        day_type: Any = None,
+    ) -> float:
+        if day_type is not None:
+            key = (_label_value(season), _label_value(period), _label_value(day_type))
+            if key in self.day_type_costs:
+                return self.day_type_costs[key]
         if (season, period) in self.period_costs:
             return self.period_costs[(season, period)]
         season_key = _label_value(season)

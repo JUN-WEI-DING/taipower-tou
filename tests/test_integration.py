@@ -70,42 +70,6 @@ def test_multiple_plans_share_calendar():
 # =============================================================================
 
 
-def test_calendar_cache_persistence(tmp_path):
-    """Test that calendar cache persists across instances."""
-    cache_dir = tmp_path / "cache"
-    cache_dir.mkdir()
-
-    # First instance - should fetch from API or calculate
-    cal1 = tou.taiwan_calendar(cache_dir=cache_dir)
-    is_hol1 = cal1.is_holiday(date(2024, 1, 1))
-
-    # Check cache file was created
-    # Cache may or may not exist depending on API availability
-    _ = cache_dir / "calendar" / "taiwan" / "2024.json"
-
-    # Second instance - should use cache if available
-    cal2 = tou.taiwan_calendar(cache_dir=cache_dir)
-    is_hol2 = cal2.is_holiday(date(2024, 1, 1))
-
-    # Results should be consistent
-    assert is_hol1 == is_hol2
-
-
-def test_calendar_fallback_on_api_failure(tmp_path):
-    """Test that calendar falls back to static holidays when API fails."""
-    cache_dir = tmp_path / "cache"
-    cache_dir.mkdir()
-
-    # Use a year that's likely cached or can be calculated
-    test_date = date(2024, 1, 1)
-
-    cal = tou.taiwan_calendar(cache_dir=cache_dir, api_timeout=1)
-    result = cal.is_holiday(test_date)
-
-    # Should return True for New Year's Day regardless of method
-    assert result is True
-
-
 # =============================================================================
 # Integration: Full Billing Pipeline
 # =============================================================================

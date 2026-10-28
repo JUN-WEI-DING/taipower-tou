@@ -1,0 +1,22 @@
+{
+  "chapter": "營業規章 第五章 違規用電 (108/2/18)",
+  "source": "docs/references/營業規章第五章.txt",
+  "lines": [1, 24],
+  "clauses": [
+    {"id": "第五章", "lines": [1, 1], "kind": "not_billing",
+     "summary": "第五章 違規用電",
+     "reason": "chapter heading"},
+    {"id": "第四十一條", "lines": [2, 3], "kind": "not_billing",
+     "reason": "Taipower may inspect premises for 違規用電"},
+    {"id": "第四十二條", "lines": [4, 14], "kind": "not_billing",
+     "reason": "what counts as 違規用電"},
+    {"id": "第四十三條", "lines": [15, 20], "kind": "not_billing",
+     "summary": "違規用電之追償按供電時間及電價計算三個月以上一年以下之電費",
+     "reason": "追償電費 for 違規用電 is damages worked from appliance capacity and assumed hours of use, charged apart from a bill; calculate_bill bills metered usage"},
+    {"id": "第四十四條", "lines": [21, 22], "kind": "not_billing",
+     "summary": "追償電價按追償期間之臨時電價計算，不予優待或折扣",
+     "reason": "追償電費 for 違規用電 is damages worked from appliance capacity and assumed hours of use, charged apart from a bill; calculate_bill bills metered usage"},
+    {"id": "第四十五條", "lines": [23, 24], "kind": "not_billing",
+     "reason": "Taipower may stop supply and sue for 違規用電"}
+  ]
+}

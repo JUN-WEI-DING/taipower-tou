@@ -41,6 +41,7 @@ import pytest
 import taipower_tou as tou
 from taipower_tou import (
     BillingInputs,
+    CalendarError,
     InvalidUsageInput,
     TariffError,
     calculate_bill,
@@ -77,27 +78,6 @@ class TestSecurityAndInputValidation:
                 pass  # Expected - invalid plan name rejected
             except Exception as e:
                 pytest.fail(f"Unsafe exception for input '{malicious_input}': {e}")
-
-    def test_path_traversal_prevention(self):
-        """Test that path traversal attempts are prevented."""
-        traversal_attempts = [
-            "../../../etc/passwd",
-            "..\\..\\..\\windows\\system32",
-            "/etc/shadow",
-            "C:\\Windows\\System32\\config\\SAM",
-            "....//....//....//etc/passwd",
-        ]
-
-        for attempt in traversal_attempts:
-            try:
-                # Try to use with cache_dir or similar
-                cal = tou.taiwan_calendar(cache_dir=Path(attempt))
-                # If it succeeded, it should have sanitized the path
-                assert cal is not None
-            except (FileNotFoundError, ValueError, OSError):
-                pass  # Expected - path rejected
-            except Exception as e:
-                pytest.fail(f"Unsafe handling of path traversal '{attempt}': {e}")
 
     def test_command_injection_prevention(self):
         """Test that command injection attempts are prevented."""
@@ -255,18 +235,13 @@ class TestExtremeScenarios:
 
     def test_century_transition(self):
         """Test century boundary transitions."""
-        # Test dates around century boundaries
-        dates_to_test = [
-            datetime(1999, 12, 31, 23, 59),
-            datetime(2000, 1, 1, 0, 0),
-            datetime(2099, 12, 31, 23, 59),
-            datetime(2100, 1, 1, 0, 0),
-        ]
+        for dt in [datetime(2099, 12, 31, 23, 59), datetime(2100, 1, 1, 0, 0)]:
+            assert tou.is_holiday(dt) in (True, False)
+            assert tou.period_at(dt, "residential_simple_2_tier") is not None
 
-        for dt in dates_to_test:
-            is_hol = tou.is_holiday(dt)
-            period = tou.period_at(dt, "residential_simple_2_tier")
-            assert period is not None or is_hol is not None
+        for dt in [datetime(1999, 12, 31, 23, 59), datetime(2101, 1, 1, 0, 0)]:
+            with pytest.raises(CalendarError):
+                tou.is_holiday(dt)
 
     def test_millennium_bug_scenario(self):
         """Test Y2K-like scenarios."""
@@ -494,8 +469,8 @@ class TestAPICompatibility:
 
         # Should be a dict
         assert isinstance(plans, dict)
-        # Should have 20 plans
-        assert len(plans) == 20
+        # Should have 18 plans
+        assert len(plans) == 18
         # Keys should be plan IDs (lowercase with underscores)
         for plan_id in plans.keys():
             assert plan_id.replace("_", "").islower()
@@ -677,26 +652,6 @@ class TestConcurrencyAndRaceConditions:
         # All results should be identical
         assert len(set(results)) == 1, f"Inconsistent results: {set(results)}"
 
-    def test_concurrent_calendar_cache_writes(self):
-        """Test concurrent cache writes don't corrupt data."""
-        import tempfile
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache_path = Path(tmpdir) / "cache"
-
-            def create_calendar_with_cache(n):
-                cal = tou.taiwan_calendar(cache_dir=cache_path)
-                return cal.is_holiday(date(2024, 1, 1))
-
-            with ThreadPoolExecutor(max_workers=20) as executor:
-                futures = [
-                    executor.submit(create_calendar_with_cache, i) for i in range(50)
-                ]
-                results = [f.result() for f in as_completed(futures)]
-
-            # All should agree Jan 1 is a holiday
-            assert all(r is True for r in results)
-
 
 # =============================================================================
 # CATEGORY 7: Resource Management Tests
@@ -727,34 +682,6 @@ class TestResourceManagement:
 
         # Calendar may be cached, so this is informational
         assert True
-
-    def test_no_file_handle_leaks(self):
-        """Test that file handles are properly closed."""
-        import tempfile
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache_dir = Path(tmpdir) / "cache"
-            cache_dir.mkdir()
-
-            # Create multiple calendar instances
-            for _ in range(10):
-                cal = tou.taiwan_calendar(cache_dir=cache_dir)
-                cal.is_holiday(date(2024, 1, 1))
-
-            # Check for open file handles
-            try:
-                import psutil
-
-                process = psutil.Process()
-                open_files = process.open_files()
-
-                # Filter for our temp directory
-                our_files = [f for f in open_files if tmpdir in f.path]
-
-                # Should have minimal open files
-                assert len(our_files) < 5, f"Too many open files: {len(our_files)}"
-            except ImportError:
-                pass  # psutil not available
 
     def test_large_dataset_memory(self):
         """Test memory usage with large datasets."""
@@ -905,7 +832,7 @@ class TestDocumentationExamples:
 
         # Should be a dict with 20 entries
         assert isinstance(plans, dict)
-        assert len(plans) == 20
+        assert len(plans) == 18
 
         # Keys are plan IDs, values are Chinese names
         assert "residential_simple_2_tier" in plans
@@ -1540,20 +1467,6 @@ class TestInstallationAndIntegration:
 
         # Package should work without pytest, mypy, etc.
         assert taipower_tou.__version__ is not None
-
-    def test_optional_lunar_dependency(self):
-        """Test that lunar calendar is optional."""
-        # Should work without zhdate
-        try:
-            import zhdate  # noqa: F401
-
-            _ = True
-        except ImportError:
-            _ = False
-
-        # Package should work regardless
-        cal = tou.taiwan_calendar()
-        assert cal.is_holiday(date(2024, 1, 1)) is True
 
 
 # =============================================================================

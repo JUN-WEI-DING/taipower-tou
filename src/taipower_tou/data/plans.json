@@ -1,5 +1,9 @@
 {
   "version": "20251001",
+  "price_dates": {
+    "effective_from": "2025-10-01",
+    "decided_through": "2026-12-31"
+  },
   "definitions": {
     "seasons": [
       {
@@ -41,26 +45,16 @@
         {
           "label": "single_low_voltage",
           "phase": "single",
-          "voltage_v": 110,
+          "voltage_v_below": 1000,
           "ampere_threshold": 10,
-          "kwh_per_ampere": 2,
-          "kwh_per_ampere_over": 20
-        },
-        {
-          "label": "single_low_voltage",
-          "phase": "single",
-          "voltage_v": 220,
-          "ampere_threshold": 10,
-          "kwh_per_ampere": 2,
-          "kwh_per_ampere_over": 20
+          "kwh_per_ampere": 2
         },
         {
           "label": "three_low_voltage",
           "phase": "three",
-          "voltage_v": 220,
+          "voltage_v_below": 1000,
           "ampere_threshold": 10,
-          "kwh_per_ampere": 6,
-          "kwh_per_ampere_over": 60
+          "kwh_per_ampere": 6
         },
         {
           "label": "single_high_voltage_3300",
@@ -143,7 +137,15 @@
       "billing_rules": {
         "min_monthly_fee": 100,
         "minimum_usage_rules_ref": "lighting_minimum_usage",
-        "billing_cycle_months": 2
+        "billing_cycle_months": 2,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
+        }
       }
     },
     {
@@ -193,7 +195,15 @@
       "billing_rules": {
         "min_monthly_fee": 100,
         "minimum_usage_rules_ref": "lighting_minimum_usage",
-        "billing_cycle_months": 2
+        "billing_cycle_months": 2,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
+        }
       }
     },
     {
@@ -237,7 +247,15 @@
       "billing_rules": {
         "min_monthly_fee": 100,
         "minimum_usage_rules_ref": "lighting_minimum_usage",
-        "billing_cycle_months": 2
+        "billing_cycle_months": 2,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
+        }
       }
     },
     {
@@ -346,6 +364,14 @@
         "over_2000_kwh_surcharge": {
           "threshold_kwh": 2000,
           "cost_per_kwh": 1.04
+        },
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
         }
       }
     },
@@ -372,11 +398,6 @@
           "season": "summer",
           "period": "off_peak",
           "cost": 2.06
-        },
-        {
-          "season": "non_summer",
-          "period": "peak",
-          "cost": 6.36
         },
         {
           "season": "non_summer",
@@ -435,13 +456,6 @@
         {
           "season": "non_summer",
           "day_type": "weekday",
-          "start": "16:00",
-          "end": "22:00",
-          "period": "peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
           "start": "06:00",
           "end": "11:00",
           "period": "semi_peak"
@@ -464,13 +478,6 @@
           "season": "non_summer",
           "day_type": "weekday",
           "start": "14:00",
-          "end": "16:00",
-          "period": "semi_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "22:00",
           "end": "24:00",
           "period": "semi_peak"
         },
@@ -493,6 +500,14 @@
         "over_2000_kwh_surcharge": {
           "threshold_kwh": 2000,
           "cost_per_kwh": 1.04
+        },
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three"
+          }
         }
       }
     },
@@ -506,12 +521,14 @@
         {
           "label": "按戶計收-單相",
           "unit": "per_household_month",
-          "cost": 129.1
+          "cost": 129.1,
+          "phase": "single"
         },
         {
           "label": "按戶計收-三相",
           "unit": "per_household_month",
-          "cost": 262.5
+          "cost": 262.5,
+          "phase": "three"
         },
         {
           "label": "經常契約",
@@ -706,10 +723,18 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_contract_kw": 20
+          }
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -717,8 +742,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -732,12 +756,14 @@
         {
           "label": "按戶計收-單相",
           "unit": "per_household_month",
-          "cost": 129.1
+          "cost": 129.1,
+          "phase": "single"
         },
         {
           "label": "按戶計收-三相",
           "unit": "per_household_month",
-          "cost": 262.5
+          "cost": 262.5,
+          "phase": "three"
         },
         {
           "label": "經常契約",
@@ -953,10 +979,18 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "three_stage"
+          "tier": "three_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_contract_kw": 20
+          }
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -964,8 +998,7 @@
           "semi_peak_label": "半尖峰契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -1004,7 +1037,33 @@
           "period": "flat",
           "cost": 3.87
         }
-      ]
+      ],
+      "billing_rules": {
+        "zero_usage_basic_fee_ratio": 0.5,
+        "power_factor_adjustment": {
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_installed_kw": 20,
+            "min_demand_kw": 30
+          }
+        },
+        "basic_fee_formula": {
+          "type": "two_stage",
+          "regular_label": "需量經常契約",
+          "non_summer_label": "需量非夏月契約",
+          "weekend_ratio": 0.5
+        },
+        "over_contract_penalty": {
+          "threshold_ratio": 0.1,
+          "rate_low": 2,
+          "rate_high": 3,
+          "base_fee_label": "需量經常契約",
+          "tier": "two_stage"
+        }
+      }
     },
     {
       "id": "low_voltage_2_tier",
@@ -1016,7 +1075,8 @@
         {
           "label": "按戶計收",
           "unit": "per_household_month",
-          "cost": 105.0
+          "cost": 105.0,
+          "contract": "installed"
         },
         {
           "label": "裝置契約",
@@ -1026,7 +1086,8 @@
         {
           "label": "按戶計收(需量)",
           "unit": "per_household_month",
-          "cost": 262.5
+          "cost": 262.5,
+          "contract": "demand"
         },
         {
           "label": "經常契約",
@@ -1220,10 +1281,19 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_installed_kw": 20,
+            "min_demand_kw": 30
+          }
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -1231,9 +1301,9 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
-        }
+          "weekend_ratio": 0.5
+        },
+        "zero_usage_basic_fee_ratio": 0.5
       }
     },
     {
@@ -1461,10 +1531,19 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "three_stage"
+          "tier": "three_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1,
+          "eligible": {
+            "phase": "three",
+            "min_installed_kw": 20,
+            "min_demand_kw": 30
+          }
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -1472,9 +1551,9 @@
           "semi_peak_label": "半尖峰契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
-        }
+          "weekend_ratio": 0.5
+        },
+        "zero_usage_basic_fee_ratio": 0.5
       }
     },
     {
@@ -1627,232 +1706,20 @@
           "tier": "two_stage"
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
-        },
-        "basic_fee_formula": {
-          "type": "regular_only",
-          "regular_label": "經常契約",
-          "household_label": "按戶計收"
-        }
-      }
-    },
-    {
-      "id": "high_voltage_power",
-      "name": "高壓電力",
-      "type": "TOU",
-      "category": "high_voltage",
-      "season_strategy": "seasons_high_voltage",
-      "basic_fees": [
-        {
-          "label": "經常契約",
-          "unit": "per_kw_month",
-          "summer": 223.6,
-          "non_summer": 166.9
-        },
-        {
-          "label": "非夏月契約",
-          "unit": "per_kw_month",
-          "non_summer": 166.9
-        },
-        {
-          "label": "週六半尖峰契約",
-          "unit": "per_kw_month",
-          "summer": 44.7,
-          "non_summer": 33.3
-        },
-        {
-          "label": "離峰契約",
-          "unit": "per_kw_month",
-          "summer": 44.7,
-          "non_summer": 33.3
-        }
-      ],
-      "rates": [
-        {
-          "season": "summer",
-          "period": "peak",
-          "day_type": "weekday",
-          "cost": 6.75
-        },
-        {
-          "season": "non_summer",
-          "period": "peak",
-          "day_type": "weekday",
-          "cost": 6.37
-        },
-        {
-          "season": "summer",
-          "period": "semi_peak",
-          "day_type": "saturday",
-          "cost": 2.77
-        },
-        {
-          "season": "non_summer",
-          "period": "semi_peak",
-          "day_type": "saturday",
-          "cost": 2.54
-        },
-        {
-          "season": "summer",
-          "period": "off_peak",
-          "day_type": "weekday",
-          "cost": 2.71
-        },
-        {
-          "season": "non_summer",
-          "period": "off_peak",
-          "day_type": "weekday",
-          "cost": 2.46
-        },
-        {
-          "season": "summer",
-          "period": "off_peak",
-          "day_type": "saturday",
-          "cost": 2.71
-        },
-        {
-          "season": "non_summer",
-          "period": "off_peak",
-          "day_type": "saturday",
-          "cost": 2.46
-        },
-        {
-          "season": "summer",
-          "period": "off_peak",
-          "day_type": "sunday_holiday",
-          "cost": 2.71
-        },
-        {
-          "season": "non_summer",
-          "period": "off_peak",
-          "day_type": "sunday_holiday",
-          "cost": 2.46
-        }
-      ],
-      "schedules": [
-        {
-          "season": "summer",
-          "day_type": "weekday",
-          "start": "09:00",
-          "end": "24:00",
-          "period": "peak"
-        },
-        {
-          "season": "summer",
-          "day_type": "weekday",
-          "start": "00:00",
-          "end": "09:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "summer",
-          "day_type": "saturday",
-          "start": "09:00",
-          "end": "24:00",
-          "period": "semi_peak"
-        },
-        {
-          "season": "summer",
-          "day_type": "saturday",
-          "start": "00:00",
-          "end": "09:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "summer",
-          "day_type": "sunday_holiday",
-          "start": "00:00",
-          "end": "24:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "06:00",
-          "end": "11:00",
-          "period": "peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "14:00",
-          "end": "24:00",
-          "period": "peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "00:00",
-          "end": "06:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "11:00",
-          "end": "14:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "saturday",
-          "start": "06:00",
-          "end": "11:00",
-          "period": "semi_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "saturday",
-          "start": "14:00",
-          "end": "24:00",
-          "period": "semi_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "saturday",
-          "start": "00:00",
-          "end": "06:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "saturday",
-          "start": "11:00",
-          "end": "14:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "sunday_holiday",
-          "start": "00:00",
-          "end": "24:00",
-          "period": "off_peak"
-        }
-      ],
-      "billing_rules": {
-        "over_contract_penalty": {
-          "threshold_ratio": 0.1,
-          "rate_low": 2,
-          "rate_high": 3,
-          "base_fee_label": "經常契約",
-          "tier": "two_stage"
-        },
-        "zero_usage_basic_fee_ratio": 0.5,
-        "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
           "step_percent": 0.1,
-          "apply_to": "total"
+          "eligible": {
+            "phase": "three",
+            "min_installed_kw": 20,
+            "min_demand_kw": 30
+          }
         },
         "basic_fee_formula": {
-          "type": "two_stage",
-          "regular_label": "經常契約",
-          "non_summer_label": "非夏月契約",
-          "saturday_label": "週六半尖峰契約",
-          "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
-        }
+          "type": "regular_only",
+          "regular_label": "經常契約"
+        },
+        "zero_usage_basic_fee_ratio": 0.5
       }
     },
     {
@@ -2054,14 +1921,15 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -2069,8 +1937,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -2294,14 +2161,15 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "three_stage"
+          "tier": "three_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -2309,8 +2177,7 @@
           "semi_peak_label": "半尖峰契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -2513,14 +2380,15 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -2528,8 +2396,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -2538,18 +2405,18 @@
       "name": "高壓-電動車充換電設施電價",
       "type": "TOU",
       "category": "high_voltage",
-      "season_strategy": "seasons_high_voltage",
+      "season_strategy": "seasons",
       "basic_fees": [
         {
           "label": "按戶計收",
           "unit": "per_household_month",
-          "cost": 249.375
+          "cost": 262.5
         },
         {
           "label": "經常契約",
           "unit": "per_kw_month",
-          "summer": 44.84,
-          "non_summer": 32.87
+          "summer": 47.2,
+          "non_summer": 34.6
         }
       ],
       "rates": [
@@ -2557,49 +2424,49 @@
           "season": "summer",
           "period": "peak",
           "day_type": "weekday",
-          "cost": 11.8465
+          "cost": 12.47
         },
         {
           "season": "non_summer",
           "period": "peak",
           "day_type": "weekday",
-          "cost": 11.533
+          "cost": 12.14
         },
         {
           "season": "summer",
           "period": "off_peak",
           "day_type": "weekday",
-          "cost": 2.8975
+          "cost": 3.05
         },
         {
           "season": "non_summer",
           "period": "off_peak",
           "day_type": "weekday",
-          "cost": 2.755
+          "cost": 2.9
         },
         {
           "season": "summer",
           "period": "off_peak",
           "day_type": "saturday",
-          "cost": 2.8975
+          "cost": 3.05
         },
         {
           "season": "non_summer",
           "period": "off_peak",
           "day_type": "saturday",
-          "cost": 2.755
+          "cost": 2.9
         },
         {
           "season": "summer",
           "period": "off_peak",
           "day_type": "sunday_holiday",
-          "cost": 2.8975
+          "cost": 3.05
         },
         {
           "season": "non_summer",
           "period": "off_peak",
           "day_type": "sunday_holiday",
-          "cost": 2.755
+          "cost": 2.9
         }
       ],
       "schedules": [
@@ -2683,232 +2550,16 @@
           "tier": "two_stage"
         },
         "power_factor_adjustment": {
-          "apply_to": "energy"
+          "base_percent": 80,
+          "max_discount_percent": 95,
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "regular_only",
-          "regular_label": "經常契約",
-          "household_label": "按戶計收"
-        }
-      }
-    },
-    {
-      "id": "extra_high_voltage_power",
-      "name": "特高壓電力",
-      "type": "TOU",
-      "category": "extra_high_voltage",
-      "season_strategy": "seasons_high_voltage",
-      "basic_fees": [
-        {
-          "label": "經常契約",
-          "unit": "per_kw_month",
-          "summer": 217.3,
-          "non_summer": 160.6
-        },
-        {
-          "label": "非夏月契約",
-          "unit": "per_kw_month",
-          "non_summer": 160.6
-        },
-        {
-          "label": "週六半尖峰契約",
-          "unit": "per_kw_month",
-          "summer": 43.4,
-          "non_summer": 32.1
-        },
-        {
-          "label": "離峰契約",
-          "unit": "per_kw_month",
-          "summer": 43.4,
-          "non_summer": 32.1
-        }
-      ],
-      "rates": [
-        {
-          "season": "summer",
-          "period": "peak",
-          "day_type": "weekday",
-          "cost": 6.17
-        },
-        {
-          "season": "non_summer",
-          "period": "peak",
-          "day_type": "weekday",
-          "cost": 5.79
-        },
-        {
-          "season": "summer",
-          "period": "semi_peak",
-          "day_type": "saturday",
-          "cost": 2.73
-        },
-        {
-          "season": "non_summer",
-          "period": "semi_peak",
-          "day_type": "saturday",
-          "cost": 2.48
-        },
-        {
-          "season": "summer",
-          "period": "off_peak",
-          "day_type": "weekday",
-          "cost": 2.55
-        },
-        {
-          "season": "non_summer",
-          "period": "off_peak",
-          "day_type": "weekday",
-          "cost": 2.28
-        },
-        {
-          "season": "summer",
-          "period": "off_peak",
-          "day_type": "saturday",
-          "cost": 2.55
-        },
-        {
-          "season": "non_summer",
-          "period": "off_peak",
-          "day_type": "saturday",
-          "cost": 2.28
-        },
-        {
-          "season": "summer",
-          "period": "off_peak",
-          "day_type": "sunday_holiday",
-          "cost": 2.55
-        },
-        {
-          "season": "non_summer",
-          "period": "off_peak",
-          "day_type": "sunday_holiday",
-          "cost": 2.28
-        }
-      ],
-      "schedules": [
-        {
-          "season": "summer",
-          "day_type": "weekday",
-          "start": "09:00",
-          "end": "24:00",
-          "period": "peak"
-        },
-        {
-          "season": "summer",
-          "day_type": "weekday",
-          "start": "00:00",
-          "end": "09:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "summer",
-          "day_type": "saturday",
-          "start": "09:00",
-          "end": "24:00",
-          "period": "semi_peak"
-        },
-        {
-          "season": "summer",
-          "day_type": "saturday",
-          "start": "00:00",
-          "end": "09:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "summer",
-          "day_type": "sunday_holiday",
-          "start": "00:00",
-          "end": "24:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "06:00",
-          "end": "11:00",
-          "period": "peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "14:00",
-          "end": "24:00",
-          "period": "peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "00:00",
-          "end": "06:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "weekday",
-          "start": "11:00",
-          "end": "14:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "saturday",
-          "start": "06:00",
-          "end": "11:00",
-          "period": "semi_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "saturday",
-          "start": "14:00",
-          "end": "24:00",
-          "period": "semi_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "saturday",
-          "start": "00:00",
-          "end": "06:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "saturday",
-          "start": "11:00",
-          "end": "14:00",
-          "period": "off_peak"
-        },
-        {
-          "season": "non_summer",
-          "day_type": "sunday_holiday",
-          "start": "00:00",
-          "end": "24:00",
-          "period": "off_peak"
-        }
-      ],
-      "billing_rules": {
-        "over_contract_penalty": {
-          "threshold_ratio": 0.1,
-          "rate_low": 2,
-          "rate_high": 3,
-          "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "regular_label": "經常契約"
         },
         "zero_usage_basic_fee_ratio": 0.5,
-        "power_factor_adjustment": {
-          "base_percent": 80,
-          "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
-        },
-        "basic_fee_formula": {
-          "type": "two_stage",
-          "regular_label": "經常契約",
-          "non_summer_label": "非夏月契約",
-          "saturday_label": "週六半尖峰契約",
-          "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
-        }
+        "bill_ratio": 0.95
       }
     },
     {
@@ -3110,14 +2761,15 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -3125,8 +2777,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -3350,14 +3001,15 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "three_stage"
+          "tier": "three_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "three_stage",
@@ -3365,8 +3017,7 @@
           "semi_peak_label": "半尖峰契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     },
@@ -3569,14 +3220,15 @@
           "rate_low": 2,
           "rate_high": 3,
           "base_fee_label": "經常契約",
-          "tier": "two_stage"
+          "tier": "two_stage",
+          "outside_contract_basic_ratio": 4.8,
+          "outside_contract_energy_ratio": 1.6
         },
         "zero_usage_basic_fee_ratio": 0.5,
         "power_factor_adjustment": {
           "base_percent": 80,
           "max_discount_percent": 95,
-          "step_percent": 0.1,
-          "apply_to": "total"
+          "step_percent": 0.1
         },
         "basic_fee_formula": {
           "type": "two_stage",
@@ -3584,8 +3236,7 @@
           "non_summer_label": "非夏月契約",
           "saturday_label": "週六半尖峰契約",
           "off_peak_label": "離峰契約",
-          "weekend_ratio": 0.5,
-          "household_label": "按戶計收"
+          "weekend_ratio": 0.5
         }
       }
     }

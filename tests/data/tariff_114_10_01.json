@@ -1,0 +1,2955 @@
+{
+  "residential_non_tou": {
+    "title": "第三章 表燈(住商)電價 四、電價 (一)非時間電價 1.住宅用",
+    "lines": [
+      134,
+      146
+    ],
+    "summer": "06-01..09-30",
+    "energy": [],
+    "tiers": [
+      {
+        "season": "summer",
+        "from_kwh": 1,
+        "to_kwh": 120,
+        "price": 1.78,
+        "line": 138
+      },
+      {
+        "season": "summer",
+        "from_kwh": 121,
+        "to_kwh": 330,
+        "price": 2.55,
+        "line": 139
+      },
+      {
+        "season": "summer",
+        "from_kwh": 331,
+        "to_kwh": 500,
+        "price": 3.8,
+        "line": 140
+      },
+      {
+        "season": "summer",
+        "from_kwh": 501,
+        "to_kwh": 700,
+        "price": 5.14,
+        "line": 142
+      },
+      {
+        "season": "summer",
+        "from_kwh": 701,
+        "to_kwh": 1000,
+        "price": 6.44,
+        "line": 143
+      },
+      {
+        "season": "summer",
+        "from_kwh": 1001,
+        "to_kwh": null,
+        "price": 8.86,
+        "line": 144
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 1,
+        "to_kwh": 120,
+        "price": 1.78,
+        "line": 138
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 121,
+        "to_kwh": 330,
+        "price": 2.26,
+        "line": 139
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 331,
+        "to_kwh": 500,
+        "price": 3.13,
+        "line": 140
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 501,
+        "to_kwh": 700,
+        "price": 4.24,
+        "line": 142
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 701,
+        "to_kwh": 1000,
+        "price": 5.27,
+        "line": 143
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 1001,
+        "to_kwh": null,
+        "price": 7.03,
+        "line": 144
+      }
+    ],
+    "basic_fees": [],
+    "surcharges": [],
+    "notes": [
+      "Tier limits are per month as printed. The table note says that for customers read and billed every 2 months each tier's kWh limits are doubled (各段度數係加倍計算). (lines 145-146)",
+      "120度以下部分 (line 138) is transcribed as from_kwh 1; the text gives no lower bound.",
+      "Lines 333-341: kWh below the meter's 底度 are billed as 底度, and a bill under 100元 is billed as 100元. Not encoded."
+    ]
+  },
+  "lighting_non_business_tiered": {
+    "title": "第三章 表燈(住商)電價 四、電價 (一)非時間電價 2.住宅以外非營業用",
+    "lines": [
+      152,
+      165
+    ],
+    "summer": "06-01..09-30",
+    "energy": [],
+    "tiers": [
+      {
+        "season": "summer",
+        "from_kwh": 1,
+        "to_kwh": 120,
+        "price": 1.78,
+        "line": 156
+      },
+      {
+        "season": "summer",
+        "from_kwh": 121,
+        "to_kwh": 330,
+        "price": 2.55,
+        "line": 157
+      },
+      {
+        "season": "summer",
+        "from_kwh": 331,
+        "to_kwh": 500,
+        "price": 3.8,
+        "line": 158
+      },
+      {
+        "season": "summer",
+        "from_kwh": 501,
+        "to_kwh": 700,
+        "price": 5.14,
+        "line": 160
+      },
+      {
+        "season": "summer",
+        "from_kwh": 701,
+        "to_kwh": 1000,
+        "price": 6.44,
+        "line": 161
+      },
+      {
+        "season": "summer",
+        "from_kwh": 1001,
+        "to_kwh": null,
+        "price": 8.86,
+        "line": 162
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 1,
+        "to_kwh": 120,
+        "price": 1.78,
+        "line": 156
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 121,
+        "to_kwh": 330,
+        "price": 2.26,
+        "line": 157
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 331,
+        "to_kwh": 500,
+        "price": 3.13,
+        "line": 158
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 501,
+        "to_kwh": 700,
+        "price": 4.24,
+        "line": 160
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 701,
+        "to_kwh": 1000,
+        "price": 5.27,
+        "line": 161
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 1001,
+        "to_kwh": null,
+        "price": 7.03,
+        "line": 162
+      }
+    ],
+    "basic_fees": [],
+    "surcharges": [],
+    "notes": [
+      "Tier limits are per month as printed. The table note says that for customers read and billed every 2 months each tier's kWh limits are doubled (各段度數係加倍計算). (lines 163-164)",
+      "Line 165: 公用路燈 pay these prices less 50%.",
+      "Prices are identical to 1.住宅用 (lines 156-162 vs 138-144)."
+    ]
+  },
+  "lighting_business_tiered": {
+    "title": "第三章 表燈(住商)電價 四、電價 (一)非時間電價 3.營業用",
+    "lines": [
+      166,
+      176
+    ],
+    "summer": "06-01..09-30",
+    "energy": [],
+    "tiers": [
+      {
+        "season": "summer",
+        "from_kwh": 1,
+        "to_kwh": 330,
+        "price": 2.71,
+        "line": 170
+      },
+      {
+        "season": "summer",
+        "from_kwh": 331,
+        "to_kwh": 700,
+        "price": 3.76,
+        "line": 171
+      },
+      {
+        "season": "summer",
+        "from_kwh": 701,
+        "to_kwh": 1500,
+        "price": 4.46,
+        "line": 172
+      },
+      {
+        "season": "summer",
+        "from_kwh": 1501,
+        "to_kwh": 3000,
+        "price": 7.08,
+        "line": 173
+      },
+      {
+        "season": "summer",
+        "from_kwh": 3001,
+        "to_kwh": null,
+        "price": 7.43,
+        "line": 174
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 1,
+        "to_kwh": 330,
+        "price": 2.28,
+        "line": 170
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 331,
+        "to_kwh": 700,
+        "price": 3.1,
+        "line": 171
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 701,
+        "to_kwh": 1500,
+        "price": 3.61,
+        "line": 172
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 1501,
+        "to_kwh": 3000,
+        "price": 5.56,
+        "line": 173
+      },
+      {
+        "season": "non_summer",
+        "from_kwh": 3001,
+        "to_kwh": null,
+        "price": 5.83,
+        "line": 174
+      }
+    ],
+    "basic_fees": [],
+    "surcharges": [],
+    "notes": [
+      "Tier limits are per month as printed. The table note says that for customers read and billed every 2 months each tier's kWh limits are doubled (各段度數係加倍計算). (lines 175-176)",
+      "330度以下部分 (line 170) is transcribed as from_kwh 1."
+    ]
+  },
+  "residential_simple_2_tier": {
+    "title": "第三章 表燈(住商)電價 四、電價 (二)時間電價 1.簡易型時間電價 (1)二段式",
+    "lines": [
+      184,
+      204
+    ],
+    "summer": "06-01..09-30",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.06,
+        "line": 197
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 5.16,
+        "line": 192
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.06,
+        "line": 202
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.06,
+        "line": 202
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 1.99,
+        "line": 199
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "peak",
+        "price": 4.93,
+        "line": 194
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 1.99,
+        "line": 199
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 4.93,
+        "line": 194
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 1.99,
+        "line": 202
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 1.99,
+        "line": 202
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "按戶計收",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 75.0,
+        "line": 189
+      }
+    ],
+    "surcharges": [
+      {
+        "rule": "每月總度數超過2000度之部分 每度 加",
+        "price": 1.04,
+        "line": 204
+      }
+    ],
+    "notes": [
+      "按戶計收 basic fee 75.00 (line 189) is printed once, centred between the 夏月 and 非夏月 columns (char col 54; season columns at 50 and 63); read as applying to both seasons. Lines 357-359: no power-factor adjustment on it, and it is billed in full even in a month with zero kWh.",
+      "加 1.04 (line 204) is printed once between the season columns (char col 56); read as applying in both seasons. Lines 351-356: kWh above 2,000 in the month are charged this on top of the period price (依適用電價加計流動電費).",
+      "週六、週日及離峰日 share one all-day 離峰 row (lines 201-203), so saturday and sunday_holiday carry the same rows.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 313-325 (fixed dates plus lunar 春節 eve-1, 端午, 中秋 and 4/4 or 4/5 掃墓節)."
+    ]
+  },
+  "residential_simple_3_tier": {
+    "title": "第三章 表燈(住商)電價 四、電價 (二)時間電價 1.簡易型時間電價 (2)三段式",
+    "lines": [
+      205,
+      226
+    ],
+    "summer": "06-01..09-30",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.06,
+        "line": 220
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "16:00",
+        "period": "semi_peak",
+        "price": 4.69,
+        "line": 215
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "16:00",
+        "end": "22:00",
+        "period": "peak",
+        "price": 7.13,
+        "line": 213
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "22:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 4.69,
+        "line": 215
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.06,
+        "line": 224
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.06,
+        "line": 224
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 1.99,
+        "line": 222
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 4.48,
+        "line": 218
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 1.99,
+        "line": 222
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 4.48,
+        "line": 218
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 1.99,
+        "line": 224
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 1.99,
+        "line": 224
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "按戶計收",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 75.0,
+        "line": 210
+      }
+    ],
+    "surcharges": [
+      {
+        "rule": "每月總度數超過2000度之部分 每度 加",
+        "price": 1.04,
+        "line": 226
+      }
+    ],
+    "notes": [
+      "非夏月 has no 尖峰 (line 213 non-summer column is —). 非夏月 weekdays are 半尖峰 06:00-11:00 and 14:00-24:00 at 4.48 (lines 217-218) and 離峰 00:00-06:00 and 11:00-14:00 at 1.99 (lines 221-222).",
+      "Summer 半尖峰 4.69 on line 215 covers 09:00~16:00 (line 214) and 22:00~24:00 (line 215).",
+      "按戶計收 basic fee 75.00 (line 210) is printed once, centred between the 夏月 and 非夏月 columns (char col 55; season columns at 50 and 63); read as applying to both seasons. Lines 357-359: no power-factor adjustment on it, and it is billed in full even in a month with zero kWh.",
+      "加 1.04 (line 226) is printed once between the season columns (char col 56); read as applying in both seasons. Lines 351-356: kWh above 2,000 in the month are charged this on top of the period price (依適用電價加計流動電費).",
+      "週六、週日及離峰日 share one all-day 離峰 row (lines 223-225).",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 313-325 (fixed dates plus lunar 春節 eve-1, 端午, 中秋 and 4/4 or 4/5 掃墓節)."
+    ]
+  },
+  "lighting_standard_2_tier": {
+    "title": "第三章 表燈(住商)電價 四、電價 (二)時間電價 2.標準型時間電價 (1)二段式",
+    "lines": [
+      230,
+      264
+    ],
+    "summer": "06-01..09-30",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.27,
+        "line": 247
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 5.54,
+        "line": 243
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.27,
+        "line": 259
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.76,
+        "line": 252
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.27,
+        "line": 263
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 248
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "peak",
+        "price": 5.39,
+        "line": 244
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 248
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 5.39,
+        "line": 244
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 260
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 2.65,
+        "line": 255
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 260
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.65,
+        "line": 255
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 263
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "按戶計收 單相",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 129.1,
+        "line": 234
+      },
+      {
+        "label": "按戶計收 三相",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 262.5,
+        "line": 236
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 236.2,
+        "line": 237
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 237
+      },
+      {
+        "label": "非夏月契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 238
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 47.2,
+        "line": 240
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 34.6,
+        "line": 240
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 47.2,
+        "line": 241
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 34.6,
+        "line": 241
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "週六 label (line 257) sits between the 半尖峰 rows (251-256) and the 離峰 rows (258-261); both blocks read as saturday. 週一至週五 labels are at lines 244-247.",
+      "Unit 每瓩每月 (line 239) applies to the four contract rows 237-241; 每戶每月 (line 235) to 按戶計收.",
+      "Basic fee formula: 週六半尖峰/離峰契約 price applies to [(週六半尖峰契約容量+離峰契約容量)-(經常契約容量+非夏月契約容量)x0.5], floored at 0; 非夏月契約 is billed only in 非夏月 (lines 370-388).",
+      "按戶計收 has two rates, 單相 and 三相, each printed once across both season columns; both are listed (單相 first, as printed).",
+      "Lines 407-408: a month with zero kWh and zero demand pays 50% of the basic fee. Lines 446-450: demand above contract is billed at 2x basic fee up to 10% over and 3x beyond. Lines 487-491: customers with only 週六半尖峰 or 離峰 contracts pay 4.8x basic fee and 1.6x energy for use outside those periods.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 313-325 (fixed dates plus lunar 春節 eve-1, 端午, 中秋 and 4/4 or 4/5 掃墓節)."
+    ]
+  },
+  "lighting_standard_3_tier": {
+    "title": "第三章 表燈(住商)電價 四、電價 (二)時間電價 2.標準型時間電價 (2)三段式",
+    "lines": [
+      270,
+      307
+    ],
+    "summer": "06-01..09-30",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.23,
+        "line": 291
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "16:00",
+        "period": "semi_peak",
+        "price": 5.02,
+        "line": 286
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "16:00",
+        "end": "22:00",
+        "period": "peak",
+        "price": 8.12,
+        "line": 283
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "22:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 5.02,
+        "line": 286
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.23,
+        "line": 302
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.5,
+        "line": 297
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.23,
+        "line": 306
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 293
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 4.86,
+        "line": 288
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 293
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 4.86,
+        "line": 288
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 303
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 2.4,
+        "line": 298
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 303
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.4,
+        "line": 298
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 306
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "按戶計收 單相",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 129.1,
+        "line": 274
+      },
+      {
+        "label": "按戶計收 三相",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 262.5,
+        "line": 276
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 236.2,
+        "line": 277
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 277
+      },
+      {
+        "label": "半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 173.2,
+        "line": 278
+      },
+      {
+        "label": "半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 278
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 47.2,
+        "line": 280
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 34.6,
+        "line": 280
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 47.2,
+        "line": 281
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 34.6,
+        "line": 281
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "非夏月 has no 尖峰 (line 283 non-summer column is —).",
+      "Summer weekday 半尖峰 5.02 on line 286 covers 09:00~16:00 (line 285) and 22:00~24:00 (line 286). Non-summer 4.86 on line 288 covers 06:00~11:00 (287) and 14:00~24:00 (288).",
+      "週一至週五 labels at lines 286-289 span the 尖峰/半尖峰/離峰 blocks 282-294; 週六 label at line 300 spans 296-304.",
+      "Basic fee formula: 當月經常契約電價x經常契約容量 + 當月半尖峰契約電價x半尖峰契約容量 + 當月週六半尖峰或離峰契約電價x[(週六半尖峰+離峰)-(經常+半尖峰)x0.5], last term floored at 0 (lines 398-403). 半尖峰契約 is billed in both seasons.",
+      "按戶計收 has two rates, 單相 and 三相, each printed once across both season columns; both are listed (單相 first, as printed).",
+      "Lines 407-408: a month with zero kWh and zero demand pays 50% of the basic fee. Lines 446-450: demand above contract is billed at 2x basic fee up to 10% over and 3x beyond. Lines 487-491: customers with only 週六半尖峰 or 離峰 contracts pay 4.8x basic fee and 1.6x energy for use outside those periods.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 313-325 (fixed dates plus lunar 春節 eve-1, 端午, 中秋 and 4/4 or 4/5 掃墓節)."
+    ]
+  },
+  "low_voltage_power": {
+    "title": "第四章 低壓電力電價 四、電價 (一)非時間電價",
+    "lines": [
+      516,
+      526
+    ],
+    "summer": "06-01..09-30",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "flat",
+        "price": 4.08,
+        "line": 526
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "flat",
+        "price": 4.08,
+        "line": 526
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "flat",
+        "price": 4.08,
+        "line": 526
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "flat",
+        "price": 3.87,
+        "line": 526
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "flat",
+        "price": 3.87,
+        "line": 526
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "flat",
+        "price": 3.87,
+        "line": 526
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "裝置契約",
+        "unit": "per_kw_month",
+        "season": "all",
+        "price": 137.5,
+        "line": 521
+      },
+      {
+        "label": "需量契約 經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 236.2,
+        "line": 523
+      },
+      {
+        "label": "需量契約 經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 523
+      },
+      {
+        "label": "需量契約 非夏月契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 525
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "Two basic-fee bases. 裝置契約 137.50 (line 521) is printed once across both season columns (char col 48; columns at 43 and 53), read as all seasons. 需量契約 has 經常契約 (line 523) and 非夏月契約 (line 525). Lines 645-654 give the billing for each; line 806 says 按裝置容量為契約容量 accepts no new applications, so 需量契約 is the live default for new customers.",
+      "Unit 每瓩每月 is printed once on line 523 in the middle of the basic-fee block (lines 521-525); read as covering 裝置契約 as well.",
+      "Energy is a single flat price per kWh, 4.08 summer / 3.87 non-summer (line 526), not tiered and not time-of-use; flat rows are repeated for all day types.",
+      "Lines 712-715: zero-use month pays 50% basic fee. Lines 742-750 and 787-791: 需量契約 over-contract demand is billed at 2x/3x basic fee."
+    ]
+  },
+  "low_voltage_2_tier": {
+    "title": "第四章 低壓電力電價 四、電價 (二)時間電價 1.二段式",
+    "lines": [
+      531,
+      568
+    ],
+    "summer": "06-01..09-30",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.27,
+        "line": 552
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 5.54,
+        "line": 547
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.27,
+        "line": 563
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.76,
+        "line": 555
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.27,
+        "line": 567
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 553
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "peak",
+        "price": 5.39,
+        "line": 548
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 553
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 5.39,
+        "line": 548
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 564
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 2.65,
+        "line": 560
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 564
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.65,
+        "line": 560
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.15,
+        "line": 567
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "裝置契約 按戶計收",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 105.0,
+        "line": 535
+      },
+      {
+        "label": "裝置契約 裝置契約",
+        "unit": "per_kw_month",
+        "season": "all",
+        "price": 137.5,
+        "line": 537
+      },
+      {
+        "label": "需量契約 按戶計收",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 262.5,
+        "line": 538
+      },
+      {
+        "label": "需量契約 經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 236.2,
+        "line": 540
+      },
+      {
+        "label": "需量契約 經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 540
+      },
+      {
+        "label": "需量契約 非夏月契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 542
+      },
+      {
+        "label": "需量契約 週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 47.2,
+        "line": 544
+      },
+      {
+        "label": "需量契約 週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 34.6,
+        "line": 544
+      },
+      {
+        "label": "需量契約 離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 47.2,
+        "line": 545
+      },
+      {
+        "label": "需量契約 離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 34.6,
+        "line": 545
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "Basic fees have two groups. 裝置契約 group (side labels 裝置 line 535, 契約 line 537): 按戶計收 105.00 (535) and 裝置契約 137.50 per kW (537). 需量契約 group (side labels 需量 line 541, 契約 line 543): 按戶計收 262.50 (538) and the contract rows 540-545. Line 538 sits just above the 需量 block's 基本 label (539); assigning its 262.50 to 需量契約 is inferred from the side labels and matches the 按戶計收 262.50 of the three-stage table (line 578). Uncertain.",
+      "Line 806: 裝置契約 accepts no new applications; the 需量契約 rows are the live default.",
+      "週六 label (line 561) sits between the 半尖峰 rows (555-560) and 離峰 rows (562-565); both read as saturday. 週一至週五 labels at 548-551 cover 546-554. Non-summer saturday 半尖峰 2.65 is on line 560, below its windows 06:00~11:00 (557) and 14:00~24:00 (559).",
+      "Line 547 prints 5.54 at char col 33, left of the usual 夏月 column (47); it is the only number on the line and the non-summer cell is —, so it is the summer weekday 尖峰 price.",
+      "Basic fee formula: 週六半尖峰/離峰契約 price applies to [(週六半尖峰契約容量+離峰契約容量)-(經常契約容量+非夏月契約容量)x0.5], floored at 0; 非夏月契約 is billed only in 非夏月 (lines 671-689).",
+      "Lines 712-715: zero-use month pays 50% basic fee. Lines 787-791: over-contract 2x/3x. Lines 811-815: 4.8x/1.6x rule. Lines 723-724: 儲冷式空調 off-peak at 60%.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 313-325 (fixed dates plus lunar 春節 eve-1, 端午, 中秋 and 4/4 or 4/5 掃墓節). Chapter 4 refers to the 表燈 list (line 616)."
+    ]
+  },
+  "low_voltage_three_stage": {
+    "title": "第四章 低壓電力電價 四、電價 (二)時間電價 2.三段式",
+    "lines": [
+      574,
+      617
+    ],
+    "summer": "06-01..09-30",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.23,
+        "line": 598
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "16:00",
+        "period": "semi_peak",
+        "price": 5.02,
+        "line": 591
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "16:00",
+        "end": "22:00",
+        "period": "peak",
+        "price": 8.12,
+        "line": 586
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "22:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 5.02,
+        "line": 591
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.23,
+        "line": 609
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.5,
+        "line": 601
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.23,
+        "line": 613
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 599
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 4.86,
+        "line": 595
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 599
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 4.86,
+        "line": 595
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 610
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 2.4,
+        "line": 606
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 610
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.4,
+        "line": 606
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.12,
+        "line": 613
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "按戶計收",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 262.5,
+        "line": 578
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 236.2,
+        "line": 579
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 579
+      },
+      {
+        "label": "半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 173.2,
+        "line": 581
+      },
+      {
+        "label": "半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 173.2,
+        "line": 581
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 47.2,
+        "line": 583
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 34.6,
+        "line": 583
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 47.2,
+        "line": 584
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 34.6,
+        "line": 584
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "非夏月 has no 尖峰 (line 586 non-summer column is —).",
+      "Summer weekday 半尖峰 5.02 is on line 591, with windows 09:00~16:00 (588) and 22:00~24:00 (590). Non-summer 4.86 is on line 595 with windows 06:00~11:00 (592) and 14:00~24:00 (594). Non-summer saturday 半尖峰 2.40 is on line 606 with windows at 603 and 605.",
+      "週一至週五 labels at 589-596 cover 585-600; 週六 label at 607 covers 601-611.",
+      "Only 需量契約 basic fees exist in this table (no 裝置契約 rows).",
+      "Basic fee formula: 當月經常契約電價x經常契約容量 + 當月半尖峰契約電價x半尖峰契約容量 + 當月週六半尖峰或離峰契約電價x[(週六半尖峰+離峰)-(經常+半尖峰)x0.5], last term floored at 0 (lines 698-703). 半尖峰契約 is billed in both seasons.",
+      "Line 617: customers under 電價調整係數 follow 附錄一. Lines 723-724: 儲冷式空調 off-peak at 60%.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 313-325 (fixed dates plus lunar 春節 eve-1, 端午, 中秋 and 4/4 or 4/5 掃墓節). Chapter 4 refers to the 表燈 list (line 616)."
+    ]
+  },
+  "low_voltage_ev": {
+    "title": "第四章 低壓電力電價 四、電價 (三)電動車充換電設施電價",
+    "lines": [
+      623,
+      640
+    ],
+    "summer": "06-01..09-30",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "16:00",
+        "period": "off_peak",
+        "price": 3.05,
+        "line": 632
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "16:00",
+        "end": "22:00",
+        "period": "peak",
+        "price": 12.47,
+        "line": 629
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "22:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 3.05,
+        "line": 632
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 3.05,
+        "line": 637
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 3.05,
+        "line": 637
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "15:00",
+        "period": "off_peak",
+        "price": 2.9,
+        "line": 634
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "15:00",
+        "end": "21:00",
+        "period": "peak",
+        "price": 12.14,
+        "line": 630
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "21:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.9,
+        "line": 634
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.9,
+        "line": 637
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.9,
+        "line": 637
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "按戶計收",
+        "unit": "per_household_month",
+        "season": "all",
+        "price": 262.5,
+        "line": 627
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 47.2,
+        "line": 628
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 34.6,
+        "line": 628
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "尖峰 differs by season: summer 16:00-22:00 at 12.47 (line 629), non-summer 15:00-21:00 at 12.14 (line 630). Summer 離峰 3.05 (line 632) covers 00:00~16:00 (631) and 22:00~24:00 (632); non-summer 離峰 2.90 (line 634) covers 00:00~15:00 (633) and 21:00~24:00 (635).",
+      "Lines 709-710: basic fee = 夏月(非夏月)經常契約電價 x 經常契約容量, plus 按戶計收. No 半尖峰 period and no other contract types.",
+      "Eligibility lines 501-506 (EV-dedicated, 20 kW to under 100 kW). Lines 816-819: if use stops qualifying, billing moves to 低壓電力二段式.",
+      "週六、週日及離峰日 share one all-day 離峰 row (lines 636-638).",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 313-325 (fixed dates plus lunar 春節 eve-1, 端午, 中秋 and 4/4 or 4/5 掃墓節). Line 640 refers to the 表燈 list."
+    ]
+  },
+  "high_voltage_2_tier": {
+    "title": "第五章 高壓及特高壓電力電價 四、電價 (一)二段式時間電價 高壓供電",
+    "lines": [
+      850,
+      881
+    ],
+    "summer": "05-16..10-15",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.71,
+        "line": 865
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 6.75,
+        "line": 860
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.71,
+        "line": 875
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.77,
+        "line": 869
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.71,
+        "line": 880
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.46,
+        "line": 867
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "peak",
+        "price": 6.37,
+        "line": 862
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.46,
+        "line": 867
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 6.37,
+        "line": 862
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.46,
+        "line": 877
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 2.54,
+        "line": 872
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.46,
+        "line": 877
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.54,
+        "line": 872
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.46,
+        "line": 880
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 223.6,
+        "line": 856
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 166.9,
+        "line": 856
+      },
+      {
+        "label": "非夏月契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 166.9,
+        "line": 857
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 44.7,
+        "line": 858
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 33.3,
+        "line": 858
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 44.7,
+        "line": 859
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 33.3,
+        "line": 859
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "Chapter 5 tables print four price columns: 高壓供電 夏月, 非夏月, then 特高壓供電 夏月, 非夏月 (lines 851-855). This plan takes columns 1 and 2; every cited line was checked to have exactly four price-or-dash tokens.",
+      "週一至週五 labels at 862-865 cover 860-868; 週六 label at 874 covers 869-878.",
+      "Basic fee formula: 週六半尖峰/離峰契約 price applies to [(週六半尖峰契約容量+離峰契約容量)-(經常契約容量+非夏月契約容量)x0.5], floored at 0; 非夏月契約 is billed only in 非夏月 (lines 1023-1041).",
+      "Lines 1072-1073: 儲冷式空調 chillers pay 60% of the applicable off-peak energy price. Lines 1064-1065: zero-use month pays 50% basic fee. Lines 1129-1133: over-contract demand 2x/3x basic fee. Lines 1160-1164: 4.8x/1.6x rule for 週六半尖峰-only or 離峰-only contracts.",
+      "Line 1008: customers under 電價調整係數 follow 附錄一. Lines 1004-1007: Taipower may shift period boundaries for special loads while keeping daily hours.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 985-997."
+    ]
+  },
+  "high_voltage_three_stage": {
+    "title": "第五章 高壓及特高壓電力電價 四、電價 (二)三段式時間電價 高壓供電 尖峰時間固定",
+    "lines": [
+      887,
+      923
+    ],
+    "summer": "05-16..10-15",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.53,
+        "line": 905
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "16:00",
+        "period": "semi_peak",
+        "price": 5.85,
+        "line": 898
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "16:00",
+        "end": "22:00",
+        "period": "peak",
+        "price": 9.39,
+        "line": 896
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "22:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 5.85,
+        "line": 898
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.53,
+        "line": 917
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.6,
+        "line": 910
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.53,
+        "line": 922
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.32,
+        "line": 907
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 5.47,
+        "line": 902
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.32,
+        "line": 907
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 5.47,
+        "line": 902
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.32,
+        "line": 919
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 2.41,
+        "line": 914
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.32,
+        "line": 919
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.41,
+        "line": 914
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.32,
+        "line": 922
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 223.6,
+        "line": 892
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 166.9,
+        "line": 892
+      },
+      {
+        "label": "半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 166.9,
+        "line": 893
+      },
+      {
+        "label": "半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 166.9,
+        "line": 893
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 44.7,
+        "line": 894
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 33.3,
+        "line": 894
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 44.7,
+        "line": 895
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 33.3,
+        "line": 895
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "Two sub-variants. Transcribed: 尖峰時間固定 (lines 896-923, side label at 910-913), listed first. Not transcribed: 尖峰時間可變動 (lines 924-956). The variable variant has summer weekday 尖峰 16:00-22:00 only on 30 designated days at 18.33 高壓 / 17.05 特高壓 (line 925); on those days 半尖峰 is 09:00-16:00 and 22:00-24:00, on other summer weekdays 半尖峰 is 09:00-24:00, both at 5.85 / 5.38 (lines 927-933); its other prices equal the fixed variant (lines 935-955). Designation: 30 days, 180 hours a year, notified by 16:00 the day before (lines 1000-1003). Line 1165-1166: its contract-capacity periods follow the fixed variant.",
+      "Chapter 5 tables print four price columns: 高壓供電 夏月, 非夏月, then 特高壓供電 夏月, 非夏月 (lines 888-891). This plan takes columns 1 and 2; every cited line was checked to have exactly four price-or-dash tokens.",
+      "非夏月 has no 尖峰 (line 896 non-summer column is —).",
+      "Summer weekday 半尖峰 5.85 is on line 898, between its windows 09:00~16:00 (897) and 22:00~24:00 (899). Non-summer 5.47 on line 902 covers 06:00~11:00 (901) and 14:00~24:00 (903). Saturday non-summer 2.41 is on line 914, between 06:00~11:00 (912) and 14:00~24:00 (915).",
+      "週一至週五 labels at 900-904 cover 896-908; 週六 label at 916 covers 910-920.",
+      "Basic fee formula: 當月經常契約電價x經常契約容量 + 當月半尖峰契約電價x半尖峰契約容量 + 當月週六半尖峰或離峰契約電價x[(週六半尖峰+離峰)-(經常+半尖峰)x0.5], last term floored at 0 (lines 1049-1054). 半尖峰契約 is billed in both seasons.",
+      "Lines 1141-1148: fixed-peak three-stage customers have a 1-year cycle with season-dependent switching windows.",
+      "Lines 1072-1073: 儲冷式空調 chillers pay 60% of the applicable off-peak energy price. Lines 1064-1065: zero-use month pays 50% basic fee. Lines 1129-1133: over-contract demand 2x/3x basic fee. Lines 1160-1164: 4.8x/1.6x rule for 週六半尖峰-only or 離峰-only contracts.",
+      "Line 1008: customers under 電價調整係數 follow 附錄一. Lines 1004-1007: Taipower may shift period boundaries for special loads while keeping daily hours.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 985-997."
+    ]
+  },
+  "high_voltage_batch": {
+    "title": "第五章 高壓及特高壓電力電價 四、電價 (三)批次生產時間電價 高壓供電",
+    "lines": [
+      958,
+      981
+    ],
+    "summer": "05-16..10-15",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "15:30",
+        "period": "off_peak",
+        "price": 3.18,
+        "line": 970
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "15:30",
+        "end": "21:30",
+        "period": "peak",
+        "price": 12.47,
+        "line": 968
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "21:30",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 3.18,
+        "line": 970
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "15:30",
+        "period": "off_peak",
+        "price": 3.18,
+        "line": 977
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "15:30",
+        "end": "21:30",
+        "period": "semi_peak",
+        "price": 3.26,
+        "line": 973
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "21:30",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 3.18,
+        "line": 977
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 3.18,
+        "line": 980
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "15:30",
+        "period": "off_peak",
+        "price": 2.88,
+        "line": 970
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "15:30",
+        "end": "21:30",
+        "period": "peak",
+        "price": 11.79,
+        "line": 968
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "21:30",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.88,
+        "line": 970
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "15:30",
+        "period": "off_peak",
+        "price": 2.88,
+        "line": 977
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "15:30",
+        "end": "21:30",
+        "period": "semi_peak",
+        "price": 3.0,
+        "line": 973
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "21:30",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.88,
+        "line": 977
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.88,
+        "line": 980
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 223.6,
+        "line": 964
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 166.9,
+        "line": 964
+      },
+      {
+        "label": "非夏月契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 166.9,
+        "line": 965
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 44.7,
+        "line": 966
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 33.3,
+        "line": 966
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 44.7,
+        "line": 967
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 33.3,
+        "line": 967
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "Chapter 5 tables print four price columns: 高壓供電 夏月, 非夏月, then 特高壓供電 夏月, 非夏月 (lines 959-963). This plan takes columns 1 and 2; every cited line was checked to have exactly four price-or-dash tokens.",
+      "Period windows are the same in both seasons: weekday 尖峰 15:30-21:30 (line 968, priced in both seasons), 離峰 00:00-15:30 and 21:30-24:00 (lines 969-971); saturday 半尖峰 15:30-21:30 (973), 離峰 00:00-15:30 and 21:30-24:00 (976-978).",
+      "Lines 828-829: only for 生產性質 premises. Line 1055 and 1126: billing and over-contract rules follow 二段式.",
+      "Basic fee formula: 週六半尖峰/離峰契約 price applies to [(週六半尖峰契約容量+離峰契約容量)-(經常契約容量+非夏月契約容量)x0.5], floored at 0; 非夏月契約 is billed only in 非夏月 (lines 1023-1041 via line 1055).",
+      "Lines 1072-1073: 儲冷式空調 chillers pay 60% of the applicable off-peak energy price. Lines 1064-1065: zero-use month pays 50% basic fee. Lines 1129-1133: over-contract demand 2x/3x basic fee. Lines 1160-1164: 4.8x/1.6x rule for 週六半尖峰-only or 離峰-only contracts.",
+      "Line 1008: customers under 電價調整係數 follow 附錄一. Lines 1004-1007: Taipower may shift period boundaries for special loads while keeping daily hours.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 985-997."
+    ]
+  },
+  "high_voltage_ev": {
+    "title": "第五章 高壓及特高壓電力電價 四、電價 (四)電動車充換電設施電價",
+    "lines": [
+      982,
+      984
+    ],
+    "summer": "06-01..09-30",
+    "energy": [],
+    "tiers": [],
+    "basic_fees": [],
+    "surcharges": [],
+    "derived": {
+      "from": "low_voltage_ev",
+      "share": 0.95,
+      "line": 983
+    },
+    "notes": [
+      "Line 983-984: 按第四章第四條第(三)款「電動車充換電設施電價」95%計算. No price table of its own.",
+      "Unsure: the text does not say whether the 95% covers the basic fees (按戶計收 and 經常契約) as well as energy. Read as covering every price of the referenced table, since it says the 電價 is 95% of that item. Lines 1057-1062 confirm the same fee structure (按戶 plus 經常契約).",
+      "Unsure: summer boundary. The referenced chapter-4 table's header says 夏月 6月1日至9月30日 (lines 624-626), but every chapter-5 table uses 5月16日至10月15日 (e.g. line 854). The text does not say which applies; summer here follows the referenced table.",
+      "Lines 830-832: only for 高壓供電 with contract capacity 100 kW or more; there is no 特高壓 EV tariff. Lines 1167-1170: if use stops qualifying, billing moves to 高壓電力二段式.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 985-997."
+    ]
+  },
+  "extra_high_voltage_2_tier": {
+    "title": "第五章 高壓及特高壓電力電價 四、電價 (一)二段式時間電價 特高壓供電",
+    "lines": [
+      850,
+      881
+    ],
+    "summer": "05-16..10-15",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.55,
+        "line": 865
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 6.17,
+        "line": 860
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.55,
+        "line": 875
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.73,
+        "line": 869
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.55,
+        "line": 880
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.28,
+        "line": 867
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "peak",
+        "price": 5.79,
+        "line": 862
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.28,
+        "line": 867
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "peak",
+        "price": 5.79,
+        "line": 862
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.28,
+        "line": 877
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 2.48,
+        "line": 872
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.28,
+        "line": 877
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.48,
+        "line": 872
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.28,
+        "line": 880
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 217.3,
+        "line": 856
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 160.6,
+        "line": 856
+      },
+      {
+        "label": "非夏月契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 160.6,
+        "line": 857
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 43.4,
+        "line": 858
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 32.1,
+        "line": 858
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 43.4,
+        "line": 859
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 32.1,
+        "line": 859
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "Chapter 5 tables print four price columns: 高壓供電 夏月, 非夏月, then 特高壓供電 夏月, 非夏月 (lines 851-855). This plan takes columns 3 and 4; every cited line was checked to have exactly four price-or-dash tokens.",
+      "週一至週五 labels at 862-865 cover 860-868; 週六 label at 874 covers 869-878.",
+      "Basic fee formula: 週六半尖峰/離峰契約 price applies to [(週六半尖峰契約容量+離峰契約容量)-(經常契約容量+非夏月契約容量)x0.5], floored at 0; 非夏月契約 is billed only in 非夏月 (lines 1023-1041).",
+      "Lines 1074-1076: customers with their own 161,000 V substation get 2% off the 特高壓 basic fee; own 345,000 V substation, 4.2% off.",
+      "Lines 1072-1073: 儲冷式空調 chillers pay 60% of the applicable off-peak energy price. Lines 1064-1065: zero-use month pays 50% basic fee. Lines 1129-1133: over-contract demand 2x/3x basic fee. Lines 1160-1164: 4.8x/1.6x rule for 週六半尖峰-only or 離峰-only contracts.",
+      "Line 1008: customers under 電價調整係數 follow 附錄一. Lines 1004-1007: Taipower may shift period boundaries for special loads while keeping daily hours.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 985-997."
+    ]
+  },
+  "extra_high_voltage_three_stage": {
+    "title": "第五章 高壓及特高壓電力電價 四、電價 (二)三段式時間電價 特高壓供電 尖峰時間固定",
+    "lines": [
+      887,
+      923
+    ],
+    "summer": "05-16..10-15",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.4,
+        "line": 905
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "09:00",
+        "end": "16:00",
+        "period": "semi_peak",
+        "price": 5.38,
+        "line": 898
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "16:00",
+        "end": "22:00",
+        "period": "peak",
+        "price": 8.69,
+        "line": 896
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "22:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 5.38,
+        "line": 898
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "09:00",
+        "period": "off_peak",
+        "price": 2.4,
+        "line": 917
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "09:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.5,
+        "line": 910
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.4,
+        "line": 922
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.18,
+        "line": 907
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 5.03,
+        "line": 902
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.18,
+        "line": 907
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 5.03,
+        "line": 902
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "06:00",
+        "period": "off_peak",
+        "price": 2.18,
+        "line": 919
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "06:00",
+        "end": "11:00",
+        "period": "semi_peak",
+        "price": 2.31,
+        "line": 914
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "11:00",
+        "end": "14:00",
+        "period": "off_peak",
+        "price": 2.18,
+        "line": 919
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "14:00",
+        "end": "24:00",
+        "period": "semi_peak",
+        "price": 2.31,
+        "line": 914
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.18,
+        "line": 922
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 217.3,
+        "line": 892
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 160.6,
+        "line": 892
+      },
+      {
+        "label": "半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 160.6,
+        "line": 893
+      },
+      {
+        "label": "半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 160.6,
+        "line": 893
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 43.4,
+        "line": 894
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 32.1,
+        "line": 894
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 43.4,
+        "line": 895
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 32.1,
+        "line": 895
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "Two sub-variants, as for high_voltage_three_stage. Transcribed: 尖峰時間固定 (lines 896-923). Not transcribed: 尖峰時間可變動 (lines 924-956), whose summer designated-day 尖峰 is 17.05 for 特高壓 (line 925).",
+      "Chapter 5 tables print four price columns: 高壓供電 夏月, 非夏月, then 特高壓供電 夏月, 非夏月 (lines 888-891). This plan takes columns 3 and 4; every cited line was checked to have exactly four price-or-dash tokens.",
+      "非夏月 has no 尖峰 (line 896 non-summer column is —). Price-line versus window-line placement as in high_voltage_three_stage (898, 902, 914).",
+      "Basic fee formula: 當月經常契約電價x經常契約容量 + 當月半尖峰契約電價x半尖峰契約容量 + 當月週六半尖峰或離峰契約電價x[(週六半尖峰+離峰)-(經常+半尖峰)x0.5], last term floored at 0 (lines 1049-1054). 半尖峰契約 is billed in both seasons.",
+      "Lines 1074-1076: customers with their own 161,000 V substation get 2% off the 特高壓 basic fee; own 345,000 V substation, 4.2% off.",
+      "Lines 1072-1073: 儲冷式空調 chillers pay 60% of the applicable off-peak energy price. Lines 1064-1065: zero-use month pays 50% basic fee. Lines 1129-1133: over-contract demand 2x/3x basic fee. Lines 1160-1164: 4.8x/1.6x rule for 週六半尖峰-only or 離峰-only contracts.",
+      "Line 1008: customers under 電價調整係數 follow 附錄一. Lines 1004-1007: Taipower may shift period boundaries for special loads while keeping daily hours.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 985-997."
+    ]
+  },
+  "extra_high_voltage_batch": {
+    "title": "第五章 高壓及特高壓電力電價 四、電價 (三)批次生產時間電價 特高壓供電",
+    "lines": [
+      958,
+      981
+    ],
+    "summer": "05-16..10-15",
+    "energy": [
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "15:30",
+        "period": "off_peak",
+        "price": 2.99,
+        "line": 970
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "15:30",
+        "end": "21:30",
+        "period": "peak",
+        "price": 11.44,
+        "line": 968
+      },
+      {
+        "season": "summer",
+        "day_type": "weekday",
+        "start": "21:30",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.99,
+        "line": 970
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "15:30",
+        "period": "off_peak",
+        "price": 2.99,
+        "line": 977
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "15:30",
+        "end": "21:30",
+        "period": "semi_peak",
+        "price": 3.2,
+        "line": 973
+      },
+      {
+        "season": "summer",
+        "day_type": "saturday",
+        "start": "21:30",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.99,
+        "line": 977
+      },
+      {
+        "season": "summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.99,
+        "line": 980
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "00:00",
+        "end": "15:30",
+        "period": "off_peak",
+        "price": 2.67,
+        "line": 970
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "15:30",
+        "end": "21:30",
+        "period": "peak",
+        "price": 10.8,
+        "line": 968
+      },
+      {
+        "season": "non_summer",
+        "day_type": "weekday",
+        "start": "21:30",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.67,
+        "line": 970
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "00:00",
+        "end": "15:30",
+        "period": "off_peak",
+        "price": 2.67,
+        "line": 977
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "15:30",
+        "end": "21:30",
+        "period": "semi_peak",
+        "price": 2.89,
+        "line": 973
+      },
+      {
+        "season": "non_summer",
+        "day_type": "saturday",
+        "start": "21:30",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.67,
+        "line": 977
+      },
+      {
+        "season": "non_summer",
+        "day_type": "sunday_holiday",
+        "start": "00:00",
+        "end": "24:00",
+        "period": "off_peak",
+        "price": 2.67,
+        "line": 980
+      }
+    ],
+    "tiers": [],
+    "basic_fees": [
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 217.3,
+        "line": 964
+      },
+      {
+        "label": "經常契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 160.6,
+        "line": 964
+      },
+      {
+        "label": "非夏月契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 160.6,
+        "line": 965
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 43.4,
+        "line": 966
+      },
+      {
+        "label": "週六半尖峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 32.1,
+        "line": 966
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "summer",
+        "price": 43.4,
+        "line": 967
+      },
+      {
+        "label": "離峰契約",
+        "unit": "per_kw_month",
+        "season": "non_summer",
+        "price": 32.1,
+        "line": 967
+      }
+    ],
+    "surcharges": [],
+    "notes": [
+      "Chapter 5 tables print four price columns: 高壓供電 夏月, 非夏月, then 特高壓供電 夏月, 非夏月 (lines 959-963). This plan takes columns 3 and 4; every cited line was checked to have exactly four price-or-dash tokens.",
+      "Period windows are the same in both seasons (lines 968-980).",
+      "Lines 828-829: only for 生產性質 premises. Line 1055: billing follows 二段式.",
+      "Lines 1074-1076: customers with their own 161,000 V substation get 2% off the 特高壓 basic fee; own 345,000 V substation, 4.2% off.",
+      "Lines 1072-1073: 儲冷式空調 chillers pay 60% of the applicable off-peak energy price. Lines 1064-1065: zero-use month pays 50% basic fee. Lines 1129-1133: over-contract demand 2x/3x basic fee. Lines 1160-1164: 4.8x/1.6x rule for 週六半尖峰-only or 離峰-only contracts.",
+      "Line 1008: customers under 電價調整係數 follow 附錄一. Lines 1004-1007: Taipower may shift period boundaries for special loads while keeping daily hours.",
+      "sunday_holiday covers 週日及離峰日; the 離峰日 list is at lines 985-997."
+    ]
+  }
+}
