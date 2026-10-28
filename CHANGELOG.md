@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-10-27
+## [0.2.0] - 2026-10-28
 
 ### Upgrading from 0.1.0
 Most bills change, so compute results stored from 0.1.0 again. The sections
