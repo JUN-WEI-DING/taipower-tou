@@ -3,10 +3,12 @@ reads a plan's rules through PlanRules."""
 
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass, fields, replace
 from datetime import date
 from functools import lru_cache
+from importlib import resources
 from typing import Any
 
 from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar
@@ -18,7 +20,6 @@ from taipower_tou.custom import (
 )
 from taipower_tou.errors import TariffError, UnknownPlanError
 from taipower_tou.models import BillingCycleType
-from taipower_tou.rates import TariffJSONLoader
 from taipower_tou.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
 
 # The short names available_plans() gives. plans.json has the 電價表's full
@@ -289,6 +290,15 @@ class PlanRequirements:
     uses_basic_fee_formula: bool
     formula_type: str | None
 
+    @property
+    def contract_keys(self) -> set[str]:
+        """The contract_capacities keys the basic fee formula bills."""
+        return {
+            "two_stage": {"regular", "non_summer", "saturday_semi_peak", "off_peak"},
+            "three_stage": {"regular", "semi_peak", "saturday_semi_peak", "off_peak"},
+            "regular_only": {"regular"},
+        }.get(self.formula_type or "", set())
+
     @classmethod
     def from_plan_data(cls, plan_data: dict[str, Any]) -> PlanRequirements:
         return cls.from_rules(PlanRules.from_plan_data(plan_data))
@@ -309,12 +319,13 @@ class PlanStore:
     """The plans in the bundled plans.json, loaded once per store."""
 
     def __init__(self, filename: str = "plans.json") -> None:
-        self._loader = TariffJSONLoader(filename=filename)
+        self._filename = filename
         self._data: dict[str, Any] | None = None
 
     def _load(self) -> dict[str, Any]:
         if self._data is None:
-            self._data = self._loader.load()
+            text = resources.files("taipower_tou.data").joinpath(self._filename)
+            self._data = json.loads(text.read_text(encoding="utf-8"))
         return self._data
 
     def definitions(self) -> dict[str, Any]:

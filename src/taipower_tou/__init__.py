@@ -273,10 +273,10 @@ def get_plan_requirements(plan_name: str) -> dict[str, Any]:
               fixed order. 簡易型 plans also take "basic_fee".
             - uses_basic_fee_formula: True if the basic fee is per kW of
               contract_capacities.
-            - formula_type: The contract_capacities keys the formula bills.
-              "two_stage" is regular, non_summer, saturday_semi_peak and
-              off_peak, "three_stage" has semi_peak for non_summer, and
-              "regular_only" is regular. None without a formula.
+            - formula_type: "two_stage", "three_stage", "regular_only", or
+              None without a formula.
+            - contract_keys: The contract_capacities keys the plan bills,
+              sorted. A key outside them warns and is left out.
 
     Example:
         >>> reqs = get_plan_requirements("high_voltage_2_tier")
@@ -284,6 +284,8 @@ def get_plan_requirements(plan_name: str) -> dict[str, Any]:
         True
         >>> sorted(reqs["valid_basic_fee_labels"])
         ['經常契約', '週六半尖峰契約', '離峰契約', '非夏月契約']
+        >>> reqs["contract_keys"]
+        ['non_summer', 'off_peak', 'regular', 'saturday_semi_peak']
     """
     store = PlanStore()
     plan_data = store.resolve_plan(plan_name)
@@ -295,6 +297,7 @@ def get_plan_requirements(plan_name: str) -> dict[str, Any]:
         "valid_basic_fee_labels": list(requirements.valid_basic_fee_labels),
         "uses_basic_fee_formula": requirements.uses_basic_fee_formula,
         "formula_type": requirements.formula_type,
+        "contract_keys": sorted(requirements.contract_keys),
     }
 
 

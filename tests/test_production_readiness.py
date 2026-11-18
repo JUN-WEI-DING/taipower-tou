@@ -47,6 +47,16 @@ from taipower_tou import (
     calculate_bill,
 )
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # bills that cover part of a month
+    pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
+    # dates outside the bundled price table
+    pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedPriceWarning"),
+    # years Taipower has no off-peak days for yet
+    pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedYearWarning"),
+]
+
 # =============================================================================
 # CATEGORY 1: Security & Input Validation Tests
 # =============================================================================

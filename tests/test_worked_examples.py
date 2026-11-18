@@ -18,6 +18,12 @@ import pytest
 
 import taipower_tou as tou
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # a plan with a 底度 and no meter details
+    pytest.mark.filterwarnings("ignore:Plan .* has minimum usage rules"),
+]
+
 AUGUST = pd.date_range("2026-08-01", "2026-08-31 23:45", freq="15min")
 CALENDAR = Path(__file__).parent / "data" / "taipower_calendar" / "2026.csv"
 DAY_TYPES = pd.read_csv(CALENDAR, index_col="date")["day_type"]
@@ -84,15 +90,10 @@ BATCH = {
 
 def _contracts(regular, saturday_semi_peak=0):
     """A 經常契約, and a 週六半尖峰契約 where the page has one. No other."""
-    return {
-        "contract_capacities": {
-            "regular": regular,
-            "non_summer": 0,
-            "semi_peak": 0,
-            "saturday_semi_peak": saturday_semi_peak,
-            "off_peak": 0,
-        }
-    }
+    contracts = {"regular": regular}
+    if saturday_semi_peak:
+        contracts["saturday_semi_peak"] = saturday_semi_peak
+    return {"contract_capacities": contracts}
 
 
 def _usage(hours, kwh, designated=()):

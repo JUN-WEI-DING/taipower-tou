@@ -487,7 +487,7 @@ A 三段式 bill has 半尖峰契約 in place of 非夏月契約, in both season
 | `"saturday_semi_peak"` | 週六半尖峰契約 | The plans with `"non_summer"` or `"semi_peak"`, except `low_voltage_power` |
 | `"off_peak"` | 離峰契約 | The plans with `"non_summer"` or `"semi_peak"`, except `low_voltage_power` |
 
-The EV plans take `"regular"` alone. `basic_fee_inputs` takes a 裝置契約 in kW for `low_voltage_power` and `low_voltage_2_tier` billed by installed capacity, and the household count of a 按戶計收 fee, 1 by default. On 簡易型 the household count's key is `"basic_fee"`. `get_plan_requirements(plan_id)["valid_basic_fee_labels"]` lists a plan's labels.
+The EV plans take `"regular"` alone. `basic_fee_inputs` takes a 裝置契約 in kW for `low_voltage_power` and `low_voltage_2_tier` billed by installed capacity, and the household count of a 按戶計收 fee, 1 by default. On 簡易型 the household count's key is `"basic_fee"`. `get_plan_requirements(plan_id)` lists a plan's labels in `"valid_basic_fee_labels"` and its `contract_capacities` keys in `"contract_keys"`.
 
 A bill pays one 按戶計收 fee, chosen by its contract type and `meter_phase`. 標準型 charges 129.10 TWD single-phase and 262.50 three-phase. `low_voltage_2_tier` charges 105.00 with a 裝置契約 and 262.50 with a 需量契約. `low_voltage_three_stage`, `low_voltage_ev` and `high_voltage_ev` charge 262.50. 簡易型 charges 75.00 a month. The 表燈非時間 plans have no basic fee.
 
@@ -727,7 +727,7 @@ Readings outside the bills of `usage` are not billed.
 - `available_plans()` returns `{plan_id: 中文名稱}` for the 18 plans.
 - `plan(name)` returns a `TariffPlan`. `name` is a plan ID, its name in `available_plans()`, or the plan's full name (`tou.plan(plan_id).name`), ignoring case and surrounding spaces. Part of a name works when no other plan contains it, so `"住宅用"` names `residential_non_tou`, while `"批次"` is in two plans' names. A name that matches no plan or more than one raises `UnknownPlanError`. `calculate_bill` and the other functions that take a plan name match it the same way.
 - `plan_details(name)` and `TariffPlan.describe()` return a plan's seasons, day types, schedules and prices.
-- `get_plan_requirements(name)` says whether a plan needs a contract or meter details and lists its `basic_fee_inputs` labels. `PlanRequirements` holds the same fields.
+- `get_plan_requirements(name)` says whether a plan needs a contract or meter details and lists its `basic_fee_inputs` labels and `contract_capacities` keys. `PlanRequirements` holds the same fields.
 - `TariffFactory` builds a `TariffPlan` from the bundled data with a calendar of your choice.
 
 ### Time and price (時段與費率)
@@ -888,7 +888,7 @@ The tests check these:
 - Each clause of the 電價表's 第三、四、五、八章 and of every chapter of the 營業規章 and its 施行細則 (`tests/data/clauses/`). A clause that changes a bill names its tests, and the others say why no bill depends on them.
 - The worked bills in Taipower's 各類電價表及計算範例, bills computed two ways that must agree, and the Python examples in this README and `docs/api_zh.md`.
 
-CI runs the tests on Python 3.9 to 3.13, and runs ruff, mypy and four scripts in `examples/`.
+CI runs the tests on Python 3.9 to 3.13 and on the oldest pandas and numpy they support, and runs ruff and mypy. The tests run every script in `examples/`.
 
 ## Acknowledgements (致謝)
 

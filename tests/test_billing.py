@@ -6,6 +6,14 @@ import pytest
 
 import taipower_tou as tou
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # bills that cover part of a month
+    pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
+    # readings a whole number of days apart
+    pytest.mark.filterwarnings("ignore:Usage timestamps are"),
+]
+
 
 def test_calculate_bill_basic_fee() -> None:
     index = pd.to_datetime(["2025-07-15 10:00", "2025-07-15 23:00"])

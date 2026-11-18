@@ -10,6 +10,8 @@ DOCS = ["README.md", "docs/api_zh.md"]
 FENCE = re.compile(r"^```(python|csv)\n(.*?)^```", re.M | re.S)
 
 
+# README's demand example shows the warning hourly demand gives.
+@pytest.mark.filterwarnings("ignore:Demand data resolution")
 @pytest.mark.parametrize("doc", DOCS)
 def test_python_blocks_run_in_order(doc, tmp_path, monkeypatch):
     """Blocks share one namespace, like a reader pasting them into one session.

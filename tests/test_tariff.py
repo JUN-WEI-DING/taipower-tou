@@ -14,6 +14,12 @@ from taipower_tou import (
 from taipower_tou.calendar import TaiwanCalendar
 from taipower_tou.tariff import PeriodType, SeasonType
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # dates outside the bundled price table
+    pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedPriceWarning"),
+]
+
 
 def test_residential_simple_2_tier_periods() -> None:
     calendar = TaiwanCalendar()

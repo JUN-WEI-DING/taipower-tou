@@ -45,6 +45,12 @@ from test_worked_examples import _usage as worked_usage
 
 import taipower_tou as tou
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # contracts the plan does not bill
+    pytest.mark.filterwarnings("ignore:Plan .* bills no"),
+]
+
 SEASONS = ("summer", "non_summer")
 DAYS = ("weekday", "saturday", "offpeak")
 FIRST_DAY, LAST_DAY = date(2025, 10, 1), date(2026, 12, 31)

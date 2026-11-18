@@ -20,9 +20,18 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+import pytest
 
 import taipower_tou as tou
 from taipower_tou.errors import InvalidUsageInput, TariffError
+
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # bills that cover part of a month
+    pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
+    # dates outside the bundled price table
+    pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedPriceWarning"),
+]
 
 # =============================================================================
 # TEST 1: Extreme Data Volumes

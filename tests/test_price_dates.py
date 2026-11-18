@@ -6,8 +6,14 @@ import pandas as pd
 import pytest
 
 import taipower_tou as tou
-from taipower_tou.rates import TariffJSONLoader
+from taipower_tou.factory import PlanStore
 from taipower_tou.tariff import _warn_outside_price_dates
+
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # bills that cover part of a month
+    pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
+]
 
 INPUTS = tou.BillingInputs(
     taipower_rounding=False, meter_phase="single", meter_voltage_v=110, meter_ampere=10
@@ -66,7 +72,7 @@ def test_price_dates_use_taiwan_local_time():
 
 
 def test_price_dates_start_on_the_table_version():
-    data = TariffJSONLoader().load()
+    data = PlanStore()._load()
     assert data["price_dates"]["effective_from"].replace("-", "") == data["version"]
 
 

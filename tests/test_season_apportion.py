@@ -12,6 +12,12 @@ import taipower_tou as tou
 from taipower_tou import BillingCycleType
 from taipower_tou.tariff import tiered_energy_cost
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # bills that cover part of a month
+    pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
+]
+
 SUMMER_350 = 1.78 * 240 + 2.55 * 110
 NON_SUMMER_350 = 1.78 * 240 + 2.26 * 110
 SEP_OCT_350 = SUMMER_350 * 30 / 61 + NON_SUMMER_350 * 31 / 61

@@ -253,17 +253,6 @@ class BillingInputs:
         )
 
 
-def _contract_keys(formula_type: str | None) -> set[str]:
-    """The contract_capacities keys a basic fee formula bills."""
-    if formula_type == "two_stage":
-        return {"regular", "non_summer", "saturday_semi_peak", "off_peak"}
-    if formula_type == "three_stage":
-        return {"regular", "semi_peak", "saturday_semi_peak", "off_peak"}
-    if formula_type == "regular_only":
-        return {"regular"}
-    return set()
-
-
 def _number(value: Any) -> float:
     """A real number as a float, and anything else as NaN, which every range
     check refuses."""
@@ -374,7 +363,7 @@ def _validate_billing_inputs(
     requirements = PlanRequirements.from_rules(rules)
     warnings = []
     contracts = inputs.contract_capacities
-    contract_keys = _contract_keys(requirements.formula_type)
+    contract_keys = requirements.contract_keys
 
     if requirements.requires_contract_capacity and not contracts:
         raise MissingRequiredInput(

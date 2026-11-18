@@ -17,6 +17,14 @@ import taipower_tou as tou
 from taipower_tou.models import BillingCycleType
 from taipower_tou.tariff import _billing_period_group_index
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # bills that cover part of a month
+    pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
+    # readings a whole number of days apart
+    pytest.mark.filterwarnings("ignore:Usage timestamps are"),
+]
+
 
 class TestBillingCycleGrouping:
     """Test month grouping for ODD_MONTH and EVEN_MONTH billing cycles."""

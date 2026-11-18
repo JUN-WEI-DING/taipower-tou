@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TariffPlan` and `TariffProfile` have `period_at`, `period_context` and
   `period_codes`, so a plan built with `build_tariff_profile` needs no
   plan name.
+- `get_plan_requirements` gives `"contract_keys"`, the
+  `contract_capacities` keys the plan bills.
 
 ### Deprecated
 Each still works in 0.3.0, warns `DeprecationWarning` with what to write
@@ -54,7 +56,8 @@ given, where 0.2.0 ignored them silently.
   `preload_years`; the engine no longer reads the strategy's `_calendar`.
 - `docs/詳細電價表.pdf` is gone; the one copy is
   `src/taipower_tou/data/詳細電價表.pdf`.
-
+- `taipower_tou.rates` is gone. Its `TariffJSONLoader` read `plans.json`
+  for `PlanStore`, which now reads the file itself.
 - It needs pandas 2.0.3 and numpy 1.24.4 or later, the oldest versions
   its tests pass on. It claimed pandas 1.5, where 63 tests failed. CI runs
   the tests on those oldest versions too.

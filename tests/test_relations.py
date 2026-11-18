@@ -11,6 +11,14 @@ import pytest
 import taipower_tou as tou
 from taipower_tou import BillingCycleType
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # contracts the plan does not bill
+    pytest.mark.filterwarnings("ignore:Plan .* bills no"),
+    # a plan with a 底度 and no meter details
+    pytest.mark.filterwarnings("ignore:Plan .* has minimum usage rules"),
+]
+
 TIERED = [
     "residential_non_tou",
     "lighting_non_business_tiered",

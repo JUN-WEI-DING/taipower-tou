@@ -4,8 +4,17 @@ import time as time_module
 from datetime import datetime
 
 import pandas as pd
+import pytest
 
 import taipower_tou as tou
+
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # bills that cover part of a month
+    pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
+    # years Taipower has no off-peak days for yet
+    pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedYearWarning"),
+]
 
 
 def test_different_data_sizes():

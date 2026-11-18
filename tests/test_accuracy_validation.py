@@ -16,6 +16,14 @@ import pytest
 import taipower_tou as tou
 from taipower_tou import BillingInputs, calculate_bill
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # bills that cover part of a month
+    pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
+    # dates outside the bundled price table
+    pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedPriceWarning"),
+]
+
 # =============================================================================
 # Residential Simple 2-Tier Plan (簡易型二段式) Accuracy Tests
 # =============================================================================

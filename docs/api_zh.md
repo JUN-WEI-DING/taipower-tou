@@ -25,7 +25,7 @@
 - `available_plans()` 回傳 `{plan_id: 中文名稱}`，共 18 個方案。
 - `plan(name, calendar_instance=None, billing_cycle_type=BillingCycleType.MONTHLY)` 回傳 `TariffPlan`。`billing_cycle_type` 只影響累進電價方案的 `calculate_costs` 與 `monthly_breakdown`。`high_voltage_ev` 的單價是低壓電動車電價的 95%。
 - `plan_details(plan_name)` 回傳 `TariffPlan.describe()`，含時段表 `profile` 與費率表 `rates`。
-- `get_plan_requirements(plan_name)` 回傳 dict，鍵為 `requires_contract_capacity`（高壓、特高壓方案必填契約容量）、`requires_meter_spec`（表燈非時間方案的底度需電表規格）、`valid_basic_fee_labels`、`uses_basic_fee_formula` 與 `formula_type`（`two_stage`、`three_stage`、`regular_only` 或 `None`）。
+- `get_plan_requirements(plan_name)` 回傳 dict，鍵為 `requires_contract_capacity`（高壓、特高壓方案必填契約容量）、`requires_meter_spec`（表燈非時間方案的底度需電表規格）、`valid_basic_fee_labels`、`uses_basic_fee_formula`、`formula_type`（`two_stage`、`three_stage`、`regular_only` 或 `None`）與 `contract_keys`（方案計費的 `contract_capacities` 鍵，已排序；其他鍵會警告並略過）。
 - `PlanRequirements` 是同樣欄位的 dataclass（`valid_basic_fee_labels` 為 set）。`PlanRequirements.from_plan_data(plan_data)` 從 `plans.json` 的一個方案建立。
 
 ## 時段查詢

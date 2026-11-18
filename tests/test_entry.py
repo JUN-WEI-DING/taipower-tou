@@ -1,3 +1,4 @@
+import warnings
 from datetime import date, datetime, time
 
 import pandas as pd
@@ -126,3 +127,36 @@ def test_get_plan_requirements_supports_chinese_name() -> None:
     req = tou.get_plan_requirements("簡易型二段式")
     assert "requires_contract_capacity" in req
     assert "valid_basic_fee_labels" in req
+
+
+@pytest.mark.parametrize("plan_id", sorted(tou.available_plans()))
+def test_contract_keys_are_what_the_bill_takes(plan_id: str) -> None:
+    """A bill takes each of contract_keys without a warning and warns of a
+    key outside them."""
+    keys = tou.get_plan_requirements(plan_id)["contract_keys"]
+    usage = pd.Series(
+        1.0, index=pd.date_range("2026-07-01", "2026-08-31 23:00", freq="h")
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        tou.calculate_bill(
+            usage,
+            plan_id,
+            tou.BillingInputs(
+                contract_capacities=dict.fromkeys(keys, 100.0),
+                meter_phase="single",
+                meter_voltage_v=110,
+                meter_ampere=30,
+            ),
+        )
+    with pytest.warns(UserWarning, match="bills no"):
+        tou.calculate_bill(
+            usage,
+            plan_id,
+            tou.BillingInputs(
+                contract_capacities={**dict.fromkeys(keys, 100.0), "unknown": 1.0},
+                meter_phase="single",
+                meter_voltage_v=110,
+                meter_ampere=30,
+            ),
+        )
