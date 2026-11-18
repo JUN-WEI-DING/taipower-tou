@@ -9,7 +9,6 @@
 - 內建電價是台電 114/10/1 生效的電價表，電價費率審議會決議維持到 2026-12-31。用電日期早於 2025-10-01 時發出一次 `UncheckedPriceWarning`，晚於 2026-12-31 時再發出一次。電價表附錄一、附錄二的用戶（例如凍漲行業、年用電 5 億度以上公司、IDC、農漁業、學校、社福團體）電價不同，本套件不含。
 - 支援 2014–2100 年。其他年份拋出 `CalendarError`，請改傳 `calendar_instance=custom_calendar(...)`。
 - 方案名稱可用 `available_plans()` 的 ID 或中文名稱、`plans.json` 的全名或舊版 README 的名稱，不分大小寫，忽略前後空白。完全相符優先，否則只有一個方案的 ID 或名稱包含該字串時才相符。
-- 引數 `cache_dir`、`api_timeout` 已無作用，傳入時發出 `DeprecationWarning`，仍可傳入。
 - 所有警告都指向呼叫端的程式行。
 
 ## 行事曆
@@ -173,6 +172,5 @@ print(plan.pricing_context(datetime(2025, 7, 1, 13, 0)))
 
 - `UncheckedPriceWarning`、`UncheckedYearWarning` 與 `PartialPeriodWarning` 都是 `UserWarning`，觸發條件見上。
 - `calculate_bill` 的其他輸入警告是 `UserWarning`，見「帳單」。
-- `cache_dir`、`api_timeout` 發出 `DeprecationWarning`。
 
 `__version__` 是套件版本字串。

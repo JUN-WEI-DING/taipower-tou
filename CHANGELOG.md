@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+Each warned `DeprecationWarning` in 0.3.0. Calling one now raises
+`AttributeError` or `TypeError`.
+
+| Removed | Write instead |
+| --- | --- |
+| `get_period(target, profile)` | `profile.period_at(target)` |
+| `get_context(target, profile)` | `profile.period_context(target)` |
+| `calculate_costs(usage, plan)` | `plan.calculate_costs(usage)` |
+| `residential_simple_2_tier_plan()`, `high_voltage_2_tier_plan()`, `residential_non_tou_plan()` | `plan("residential_simple_2_tier")` and so on |
+| `calculate_bill_simple(usage, plan_id)` | `calculate_bill(usage, plan_id)` |
+| `calculate_bill_from_list(usage, plan_id, start, freq)` | `calculate_bill(pd.Series(usage, index=pd.date_range(start, periods=len(usage), freq=freq)), plan_id)` |
+| `calculate_bill_from_dict(usage, plan_id)` | `calculate_bill(pd.Series(list(usage.values()), index=pd.to_datetime(list(usage))), plan_id)` |
+| `cache_dir` and `api_timeout` on every function | leave them out |
+
+### Changed
+- `strict` on `calculate_bill` and `calculate_bill_breakdown`, and
+  `billing_cycle_type` on `plan` and `monthly_breakdown`, are keyword-only.
+  With `cache_dir` and `api_timeout` gone, 0.3.0 code that passed those
+  positionally would otherwise pass them as `strict` or
+  `billing_cycle_type`; it now raises `TypeError`.
+
 ## [0.3.0] - 2026-11-18
 
 ### Added

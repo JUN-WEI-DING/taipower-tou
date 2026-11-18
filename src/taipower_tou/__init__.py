@@ -2,17 +2,12 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
-from taipower_tou._warnings import deprecated, unused_calendar_args
 from taipower_tou.billing import (
     BillingInputs,
     calculate_bill,
     calculate_bill_breakdown,
-    calculate_bill_from_dict,
-    calculate_bill_from_list,
-    calculate_bill_simple,
 )
 from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar
 from taipower_tou.custom import (
@@ -46,76 +41,21 @@ from taipower_tou.tariff import (
     TaiwanSeasonStrategy,
     TariffPlan,
     TariffProfile,
-    get_context,
-    get_period,
 )
 
 __version__ = "0.3.0"
 
 
-def calculate_costs(usage: Any, plan: TariffPlan) -> Any:
-    """Deprecated: plan.calculate_costs(usage)."""
-    deprecated("calculate_costs(usage, plan)", "Use plan.calculate_costs(usage).")
-    return plan.calculate_costs(usage)
-
-
 def is_holiday(
     target: object,
     calendar: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
 ) -> bool:
     """Whether target is a 離峰日 on calendar, taiwan_calendar() by default.
 
     See TaiwanCalendar.is_holiday.
     """
-    unused_calendar_args(cache_dir, api_timeout)
     calendar_instance = calendar or taiwan_calendar()
     return calendar_instance.is_holiday(target)
-
-
-def residential_simple_2_tier_plan(
-    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
-) -> TariffPlan:
-    """plan("residential_simple_2_tier")."""
-    deprecated(
-        "residential_simple_2_tier_plan()", 'Use plan("residential_simple_2_tier").'
-    )
-    return plan(
-        "residential_simple_2_tier",
-        calendar_instance,
-        cache_dir,
-        api_timeout,
-    )
-
-
-def high_voltage_2_tier_plan(
-    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
-) -> TariffPlan:
-    """plan("high_voltage_2_tier")."""
-    deprecated("high_voltage_2_tier_plan()", 'Use plan("high_voltage_2_tier").')
-    return plan("high_voltage_2_tier", calendar_instance, cache_dir, api_timeout)
-
-
-def residential_non_tou_plan(
-    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
-    billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
-) -> TariffPlan:
-    """plan("residential_non_tou", billing_cycle_type=billing_cycle_type)."""
-    deprecated("residential_non_tou_plan()", 'Use plan("residential_non_tou").')
-    return plan(
-        "residential_non_tou",
-        calendar_instance,
-        cache_dir,
-        api_timeout,
-        billing_cycle_type,
-    )
 
 
 def available_plans() -> dict[str, str]:
@@ -128,8 +68,7 @@ def available_plans() -> dict[str, str]:
 def plan(
     name: str,
     calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
+    *,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
 ) -> TariffPlan:
     """The tariff plan that name names.
@@ -142,8 +81,6 @@ def plan(
             part of exactly one plan's ID or name.
         calendar_instance: Decides 離峰日. Defaults to taiwan_calendar(),
             which covers 2014-2100.
-        cache_dir: Deprecated. It has no effect and warns.
-        api_timeout: Deprecated. It has no effect and warns.
         billing_cycle_type: How calculate_costs and monthly_breakdown pair
             months on a tiered plan. Time-of-use plans ignore it.
 
@@ -157,7 +94,6 @@ def plan(
         >>> plan = tou.plan("residential_non_tou",
         ...                 billing_cycle_type=BillingCycleType.ODD_MONTH)
     """
-    unused_calendar_args(cache_dir, api_timeout)
     calendar = calendar_instance or taiwan_calendar()
     return TariffFactory.create(
         name, calendar=calendar, billing_cycle_type=billing_cycle_type
@@ -168,10 +104,8 @@ def period_at(
     target: object,
     plan_name: str,
     calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
 ) -> Any:
-    selected_plan = plan(plan_name, calendar_instance, cache_dir, api_timeout)
+    selected_plan = plan(plan_name, calendar_instance)
     return selected_plan.period_at(target)
 
 
@@ -179,10 +113,8 @@ def period_context(
     target: object,
     plan_name: str,
     calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
 ) -> Any:
-    selected_plan = plan(plan_name, calendar_instance, cache_dir, api_timeout)
+    selected_plan = plan(plan_name, calendar_instance)
     return selected_plan.period_context(target)
 
 
@@ -210,10 +142,8 @@ def costs(
     usage: Any,
     plan_name: str,
     calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
 ) -> Any:
-    selected_plan = plan(plan_name, calendar_instance, cache_dir, api_timeout)
+    selected_plan = plan(plan_name, calendar_instance)
     return selected_plan.calculate_costs(usage)
 
 
@@ -222,12 +152,11 @@ def monthly_breakdown(
     plan_name: str,
     include_shares: bool = False,
     calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
+    *,
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
 ) -> Any:
     selected_plan = plan(
-        plan_name, calendar_instance, cache_dir, api_timeout, billing_cycle_type
+        plan_name, calendar_instance, billing_cycle_type=billing_cycle_type
     )
     return selected_plan.monthly_breakdown(usage, include_shares=include_shares)
 
@@ -235,10 +164,8 @@ def monthly_breakdown(
 def plan_details(
     plan_name: str,
     calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
 ) -> dict[str, Any]:
-    selected_plan = plan(plan_name, calendar_instance, cache_dir, api_timeout)
+    selected_plan = plan(plan_name, calendar_instance)
     return selected_plan.describe()
 
 
@@ -248,10 +175,8 @@ def pricing_context(
     usage: Any = None,
     include_details: bool = False,
     calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
 ) -> Any:
-    selected_plan = plan(plan_name, calendar_instance, cache_dir, api_timeout)
+    selected_plan = plan(plan_name, calendar_instance)
     return selected_plan.pricing_context(
         target,
         usage_kwh=usage,
@@ -314,13 +239,7 @@ __all__ = [
     "taiwan_calendar",
     "custom_calendar",
     "available_plans",
-    "calculate_costs",
-    "get_context",
-    "get_period",
     "is_holiday",
-    "high_voltage_2_tier_plan",
-    "residential_non_tou_plan",
-    "residential_simple_2_tier_plan",
     "period_at",
     "period_context",
     "period_codes",
@@ -349,9 +268,6 @@ __all__ = [
     "BillingInputs",
     "calculate_bill",
     "calculate_bill_breakdown",
-    "calculate_bill_simple",
-    "calculate_bill_from_list",
-    "calculate_bill_from_dict",
     "PlanRequirements",
     "__version__",
 ]

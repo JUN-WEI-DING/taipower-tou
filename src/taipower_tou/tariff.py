@@ -12,7 +12,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from taipower_tou._warnings import deprecated, warn
+from taipower_tou._warnings import warn
 from taipower_tou.calendar import (
     preload_calendar_years,
     taiwan_wall_datetime,
@@ -432,18 +432,6 @@ def _object_array(values: list[Any]) -> npt.NDArray[np.object_]:
     return out
 
 
-def get_period(target: object, profile: TariffProfile) -> PeriodType | str | pd.Series:
-    """Deprecated: profile.period_at(target)."""
-    deprecated("get_period(target, profile)", "Use profile.period_at(target).")
-    return profile.period_at(target)
-
-
-def get_context(target: object, profile: TariffProfile) -> Any:
-    """Deprecated: profile.period_context(target)."""
-    deprecated("get_context(target, profile)", "Use profile.period_context(target).")
-    return profile.period_context(target)
-
-
 class TariffPlan:
     def __init__(
         self,
@@ -836,6 +824,4 @@ __all__ = [
     "TaiwanDayTypeStrategy",
     "TaiwanSeasonStrategy",
     "TimeSlot",
-    "get_period",
-    "get_context",
 ]

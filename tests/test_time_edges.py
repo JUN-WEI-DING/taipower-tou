@@ -555,12 +555,6 @@ def test_empty_usage_raises_invalid_usage_input(entry):
         ENTRY_POINTS[entry](EMPTY)
 
 
-def test_empty_usage_dict_raises_invalid_usage_input():
-    """CHANGELOG 0.2.0: An empty usage series raises InvalidUsageInput."""
-    with pytest.raises(tou.InvalidUsageInput), pytest.warns(DeprecationWarning):
-        tou.calculate_bill_from_dict({}, "residential_simple_2_tier")
-
-
 def _bad_usage(kind):
     usage = pd.Series(1.0, index=JULY_HOURLY)
     if kind == "unsorted":

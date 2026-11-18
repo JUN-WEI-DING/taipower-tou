@@ -1,4 +1,4 @@
-"""Every script in examples/ runs as written, without a deprecated call."""
+"""Every script in examples/ runs as written."""
 
 import runpy
 from pathlib import Path

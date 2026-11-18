@@ -5,8 +5,6 @@ from __future__ import annotations
 import math
 import numbers
 from dataclasses import dataclass, field, replace
-from datetime import date
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -459,8 +457,7 @@ def calculate_bill(
     plan_id: str,
     inputs: BillingInputs | None = None,
     calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
+    *,
     strict: bool = False,
 ) -> pd.DataFrame:
     """Each bill's energy_cost, basic_cost, surcharge (加計), adjustment and
@@ -475,33 +472,8 @@ def calculate_bill(
     an input the plan does not bill, or a contract or meter it needs.
     calculate_bill_breakdown itemizes adjustment.
     """
-    summary = _bill(
-        usage, plan_id, inputs, calendar_instance, cache_dir, api_timeout, strict
-    )["summary"]
+    summary = _bill(usage, plan_id, inputs, calendar_instance, strict)["summary"]
     return summary.drop(columns="min_fee_adjustment")
-
-
-def calculate_bill_simple(
-    usage: pd.Series,
-    plan_id: str,
-    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
-    strict: bool = False,
-) -> pd.DataFrame:
-    """Deprecated: calculate_bill without BillingInputs."""
-    _warnings.deprecated(
-        "calculate_bill_simple(usage, plan_id)", "Use calculate_bill(usage, plan_id)."
-    )
-    return calculate_bill(
-        usage,
-        plan_id,
-        inputs=None,
-        calendar_instance=calendar_instance,
-        cache_dir=cache_dir,
-        api_timeout=api_timeout,
-        strict=strict,
-    )
 
 
 def calculate_bill_breakdown(
@@ -509,8 +481,7 @@ def calculate_bill_breakdown(
     plan_id: str,
     inputs: BillingInputs | None = None,
     calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
+    *,
     strict: bool = False,
 ) -> dict[str, pd.DataFrame]:
     """calculate_bill's bills with their details, as a dict of frames.
@@ -529,8 +500,6 @@ def calculate_bill_breakdown(
         plan_id,
         inputs,
         calendar_instance,
-        cache_dir,
-        api_timeout,
         strict,
         detailed=True,
     )
@@ -541,8 +510,6 @@ def _bill(
     plan_id: str,
     inputs: BillingInputs | None,
     calendar_instance: TaiwanCalendar | CustomCalendar | None,
-    cache_dir: Path | None,
-    api_timeout: int | None,
     strict: bool,
     detailed: bool = False,
 ) -> dict[str, pd.DataFrame]:
@@ -557,7 +524,6 @@ def _bill(
     inputs, cycle_months = _parse_inputs(rules, inputs or BillingInputs(), strict)
     _check_usage_resolution(rules, usage)
 
-    _warnings.unused_calendar_args(cache_dir, api_timeout)
     calendar = calendar_instance or taiwan_calendar()
 
     local = taiwan_wall_time(usage.index)
@@ -1454,120 +1420,3 @@ def _calculate_period_costs(
         }
     )
     return rows.groupby(columns[:3], sort=False, as_index=False)[columns[3:]].sum()
-
-
-def _normalize_usage_to_series(
-    usage: Any,
-    start: Any = None,
-    freq: str | None = None,
-) -> pd.Series:
-    """usage as a Series on a DatetimeIndex. A list needs start and freq, and
-    a dict maps timestamps to kWh."""
-    if isinstance(usage, pd.Series):
-        if not isinstance(usage.index, pd.DatetimeIndex):
-            raise InvalidUsageInput("usage index must be a pandas.DatetimeIndex")
-        return usage
-
-    if isinstance(usage, list):
-        if start is None:
-            raise InvalidUsageInput(
-                "start parameter is required when usage is a list. "
-                "Example: start='2024-01-01'"
-            )
-        if freq is None:
-            raise InvalidUsageInput(
-                "freq parameter is required when usage is a list. "
-                "Example: freq='1h' or freq='15min'"
-            )
-        index = pd.date_range(start=start, periods=len(usage), freq=freq)
-        return pd.Series(usage, index=index)
-
-    if isinstance(usage, dict):
-        try:
-            index = pd.to_datetime(list(usage.keys()))
-        except Exception as e:
-            raise InvalidUsageInput(f"Cannot convert dict keys to datetime: {e}")
-        return pd.Series(list(usage.values()), index=index)
-
-    raise InvalidUsageInput(
-        f"usage must be pd.Series, list, or dict, got {type(usage).__name__}"
-    )
-
-
-def calculate_bill_from_list(
-    usage: list[float],
-    plan_id: str,
-    start: str | date,
-    freq: str = "1h",
-    inputs: BillingInputs | None = None,
-    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
-    strict: bool = False,
-) -> pd.DataFrame:
-    """calculate_bill for kWh readings that start at start, one every freq.
-
-    freq is a pandas frequency such as "15min" or "1h". Time-of-use plans
-    need "1h" or finer.
-
-    Example:
-        result = calculate_bill_from_list(
-            usage=[1.0, 1.5, 2.0, 1.8, ...],
-            plan_id="residential_simple_2_tier",
-            start="2026-07-01",
-            freq="1h",
-        )
-    """
-    _warnings.deprecated(
-        "calculate_bill_from_list(usage, plan_id, start, freq)",
-        "Use calculate_bill(pd.Series(usage, index=pd.date_range(start, "
-        "periods=len(usage), freq=freq)), plan_id).",
-    )
-    series = _normalize_usage_to_series(usage, start=start, freq=freq)
-    return calculate_bill(
-        series,
-        plan_id,
-        inputs=inputs,
-        calendar_instance=calendar_instance,
-        cache_dir=cache_dir,
-        api_timeout=api_timeout,
-        strict=strict,
-    )
-
-
-def calculate_bill_from_dict(
-    usage: dict[str | date, float],
-    plan_id: str,
-    inputs: BillingInputs | None = None,
-    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
-    cache_dir: Path | None = None,
-    api_timeout: int | None = None,
-    strict: bool = False,
-) -> pd.DataFrame:
-    """calculate_bill for a dict of timestamp, as a string or datetime, to kWh.
-
-    Example:
-        result = calculate_bill_from_dict(
-            usage={
-                "2026-07-01 00:00": 1.0,
-                "2026-07-01 01:00": 1.5,
-                "2026-07-01 02:00": 2.0,
-            },
-            plan_id="residential_simple_2_tier",
-        )
-    """
-    _warnings.deprecated(
-        "calculate_bill_from_dict(usage, plan_id)",
-        "Use calculate_bill(pd.Series(list(usage.values()), "
-        "index=pd.to_datetime(list(usage))), plan_id).",
-    )
-    series = _normalize_usage_to_series(usage)
-    return calculate_bill(
-        series,
-        plan_id,
-        inputs=inputs,
-        calendar_instance=calendar_instance,
-        cache_dir=cache_dir,
-        api_timeout=api_timeout,
-        strict=strict,
-    )

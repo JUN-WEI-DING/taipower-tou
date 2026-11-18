@@ -38,14 +38,6 @@ def test_every_entry_point_refuses_unsupported_years(plan, year) -> None:
     assert len(tou.costs(usage, plan, calendar_instance=tou.custom_calendar())) == 1
 
 
-@pytest.mark.parametrize(
-    "kwargs", [{"cache_dir": "unused"}, {"api_timeout": 5}], ids=["cache_dir", "api"]
-)
-def test_removed_download_options_warn(kwargs) -> None:
-    with pytest.warns(DeprecationWarning):
-        tou.taiwan_calendar(**kwargs)
-
-
 def test_default_calendar_does_not_warn() -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("error")

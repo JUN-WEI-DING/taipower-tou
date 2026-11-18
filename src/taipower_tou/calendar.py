@@ -7,12 +7,11 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from functools import cache
 from importlib.resources import files
-from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
-from taipower_tou._warnings import unused_calendar_args, warn
+from taipower_tou._warnings import warn
 from taipower_tou.errors import CalendarError, UncheckedYearWarning
 
 # Taipower bills by Taiwan local time, which has been UTC+8 without daylight
@@ -155,11 +154,6 @@ class TaiwanCalendar:
     that falls on a Saturday is still one.
     """
 
-    def __init__(
-        self, cache_dir: Path | None = None, api_timeout: int | None = None
-    ) -> None:
-        unused_calendar_args(cache_dir, api_timeout)
-
     def preload_years(self, years: set[int]) -> None:
         """Validate and compute off-peak days for several years up front."""
         for year in years:
@@ -193,8 +187,5 @@ def preload_calendar_years(calendar: Any, years: set[int]) -> None:
         preload(years)
 
 
-def taiwan_calendar(
-    cache_dir: Path | None = None, api_timeout: int | None = None
-) -> TaiwanCalendar:
-    unused_calendar_args(cache_dir, api_timeout)
+def taiwan_calendar() -> TaiwanCalendar:
     return TaiwanCalendar()

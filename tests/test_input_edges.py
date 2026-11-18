@@ -169,7 +169,7 @@ def test_installed_contract_bill_is_accepted_in_strict_mode():
     """第四章 五(三)1 (line 659): a 裝置契約 time-of-use bill pays 按戶 and per
     kW of 裝置契約, 105.00 + 10 x 137.50 (lines 535-537). Its inputs are
     complete, and strict mode raises only on invalid or missing inputs
-    (calculate_bill_from_list docstring)."""
+    (calculate_bill docstring)."""
     inputs = tou.BillingInputs(basic_fee_inputs={"裝置契約": 10})
     usage = pd.Series(0.25, index=JULY)
     bill = tou.calculate_bill(usage, "low_voltage_2_tier", inputs, strict=True)
@@ -306,31 +306,6 @@ IN_PROCESS_WARNINGS = {
             ),
         ),
     ),
-    "meter-spec/calculate_bill_simple": (
-        UserWarning,
-        lambda: tou.calculate_bill_simple(
-            pd.Series(0.25, index=pd.date_range(JULY[0], periods=1488, freq="h")),
-            "lighting_business_tiered",
-        ),
-    ),
-    "meter-spec/calculate_bill_from_list": (
-        UserWarning,
-        lambda: tou.calculate_bill_from_list(
-            [0.25] * len(JULY_HOURS),
-            "lighting_business_tiered",
-            start="2026-07-01",
-            freq="1h",
-            inputs=tou.BillingInputs(billing_cycle_months=1),
-        ),
-    ),
-    "meter-spec/calculate_bill_from_dict": (
-        UserWarning,
-        lambda: tou.calculate_bill_from_dict(
-            _hourly_july().to_dict(),
-            "lighting_business_tiered",
-            inputs=tou.BillingInputs(billing_cycle_months=1),
-        ),
-    ),
     "demand-resolution/calculate_bill": (
         UserWarning,
         lambda: tou.calculate_bill(
@@ -357,16 +332,6 @@ IN_PROCESS_WARNINGS = {
         UserWarning,
         lambda: _installed_bill(15.0),
     ),
-    "cache-dir/calculate_bill": (
-        DeprecationWarning,
-        lambda: tou.calculate_bill(
-            _hourly_july(), "residential_simple_2_tier", cache_dir=Path(".")
-        ),
-    ),
-    "cache-dir/taiwan_calendar": (
-        DeprecationWarning,
-        lambda: tou.taiwan_calendar(cache_dir=Path(".")),
-    ),
 }
 
 
@@ -390,11 +355,6 @@ FRESH_PROCESS_WARNINGS = {
         "PartialPeriodWarning",
         "tou.calculate_bill(pd.Series(1.0, index=pd.date_range("
         "'2026-07-03', '2026-07-20', freq='h')), 'residential_simple_2_tier')",
-    ),
-    "partial-period/calculate_bill_from_list": (
-        "PartialPeriodWarning",
-        "tou.calculate_bill_from_list([1.0] * 24, 'residential_simple_2_tier', "
-        "start='2026-07-03', freq='1h')",
     ),
     "unchecked-price/calculate_bill": (
         "UncheckedPriceWarning",
@@ -690,14 +650,6 @@ def test_two_readings_at_one_timestamp_are_refused(series):
         demand = pd.Series(100.0, index=_repeated(JULY))
     with pytest.raises(tou.InvalidUsageInput):
         _high_voltage_bill(usage, demand_kw=demand)
-
-
-def test_empty_usage_list_is_refused():
-    """CHANGELOG 0.2.0 Fixed: an empty usage series raises InvalidUsageInput."""
-    with pytest.raises(tou.InvalidUsageInput), pytest.warns(DeprecationWarning):
-        tou.calculate_bill_from_list(
-            [], "residential_simple_2_tier", start="2026-07-01", freq="1h"
-        )
 
 
 @pytest.mark.parametrize(
