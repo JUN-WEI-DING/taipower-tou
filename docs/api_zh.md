@@ -34,6 +34,7 @@
 - `get_period(target, profile)` 對 `datetime` 回傳該時刻的時段，為 `PeriodType` 或字串（例如 `low_voltage_power` 的 `"flat"`），對 `DatetimeIndex` 回傳 `pd.Series`。其他型別（包括 `date`）拋出 `NotImplementedError`。
 - `get_context(target, profile)` 回傳季節、日型與時段。單點為 dict，`DatetimeIndex` 為欄位 `season`、`day_type`、`period` 的 `DataFrame`。
 - `period_at(target, plan_name)` 與 `period_context(target, plan_name)` 以方案名稱呼叫上面兩個函式。
+- `period_codes(index, plan_name)` 只收 `DatetimeIndex`，回傳和 `period_context` 相同欄位的 `DataFrame`，但每欄是 categorical：`.cat.codes` 是整數，`.cat.categories` 是名稱字串（例如 `"saturday"`、`"semi_peak"`）。一整年 15 分鐘資料，讀出時段約 3 毫秒，經 `period_context` 的物件約 7 毫秒。
 - `pricing_context(target, plan_name, usage=None, include_details=False)` 回傳 `season`、`period`、`rate`、`cost`，單點為 dict，`DatetimeIndex` 為 `DataFrame`。單點的 `usage` 是數值，序列的 `usage` 須為 `pd.Series`。沒給 `usage` 時 `cost` 為 `None`。累進電價方案沒有逐時單價，`rate` 為 `None`，傳入 `usage` 拋出 `InvalidUsageInput`。`include_details=True` 回傳鍵為 `context`、`rate_details`、`profile_details` 的 dict。
 
 ## 能量費

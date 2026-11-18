@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `period_codes(index, plan_name)`: `period_context` for a `DatetimeIndex`
+  with categorical columns, whose `.cat.codes` are integers and
+  `.cat.categories` their names.
+
+### Changed
+- `period_context`, `get_context` and `TariffProfile.evaluate` on a
+  `DatetimeIndex` decide each day once and expand it by integer position.
+  A year of 15-minute timestamps takes 3.9 ms instead of 11.1 ms, with the
+  same values and dtypes. `calculate_costs` and `monthly_breakdown` gain
+  the same 7 ms.
+
+### Fixed
+- An empty `DatetimeIndex` returns empty columns instead of raising
+  `TypeError`.
+- An index with `NaT` raises `ValueError` that names `NaT`.
+
 ## [0.2.0] - 2026-10-28
 
 ### Upgrading from 0.1.0

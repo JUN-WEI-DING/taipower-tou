@@ -180,6 +180,26 @@ def period_context(
     return get_context(target, selected_plan.profile)
 
 
+def period_codes(
+    index: Any,
+    plan_name: str,
+    calendar_instance: TaiwanCalendar | CustomCalendar | None = None,
+) -> Any:
+    """period_context for a DatetimeIndex, with categorical columns.
+
+    Each column's `.cat.codes` are integers and its `.cat.categories` their
+    names as strings, such as "summer", "saturday" and "semi_peak".
+
+    Example:
+        >>> idx = pd.date_range("2026-07-18 08:00", periods=2, freq="2h")
+        >>> codes = tou.period_codes(idx, "high_voltage_three_stage")
+        >>> list(codes["period"].astype(str))
+        ['off_peak', 'semi_peak']
+    """
+    selected_plan = plan(plan_name, calendar_instance)
+    return selected_plan.profile.engine.codes(index)
+
+
 def costs(
     usage: Any,
     plan_name: str,
@@ -294,6 +314,7 @@ __all__ = [
     "residential_simple_2_tier_plan",
     "period_at",
     "period_context",
+    "period_codes",
     "pricing_context",
     "plan",
     "plan_details",

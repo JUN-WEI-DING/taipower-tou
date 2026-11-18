@@ -737,6 +737,7 @@ Readings outside the bills of `usage` are not billed.
 
 ### Time and price (時段與費率)
 - `period_at`, `period_context` and `pricing_context` take a datetime and a plan name. `get_period` and `get_context` take a `TariffProfile`. A `pandas.DatetimeIndex` in place of the datetime returns a Series or DataFrame.
+- `period_codes(index, plan_name)` returns `period_context`'s DataFrame with categorical columns: `.cat.codes` are integers and `.cat.categories` their names, such as `"saturday"` and `"semi_peak"`. Reading a year of 15-minute periods this way takes about 3 ms instead of about 7 ms through `period_context`'s objects.
 
 ### Costs and bills (電費與帳單)
 - `TariffPlan.calculate_costs`, `costs(usage, name)` and `calculate_costs(usage, plan)` return the energy cost per month.

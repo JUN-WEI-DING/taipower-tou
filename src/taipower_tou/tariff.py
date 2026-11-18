@@ -210,45 +210,88 @@ class _TariffEngine:
                     self._lookup_table[s_idx, d_idx, :end_min] = p_idx
 
     def evaluate(self, index: pd.DatetimeIndex) -> pd.DataFrame:
+        day_of, seasons, day_types, period = self._by_day(index)
+        return pd.DataFrame(
+            {
+                "season": _object_array(seasons)[day_of],
+                "day_type": _object_array(day_types)[day_of],
+                "period": _object_array(self._period_types)[period],
+            },
+            index=index,
+        )
+
+    def codes(self, index: pd.DatetimeIndex) -> pd.DataFrame:
+        """evaluate as categorical columns named by strings, so a caller reads
+        integer codes instead of one Python object per timestamp."""
+        day_of, seasons, day_types, period = self._by_day(index)
+
+        def column(labels: list[Any], codes: npt.NDArray[Any]) -> pd.Categorical:
+            # A plan's default "off_peak" and PeriodType.OFF_PEAK share a name.
+            # The trailing -1 keeps code -1 (no name) as -1.
+            names = [_label_value(label) for label in labels]
+            categories = list(dict.fromkeys(names))
+            to_category = np.array([categories.index(n) for n in names] + [-1])
+            return pd.Categorical.from_codes(to_category[codes], categories)
+
+        # A season or day type the strategy does not list gets no name (-1).
+        season_codes = np.array(
+            [self._season_map.get(s, -1) for s in seasons], dtype=np.intp
+        )
+        day_type_codes = np.array(
+            [self._day_type_map.get(d, -1) for d in day_types], dtype=np.intp
+        )
+        return pd.DataFrame(
+            {
+                "season": column(self.seasons, season_codes[day_of]),
+                "day_type": column(self.day_types, day_type_codes[day_of]),
+                "period": column(self._period_types, period),
+            },
+            index=index,
+        )
+
+    def _by_day(
+        self, index: pd.DatetimeIndex
+    ) -> tuple[npt.NDArray[np.intp], list[Any], list[Any], npt.NDArray[np.int8]]:
+        """Decide season and day type once per Taiwan day, then each
+        timestamp's period by integer lookup.
+
+        Returns each timestamp's day position, each day's season and day
+        type, and each timestamp's index into _period_types.
+        """
         if pd is None or np is None:
             raise ImportError("pandas and numpy are required for vectorized lookup")
         if not isinstance(index, pd.DatetimeIndex):
             raise TypeError("Index must be a pandas.DatetimeIndex")
 
         local = taiwan_wall_time(index)
+        if local.hasnans:
+            raise ValueError("the index has NaT, which has no period")
         self._preload_calendar_years({int(y) for y in local.year.unique()})
 
-        local_days = local.normalize()
-        unique_dates = pd.Series(local_days.unique())
-
-        date_to_season = unique_dates.dt.date.apply(
-            self.profile.season_strategy.get_season
-        )
-        season_objs = local_days.map(dict(zip(unique_dates, date_to_season)))
-        season_series = pd.Series(season_objs, index=index, name="season")
-        season_codes = (
-            season_objs.map(self._season_map).fillna(0).astype(np.int8).values
-        )
-
+        day_of, days = pd.factorize(local.normalize())
+        dates = days.date
+        seasons = [self.profile.season_strategy.get_season(d) for d in dates]
         day_type_strategy = self.profile.day_type_strategy
         if hasattr(day_type_strategy, "get_day_types_batch"):
-            date_to_day_type = day_type_strategy.get_day_types_batch(unique_dates)
+            day_series = pd.Series(days)
+            by_day = day_type_strategy.get_day_types_batch(day_series)
+            day_types = [by_day[d] for d in day_series]
         else:
-            date_to_day_type = {
-                day: day_type_strategy.get_day_type(day.date()) for day in unique_dates
-            }
-        day_type_objs = local_days.map(date_to_day_type)
-        day_type_series = pd.Series(day_type_objs, index=index, name="day_type")
-        day_type_codes = (
-            day_type_objs.map(self._day_type_map).fillna(0).astype(np.int8).values
+            day_types = [day_type_strategy.get_day_type(d) for d in dates]
+
+        # A season or day type the strategy does not list reads the first's
+        # schedule.
+        season_codes = np.array(
+            [self._season_map.get(s, 0) for s in seasons], dtype=np.int8
         )
-
-        minutes = local.hour * 60 + local.minute
-        period_codes = self._lookup_table[season_codes, day_type_codes, minutes]
-        period_objs = np.array(self._period_types)[period_codes]
-        period_series = pd.Series(period_objs, index=index, name="period")
-
-        return pd.concat([season_series, day_type_series, period_series], axis=1)
+        day_type_codes = np.array(
+            [self._day_type_map.get(d, 0) for d in day_types], dtype=np.int8
+        )
+        minutes = (local.hour * 60 + local.minute).to_numpy()
+        period = self._lookup_table[
+            season_codes[day_of], day_type_codes[day_of], minutes
+        ]
+        return day_of, seasons, day_types, period
 
     def _preload_calendar_years(self, years: set[int]) -> None:
         """Let the calendar check and compute each year once, before the
@@ -284,6 +327,13 @@ class _TariffEngine:
                 if t >= slot.start or t < slot.end:
                     return slot.period_type
         return default_period
+
+
+def _object_array(values: list[Any]) -> npt.NDArray[np.object_]:
+    """values as a 1-D object array, each value kept whole."""
+    out = np.empty(len(values), dtype=object)
+    out[:] = values
+    return out
 
 
 def get_period(target: object, profile: TariffProfile) -> PeriodType | str | pd.Series:
