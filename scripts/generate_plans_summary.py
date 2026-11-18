@@ -1,6 +1,16 @@
+"""Generate src/taipower_tou/data/plans_summary.md from plans.json.
+
+Usage:
+
+    python scripts/generate_plans_summary.py
+    python scripts/generate_plans_summary.py --check
+"""
+
 from __future__ import annotations
 
+import argparse
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -80,7 +90,7 @@ def _format_plans(plans: list[dict]) -> list[str]:
     return lines
 
 
-def main() -> None:
+def render() -> str:
     data = json.loads(PLANS_PATH.read_text(encoding="utf-8"))
     lines: list[str] = []
 
@@ -95,7 +105,23 @@ def main() -> None:
     plans = data.get("plans", [])
     lines.extend(_format_plans(plans))
 
-    SUMMARY_PATH.write_text("\n".join(lines), encoding="utf-8")
+    return "\n".join(lines)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="exit non-zero if the committed summary differs from a fresh render",
+    )
+    content = render()
+    if parser.parse_args().check:
+        if SUMMARY_PATH.read_text(encoding="utf-8") != content:
+            sys.exit(f"{SUMMARY_PATH.relative_to(ROOT)} is stale; rerun the generator")
+        print(f"{SUMMARY_PATH.relative_to(ROOT)} is up to date")
+        return
+    SUMMARY_PATH.write_text(content, encoding="utf-8")
 
 
 if __name__ == "__main__":

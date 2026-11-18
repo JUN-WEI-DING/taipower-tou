@@ -42,6 +42,9 @@ Documentation = "https://github.com/JUN-WEI-DING/taipower-tou#readme"
 test = [
     "pytest",
     "tomli>=1.1.0; python_version < '3.11'",
+    # scripts/generate_festival_dates.py, checked by tests/test_generated_files.py
+    "lunar_python==1.4.8",
+    "astronomy-engine==2.1.19",
 ]
 dev = ["pre-commit", "ruff", "mypy"]
 
