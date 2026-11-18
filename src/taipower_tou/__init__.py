@@ -50,7 +50,7 @@ from taipower_tou.tariff import (
     get_period,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 def calculate_costs(usage: Any, plan: TariffPlan) -> Any:
