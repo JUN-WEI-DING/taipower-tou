@@ -719,43 +719,9 @@ average is multiplied by `demand_adjustment_factor`, cut to the whole kW
 (第二十八條), and counts in the bill, season and time of its own timestamp.
 Readings outside the bills of `usage` are not billed.
 
-## Public API Index (公開 API 總覽)
+## Public API (公開 API)
 
-`taipower_tou` exports every function and class below. `docs/api_zh.md` describes them in 中文.
-
-### Plans (方案)
-- `available_plans()` returns `{plan_id: 中文名稱}` for the 18 plans.
-- `plan(name)` returns a `TariffPlan`. `name` is a plan ID, its name in `available_plans()`, or the plan's full name (`tou.plan(plan_id).name`), ignoring case and surrounding spaces. Part of a name works when no other plan contains it, so `"住宅用"` names `residential_non_tou`, while `"批次"` is in two plans' names. A name that matches no plan or more than one raises `UnknownPlanError`. `calculate_bill` and the other functions that take a plan name match it the same way.
-- `plan_details(name)` and `TariffPlan.describe()` return a plan's seasons, day types, schedules and prices.
-- `get_plan_requirements(name)` says whether a plan needs a contract or meter details and lists its `basic_fee_inputs` labels and `contract_capacities` keys. `PlanRequirements` holds the same fields.
-- `TariffFactory` builds a `TariffPlan` from the bundled data with a calendar of your choice.
-
-### Time and price (時段與費率)
-- `period_at`, `period_context` and `pricing_context` take a datetime and a plan name. `TariffPlan` and `TariffProfile` have `period_at`, `period_context` and `period_codes` methods that take only the time, for a plan you built yourself. A `pandas.DatetimeIndex` in place of the datetime returns a Series or DataFrame.
-- `period_codes(index, plan_name)` returns `period_context`'s DataFrame with categorical columns: `.cat.codes` are integers and `.cat.categories` their names, such as `"saturday"` and `"semi_peak"`. Reading a year of 15-minute periods this way takes about 3 ms instead of about 7 ms through `period_context`'s objects.
-
-### Costs and bills (電費與帳單)
-- `costs(usage, name)` and `TariffPlan.calculate_costs(usage)` return the energy cost per month.
-- `TariffPlan.monthly_breakdown` and `monthly_breakdown(usage, name)` return kWh and cost per month, season and period. `include_shares=True` adds each row's share of its month.
-- `calculate_bill` returns one row per bill.
-- `calculate_bill_breakdown` returns a dict of DataFrames: `summary` (the bill items, `min_fee_adjustment` and `total`), `details` (kWh and energy cost per bill, season and period), `basic_details` (each basic fee's `season`, `share`, `quantity`, `rate` and `cost`) and `adjustment_details` (each 超約, 功率因數 or other adjustment).
-- `BillingInputs` holds a bill's inputs. `BillingInputs.for_high_voltage`, `for_high_voltage_three_stage`, `for_extra_high_voltage`, `for_extra_high_voltage_three_stage`, `for_residential` and `for_lighting_standard` build common ones.
-- `BillingCycleType` is `MONTHLY`, `ODD_MONTH` or `EVEN_MONTH`.
-
-### Calendars (日曆)
-- `taiwan_calendar()` returns a `TaiwanCalendar` of Taipower's off-peak days, and `is_holiday` asks it about a day.
-- `custom_calendar(holidays=..., weekend_days=...)` returns a `CustomCalendar` of your own days. It takes `date` objects, not strings.
-
-### Custom plan builders (自定義方案)
-- `build_tariff_profile`, `build_day_schedule`, `build_tariff_rate` and `build_tariff_plan`, with `TaiwanSeasonStrategy`, `TaiwanDayTypeStrategy` and `WeekdayDayTypeStrategy`. See [Custom Plans](#custom-plans-自定義費率).
-
-### Types & enums (型別與列舉)
-- `TariffPlan`, `TariffProfile`, `PeriodType`, `SeasonType`.
-
-### Errors (錯誤型別)
-- `PowerKitError` is the base of `CalendarError`, `TariffError`, `InvalidUsageInput`, `MissingRequiredInput`, `InvalidBillingInput` and `UnknownPlanError`.
-- `InvalidBillingInput` is also a `ValueError`, and `InvalidBasicFeeInput` is an `InvalidBillingInput`. `UnknownPlanError` is also a `ValueError` and a `KeyError`.
-- `UncheckedPriceWarning`, `UncheckedYearWarning` and `PartialPeriodWarning` are `UserWarning`s.
+[`docs/api_zh.md`](docs/api_zh.md) describes every function and class `taipower_tou` exports, in 中文.
 
 ## API Examples (公開 API 範例)
 

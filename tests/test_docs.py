@@ -29,3 +29,17 @@ def test_python_blocks_run_in_order(doc, tmp_path, monkeypatch):
             continue
         line = before.count("\n") + 2
         exec(compile(fence.group(2), f"{doc}:{line}", "exec"), namespace)
+
+
+def test_api_zh_names_every_export():
+    """docs/api_zh.md is the one description of the public API, so an export
+    it leaves out is undocumented."""
+    import taipower_tou
+
+    text = (ROOT / "docs/api_zh.md").read_text("utf-8")
+    missing = [
+        name
+        for name in taipower_tou.__all__
+        if not re.search(rf"\b{re.escape(name)}\b", text)
+    ]
+    assert not missing

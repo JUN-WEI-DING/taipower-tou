@@ -28,6 +28,9 @@ Each warned `DeprecationWarning` in 0.3.0. Calling one now raises
   With `cache_dir` and `api_timeout` gone, 0.3.0 code that passed those
   positionally would otherwise pass them as `strict` or
   `billing_cycle_type`; it now raises `TypeError`.
+- README's Public API Index is a link to `docs/api_zh.md`, the one
+  description of every export. A test fails when an export is missing
+  from it.
 
 ## [0.3.0] - 2026-11-18
 

@@ -73,9 +73,9 @@ def _installed_bill(demand_peak):
 @pytest.mark.filterwarnings("ignore::UserWarning")
 @pytest.mark.parametrize(("plan_id", "name"), tou.available_plans().items())
 def test_every_plan_id_and_chinese_name_bill_the_same_plan(plan_id, name):
-    """README Public API Index: available_plans() returns {plan_id:
-    chinese_name}, and PlanStore.resolve_plan takes the Chinese name too
-    (factory.py:155). tou.plan and calculate_bill accept both."""
+    """docs/api_zh.md: available_plans() returns {plan_id: chinese_name},
+    and PlanStore.resolve_plan takes the Chinese name too. tou.plan and
+    calculate_bill accept both."""
     assert tou.plan(name).name == tou.plan(plan_id).name
     usage = pd.Series(0.25, index=JULY)
 
