@@ -10,10 +10,7 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
+import pandas as pd
 
 from taipower_tou._warnings import unused_calendar_args, warn
 from taipower_tou.errors import CalendarError, UncheckedYearWarning
@@ -173,7 +170,7 @@ class TaiwanCalendar:
 
         A timezone-aware datetime or index is read in Taiwan time.
         """
-        if pd is not None and isinstance(target, pd.DatetimeIndex):
+        if isinstance(target, pd.DatetimeIndex):
             local = taiwan_wall_time(target)
             listed: set[date] = set()
             for year in local.year.unique():

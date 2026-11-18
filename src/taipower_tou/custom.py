@@ -7,10 +7,7 @@ from datetime import date, datetime, time
 from functools import singledispatchmethod
 from typing import Any
 
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
+import pandas as pd
 
 from taipower_tou.calendar import preload_calendar_years
 from taipower_tou.errors import CalendarError, TariffError
@@ -59,17 +56,15 @@ class CustomCalendar:
     def _(self, target: datetime) -> bool:
         return self.is_holiday(target.date())
 
-    if pd is not None:
+    @is_holiday.register
+    def _(self, target: pd.DatetimeIndex) -> pd.Series:
+        is_weekend = target.day_of_week.isin(sorted(self._weekend_days))
+        if not self._holidays:
+            return pd.Series(is_weekend, index=target, name="is_holiday")
 
-        @is_holiday.register
-        def _(self, target: pd.DatetimeIndex) -> pd.Series:
-            is_weekend = target.day_of_week.isin(sorted(self._weekend_days))
-            if not self._holidays:
-                return pd.Series(is_weekend, index=target, name="is_holiday")
-
-            holiday_ts = pd.DatetimeIndex(list(self._holidays))
-            is_holiday = target.normalize().isin(holiday_ts)
-            return pd.Series(is_weekend | is_holiday, index=target, name="is_holiday")
+        holiday_ts = pd.DatetimeIndex(list(self._holidays))
+        is_holiday = target.normalize().isin(holiday_ts)
+        return pd.Series(is_weekend | is_holiday, index=target, name="is_holiday")
 
 
 def custom_calendar(

@@ -7,14 +7,9 @@ from collections import Counter
 from datetime import date, datetime, time
 from typing import Any, Protocol
 
-try:
-    import numpy as np
-    import numpy.typing as npt
-    import pandas as pd
-except ImportError:
-    np: Any = None  # type: ignore
-    npt: Any = None  # type: ignore
-    pd: Any = None  # type: ignore
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
 
 from taipower_tou._warnings import deprecated, warn
 from taipower_tou.calendar import (
@@ -22,7 +17,7 @@ from taipower_tou.calendar import (
     taiwan_wall_datetime,
     taiwan_wall_time,
 )
-from taipower_tou.errors import InvalidUsageInput, TariffError, UncheckedPriceWarning
+from taipower_tou.errors import InvalidUsageInput, UncheckedPriceWarning
 from taipower_tou.models import (
     BillingCycleType,
     ConsumptionTier,
@@ -129,13 +124,11 @@ class TariffProfile:
         return self._engine
 
     def evaluate(self, index: pd.DatetimeIndex) -> pd.DataFrame:
-        if pd is None:
-            raise TariffError("pandas is required for tariff evaluation")
         return self.engine.evaluate(index)
 
     def period_at(self, target: object) -> PeriodType | str | pd.Series:
         """The period at a datetime, or a period Series for a DatetimeIndex."""
-        if pd is not None and isinstance(target, pd.DatetimeIndex):
+        if isinstance(target, pd.DatetimeIndex):
             return self.engine.evaluate(target)["period"]
         if isinstance(target, datetime):
             return self.engine.get_period_type_scalar(taiwan_wall_datetime(target))
@@ -144,7 +137,7 @@ class TariffProfile:
     def period_context(self, target: object) -> Any:
         """Season, day type and period at a datetime, or a frame for a
         DatetimeIndex."""
-        if pd is not None and isinstance(target, pd.DatetimeIndex):
+        if isinstance(target, pd.DatetimeIndex):
             return self.engine.evaluate(target)
         if not isinstance(target, datetime):
             raise NotImplementedError(f"Unsupported type: {type(target)}")
@@ -203,8 +196,7 @@ class TariffProfile:
 class _TariffEngine:
     def __init__(self, profile: TariffProfile) -> None:
         self.profile = profile
-        if np is not None:
-            self._build_lookup_table()
+        self._build_lookup_table()
 
     def _build_lookup_table(self) -> None:
         self.seasons = self.profile.season_strategy.get_all_seasons()
@@ -293,8 +285,6 @@ class _TariffEngine:
         Returns each timestamp's day position, each day's season and day
         type, and each timestamp's index into _period_types.
         """
-        if pd is None or np is None:
-            raise ImportError("pandas and numpy are required for vectorized lookup")
         if not isinstance(index, pd.DatetimeIndex):
             raise TypeError("Index must be a pandas.DatetimeIndex")
 
@@ -430,8 +420,6 @@ class TariffPlan:
         usage_kwh: float | pd.Series | None = None,
         include_details: bool = False,
     ) -> Any:
-        if pd is None and hasattr(target, "__iter__"):
-            raise TariffError("pandas is required for multi-point context evaluation")
         if usage_kwh is not None and self.rates.tiered_rates:
             raise InvalidUsageInput(
                 "usage-based pricing is not supported for tiered plans; "
@@ -465,7 +453,7 @@ class TariffPlan:
                 }
             return result
 
-        if pd is None or not isinstance(target, pd.DatetimeIndex):
+        if not isinstance(target, pd.DatetimeIndex):
             raise InvalidUsageInput("target must be a datetime or pandas.DatetimeIndex")
 
         check_price_dates(target, self.rates.price_dates)
@@ -512,8 +500,6 @@ class TariffPlan:
         It has no basic fee, 加計, adjustment or rounding. calculate_bill adds
         them.
         """
-        if pd is None:
-            raise TariffError("pandas is required for cost calculation")
         _validate_usage_series(usage_kwh)
         check_price_dates(usage_kwh.index, self.rates.price_dates)
 
@@ -564,8 +550,6 @@ class TariffPlan:
         """kWh and energy cost per month, season and period, as calculate_costs
         prices them. A tiered plan has one "tiered" row per billing period,
         under the season most of its readings fall in."""
-        if pd is None:
-            raise TariffError("pandas is required for cost calculation")
         _validate_usage_series(usage_kwh)
         check_price_dates(usage_kwh.index, self.rates.price_dates)
 
