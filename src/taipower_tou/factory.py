@@ -1,8 +1,10 @@
-"""Factory for creating tariff plans from JSON data."""
+"""Plans from plans.json. Only this module reads plans.json's shape: billing
+reads a plan's rules through PlanRules."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+import math
+from dataclasses import dataclass, fields, replace
 from datetime import date
 from functools import lru_cache
 from typing import Any
@@ -14,7 +16,7 @@ from taipower_tou.custom import (
     build_tariff_profile,
     build_tariff_rate,
 )
-from taipower_tou.errors import UnknownPlanError
+from taipower_tou.errors import TariffError, UnknownPlanError
 from taipower_tou.models import BillingCycleType
 from taipower_tou.rates import TariffJSONLoader
 from taipower_tou.tariff import TaiwanDayTypeStrategy, TaiwanSeasonStrategy
@@ -62,6 +64,220 @@ _REMOVED_PLANS: dict[str, str] = {
 }
 
 
+def _fields(cls: Any, raw: dict[str, Any], where: str) -> dict[str, Any]:
+    """raw as cls's keyword arguments. A key cls does not know is a typo in
+    plans.json, so it raises here instead of being ignored by the bill."""
+    known = {f.name for f in fields(cls)}
+    unknown = set(raw) - known
+    if unknown:
+        raise TariffError(f"plans.json {where} has unknown keys {sorted(unknown)}")
+    return dict(raw)
+
+
+@dataclass(frozen=True)
+class BasicFee:
+    """One 基本電費 line of a plan: per kW of a contract, or 按戶計收."""
+
+    label: str
+    unit: str
+    cost: float | None = None
+    summer: float | None = None
+    non_summer: float | None = None
+    contract: str | None = None
+    phase: str | None = None
+
+    @property
+    def per_household(self) -> bool:
+        return self.unit == "per_household_month"
+
+    def rate(self, season: str) -> float | None:
+        """The price in a season."""
+        if self.summer is not None or self.non_summer is not None:
+            rate = self.summer if season == "summer" else self.non_summer
+        else:
+            rate = self.cost
+        return None if rate is None else float(rate)
+
+
+@dataclass(frozen=True)
+class BasicFeeFormula:
+    """How a 需量契約's contracts make its 基本電費."""
+
+    type: str
+    regular_label: str
+    semi_peak_label: str | None = None
+    non_summer_label: str | None = None
+    saturday_label: str = ""
+    off_peak_label: str | None = None
+    weekend_ratio: float = 0.5
+
+
+@dataclass(frozen=True)
+class OverContractRule:
+    """超約: up to threshold_ratio of the contract at rate_low times the basic
+    fee, above it rate_high times; times a 週六半尖峰 or 離峰 contract alone
+    does not cover pay outside_contract_basic_ratio and their kWh
+    outside_contract_energy_ratio."""
+
+    tier: str | None = None
+    base_fee_label: str = "經常契約"
+    threshold_ratio: float = 0.10
+    rate_low: float = 2
+    rate_high: float = 3
+    outside_contract_basic_ratio: float | None = None
+    outside_contract_energy_ratio: float | None = None
+
+    def __post_init__(self) -> None:
+        if (self.outside_contract_basic_ratio is None) != (
+            self.outside_contract_energy_ratio is None
+        ):
+            raise TariffError(
+                "plans.json over_contract_penalty gives one of "
+                "outside_contract_basic_ratio and outside_contract_energy_ratio "
+                "without the other"
+            )
+
+
+@dataclass(frozen=True)
+class PowerFactorEligibility:
+    """Which bills the 電價表 adjusts for power factor. A missing bound does
+    not limit."""
+
+    phase: str | None = None
+    min_contract_kw: float | None = None
+    min_installed_kw: float | None = None
+    min_demand_kw: float | None = None
+
+
+@dataclass(frozen=True)
+class PowerFactorRule:
+    eligible: PowerFactorEligibility = PowerFactorEligibility()
+    base_percent: float = 80
+    step_percent: float = 0.1
+    max_discount_percent: float = 95
+
+
+@dataclass(frozen=True)
+class Surcharge:
+    """每月總度數超過 threshold_kwh 之部分 pays cost_per_kwh more."""
+
+    threshold_kwh: float = 2000
+    cost_per_kwh: float = 0.0
+
+
+@dataclass(frozen=True)
+class MeterMinimum:
+    """A 底度 rule for one kind of meter: ampere_threshold caps the amperes,
+    and each ampere is kwh_per_ampere kWh a month."""
+
+    phase: str
+    kwh_per_ampere: float
+    label: str = ""
+    voltage_v: float | None = None
+    voltage_v_below: float = 0
+    ampere_threshold: float = math.inf
+
+
+@dataclass(frozen=True)
+class PlanRules:
+    """What a plan's bill reads from plans.json, beyond its prices and
+    schedules. Only this module knows plans.json's shape."""
+
+    plan_id: str
+    category: str
+    time_of_use: bool
+    cycle_months: int | None
+    basic_fee: float | None
+    basic_fees: tuple[BasicFee, ...]
+    formula: BasicFeeFormula | None
+    idle_basic_fee_ratio: float | None
+    surcharge: Surcharge | None
+    over_contract: OverContractRule | None
+    power_factor: PowerFactorRule | None
+    bill_ratio: float | None
+    min_monthly_fee: float | None
+    has_minimum_usage: bool
+    minimum_usage: tuple[MeterMinimum, ...]
+
+    @classmethod
+    def from_plan_data(
+        cls, plan_data: dict[str, Any], definitions: dict[str, Any] | None = None
+    ) -> PlanRules:
+        plan_id = plan_data.get("id", "")
+        rules = dict(plan_data.get("billing_rules", {}))
+        where = f"plan {plan_id} billing_rules"
+
+        def rule(key: str, kind: Any) -> Any:
+            raw = rules.pop(key, None)
+            return None if raw is None else kind(**_fields(kind, raw, f"{where}.{key}"))
+
+        surcharge = rule("over_2000_kwh_surcharge", Surcharge)
+        over_contract = rule("over_contract_penalty", OverContractRule)
+        formula = rule("basic_fee_formula", BasicFeeFormula)
+        power_factor = None
+        pf_raw = rules.pop("power_factor_adjustment", None)
+        if pf_raw is not None:
+            pf = _fields(PowerFactorRule, pf_raw, f"{where}.power_factor_adjustment")
+            eligible = pf.pop("eligible", {})
+            power_factor = PowerFactorRule(
+                eligible=PowerFactorEligibility(
+                    **_fields(PowerFactorEligibility, eligible, f"{where} eligible")
+                ),
+                **pf,
+            )
+        ref = rules.pop("minimum_usage_rules_ref", None)
+        minimum_usage: tuple[MeterMinimum, ...] = ()
+        if ref:
+            entries = (definitions or {}).get("minimum_usage_rules", {}).get(ref, [])
+            minimum_usage = tuple(
+                MeterMinimum(**_fields(MeterMinimum, e, f"minimum_usage_rules.{ref}"))
+                for e in entries
+            )
+        cycle_months = rules.pop("billing_cycle_months", None)
+        idle_ratio = rules.pop("zero_usage_basic_fee_ratio", None)
+        bill_ratio = rules.pop("bill_ratio", None)
+        min_monthly_fee = rules.pop("min_monthly_fee", None)
+        if rules:
+            raise TariffError(f"plans.json {where} has unknown keys {sorted(rules)}")
+        basic_fee = plan_data.get("basic_fee")
+        return cls(
+            plan_id=plan_id,
+            category=plan_data.get("category", ""),
+            time_of_use=plan_data.get("type") == "TOU",
+            cycle_months=cycle_months,
+            basic_fee=None if basic_fee is None else float(basic_fee),
+            basic_fees=tuple(
+                BasicFee(**_fields(BasicFee, e, f"plan {plan_id} basic_fees"))
+                for e in plan_data.get("basic_fees", [])
+            ),
+            formula=formula,
+            idle_basic_fee_ratio=idle_ratio,
+            surcharge=surcharge,
+            over_contract=over_contract,
+            power_factor=power_factor,
+            bill_ratio=bill_ratio,
+            min_monthly_fee=min_monthly_fee,
+            has_minimum_usage=bool(ref),
+            minimum_usage=minimum_usage,
+        )
+
+    def fee(self, label: str) -> BasicFee | None:
+        """The basic fee with this label, or None if the plan has none."""
+        return next((f for f in self.basic_fees if f.label == label), None)
+
+    def household_fee(self, contract: str, phase: str) -> BasicFee | None:
+        """The one 按戶計收 fee of a bill, by contract type and meter phase. A
+        fee that names no contract or phase fits any."""
+        for fee in self.basic_fees:
+            if (
+                fee.per_household
+                and (fee.contract or contract) == contract
+                and (fee.phase or phase) == phase
+            ):
+                return fee
+        return None
+
+
 @dataclass
 class PlanRequirements:
     """The inputs a plan's bill reads. get_plan_requirements describes each
@@ -75,26 +291,17 @@ class PlanRequirements:
 
     @classmethod
     def from_plan_data(cls, plan_data: dict[str, Any]) -> PlanRequirements:
-        category = plan_data.get("category", "")
-        basic_fees = plan_data.get("basic_fees", [])
-        rules = plan_data.get("billing_rules", {})
-        requires_contract_capacity = category in (
-            "high_voltage",
-            "extra_high_voltage",
-        )
-        requires_meter_spec = "minimum_usage_rules_ref" in rules
-        valid_basic_fee_labels = {
-            fee.get("label", "") for fee in basic_fees if fee.get("label")
-        }
-        uses_basic_fee_formula = "basic_fee_formula" in rules
-        formula_type = rules.get("basic_fee_formula", {}).get("type")
+        return cls.from_rules(PlanRules.from_plan_data(plan_data))
 
+    @classmethod
+    def from_rules(cls, rules: PlanRules) -> PlanRequirements:
         return cls(
-            requires_contract_capacity=requires_contract_capacity,
-            requires_meter_spec=requires_meter_spec,
-            valid_basic_fee_labels=valid_basic_fee_labels,
-            uses_basic_fee_formula=uses_basic_fee_formula,
-            formula_type=formula_type,
+            requires_contract_capacity=rules.category
+            in ("high_voltage", "extra_high_voltage"),
+            requires_meter_spec=rules.has_minimum_usage,
+            valid_basic_fee_labels={f.label for f in rules.basic_fees if f.label},
+            uses_basic_fee_formula=rules.formula is not None,
+            formula_type=rules.formula.type if rules.formula else None,
         )
 
 
@@ -182,6 +389,10 @@ class PlanStore:
             f"Use available_plans() to list all valid plan IDs."
         )
 
+    def rules(self, plan_data: dict[str, Any]) -> PlanRules:
+        """The billing rules of a plan's data from resolve_plan."""
+        return PlanRules.from_plan_data(plan_data, self.definitions())
+
     @lru_cache(maxsize=1)
     def list_plan_ids(self) -> tuple[str, ...]:
         """Return tuple of all available plan IDs."""
@@ -219,7 +430,7 @@ class TariffFactory:
         # 高壓電動車 pays bill_ratio of the 低壓 bill. calculate_bill takes the
         # ratio off the rounded bill. A plan from here prices each kWh at that
         # share of its 低壓 price.
-        ratio = plan_data.get("billing_rules", {}).get("bill_ratio")
+        ratio = self._store.rules(plan_data).bill_ratio
         if ratio is not None:
             plan_data["rates"] = [
                 {**rate, "cost": rate["cost"] * ratio} for rate in plan_data["rates"]

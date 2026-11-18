@@ -265,7 +265,6 @@
       "category": "lighting",
       "season_strategy": "seasons",
       "basic_fee": 75.0,
-      "over_2000_kwh_surcharge": 1.04,
       "rates": [
         {
           "season": "summer",
@@ -382,7 +381,6 @@
       "category": "lighting",
       "season_strategy": "seasons",
       "basic_fee": 75.0,
-      "over_2000_kwh_surcharge": 1.04,
       "rates": [
         {
           "season": "summer",

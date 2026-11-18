@@ -58,7 +58,7 @@ def _plan_notes(plan: dict) -> str:
         notes.append(f"rates:{len(plan['rates'])}")
     if "schedules" in plan:
         notes.append(f"schedules:{len(plan['schedules'])}")
-    if "over_2000_kwh_surcharge" in plan:
+    if "over_2000_kwh_surcharge" in plan.get("billing_rules", {}):
         notes.append("over_2000_kwh_surcharge")
     if "variant" in plan:
         notes.append(plan["variant"])

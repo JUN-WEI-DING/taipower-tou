@@ -226,3 +226,37 @@ def test_a_plan_no_name_finds_raises_one_error_everywhere(entry, query) -> None:
     for kind in (tou.PowerKitError, KeyError, ValueError):
         assert isinstance(raised.value, kind)
     assert not str(raised.value).startswith("'")
+
+
+def test_every_plan_parses_into_billing_rules() -> None:
+    from taipower_tou.factory import PlanStore
+
+    store = PlanStore()
+    for plan_id in store.list_plan_ids():
+        rules = store.rules(store.resolve_plan(plan_id))
+        assert rules.plan_id == plan_id
+
+
+@pytest.mark.parametrize(
+    "where",
+    ["billing_rules", "over_contract_penalty", "eligible", "basic_fees"],
+)
+def test_a_misspelled_plans_json_key_is_refused(where: str) -> None:
+    """A billing rule the bill does not know would silently bill nothing."""
+    import copy
+
+    from taipower_tou.errors import TariffError
+    from taipower_tou.factory import PlanStore
+
+    store = PlanStore()
+    plan = copy.deepcopy(store.resolve_plan("high_voltage_2_tier"))
+    rules = plan["billing_rules"]
+    target = {
+        "billing_rules": rules,
+        "over_contract_penalty": rules["over_contract_penalty"],
+        "eligible": rules["power_factor_adjustment"].setdefault("eligible", {}),
+        "basic_fees": plan["basic_fees"][0],
+    }[where]
+    target["rate_hgih"] = 3
+    with pytest.raises(TariffError, match="rate_hgih"):
+        store.rules(plan)

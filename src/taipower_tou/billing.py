@@ -21,10 +21,15 @@ from taipower_tou.errors import (
     InvalidUsageInput,
     MissingRequiredInput,
     PartialPeriodWarning,
+    TariffError,
 )
 from taipower_tou.factory import (
+    BasicFeeFormula,
+    OverContractRule,
     PlanRequirements,
+    PlanRules,
     PlanStore,
+    PowerFactorEligibility,
     _build_tariff_plan_from_data,
 )
 from taipower_tou.models import BillingCycleType
@@ -323,7 +328,7 @@ def _check_demand(demand: Any) -> None:
 
 
 def _parse_inputs(
-    plan_data: dict[str, Any], inputs: BillingInputs, strict: bool
+    rules: PlanRules, inputs: BillingInputs, strict: bool
 ) -> tuple[BillingInputs, int]:
     """The caller's inputs as this plan's bill reads them, and the bill's
     months. They are checked here once, and the bill trusts them. The
@@ -338,11 +343,7 @@ def _parse_inputs(
                 f"contract_capacity_kw {inputs.contract_capacity_kw:g} is the "
                 f"經常契約, and contract_capacities gives another, {regular:g}."
             )
-    cycle_months = int(
-        inputs.billing_cycle_months
-        or plan_data.get("billing_rules", {}).get("billing_cycle_months")
-        or 1
-    )
+    cycle_months = int(inputs.billing_cycle_months or rules.cycle_months or 1)
     parsed = replace(
         inputs,
         contract_capacities=contracts,
@@ -350,13 +351,13 @@ def _parse_inputs(
         meter_phase=inputs.meter_phase and inputs.meter_phase.lower(),
         billing_cycle_months=cycle_months,
     )
-    for message in _validate_billing_inputs(plan_data, parsed, cycle_months, strict):
+    for message in _validate_billing_inputs(rules, parsed, cycle_months, strict):
         _warnings.warn(message, UserWarning)
     return parsed, cycle_months
 
 
 def _validate_billing_inputs(
-    plan_data: dict[str, Any],
+    rules: PlanRules,
     inputs: BillingInputs,
     cycle_months: int,
     strict: bool,
@@ -370,21 +371,21 @@ def _validate_billing_inputs(
         InvalidBillingInput: If contract_capacities has a key the plan does
             not bill (strict mode)
     """
-    requirements = PlanRequirements.from_plan_data(plan_data)
+    requirements = PlanRequirements.from_rules(rules)
     warnings = []
     contracts = inputs.contract_capacities
     contract_keys = _contract_keys(requirements.formula_type)
 
     if requirements.requires_contract_capacity and not contracts:
         raise MissingRequiredInput(
-            f"Plan '{plan_data.get('id')}' requires contract capacity. "
+            f"Plan '{rules.plan_id}' requires contract capacity. "
             f"Provide either contract_capacity_kw or contract_capacities. "
             f"Use BillingInputs.for_high_voltage() or "
             f"BillingInputs.for_extra_high_voltage() for convenient setup."
         )
 
     valid_basic_fee_labels = set(requirements.valid_basic_fee_labels)
-    if plan_data.get("basic_fee") is not None:
+    if rules.basic_fee is not None:
         valid_basic_fee_labels.add("basic_fee")
 
     if inputs.basic_fee_inputs:
@@ -402,7 +403,7 @@ def _validate_billing_inputs(
     unknown_contracts = set(contracts) - contract_keys
     if unknown_contracts:
         message = (
-            f"Plan '{plan_data.get('id')}' bills no {sorted(unknown_contracts)} "
+            f"Plan '{rules.plan_id}' bills no {sorted(unknown_contracts)} "
             "contract, so the bill leaves them out. "
             + (
                 f"Its contracts are {sorted(contract_keys)}."
@@ -415,7 +416,7 @@ def _validate_billing_inputs(
         warnings.append(message)
     if contract_keys and not contracts and "裝置契約" not in inputs.basic_fee_inputs:
         message = (
-            f"Plan '{plan_data.get('id')}' bills its basic fee per kW of "
+            f"Plan '{rules.plan_id}' bills its basic fee per kW of "
             "contract_capacities, or of a 裝置契約 in basic_fee_inputs where the "
             "plan has one. With neither, it bills no kW."
         )
@@ -425,7 +426,7 @@ def _validate_billing_inputs(
     if cycle_months > 1 and contract_keys & set(contracts):
         warnings.append(
             f"Taipower bills a 契約容量 every month, since 超約 is on 當月最高需量. "
-            f"This bill of plan '{plan_data.get('id')}' covers {cycle_months} "
+            f"This bill of plan '{rules.plan_id}' covers {cycle_months} "
             "months and does not match Taipower's."
         )
 
@@ -433,25 +434,25 @@ def _validate_billing_inputs(
         if not all([inputs.meter_phase, inputs.meter_voltage_v, inputs.meter_ampere]):
             if strict:
                 raise MissingRequiredInput(
-                    f"Plan '{plan_data.get('id')}' has minimum usage rules. "
+                    f"Plan '{rules.plan_id}' has minimum usage rules. "
                     f"Providing meter_phase, meter_voltage_v, and meter_ampere "
                     f"is required for accurate billing. "
                     f"Use BillingInputs.for_residential() for convenient setup."
                 )
             warnings.append(
-                f"Plan '{plan_data.get('id')}' has minimum usage rules. "
+                f"Plan '{rules.plan_id}' has minimum usage rules. "
                 f"Providing meter specifications is recommended."
             )
 
     return warnings
 
 
-def _check_usage_resolution(plan_data: dict[str, Any], usage: pd.Series) -> None:
+def _check_usage_resolution(rules: PlanRules, usage: pd.Series) -> None:
     """Warn for time-of-use usage that steps by more than an hour. A reading
     is priced at the period of its timestamp, so a day's kWh would all be
     priced at 00:00. Irregular readings warn only when every gap between
     them is a multiple of one step over an hour."""
-    if plan_data.get("type") != "TOU" or len(usage) < 2:
+    if not rules.time_of_use or len(usage) < 2:
         return
     steps = np.unique(np.diff(usage.index.as_unit("ns").asi8))
     step = pd.Timedelta(math.gcd(*steps.tolist()))
@@ -563,8 +564,9 @@ def _bill(
 
     store = PlanStore()
     plan_data = store.resolve_plan(plan_id)
-    inputs, cycle_months = _parse_inputs(plan_data, inputs or BillingInputs(), strict)
-    _check_usage_resolution(plan_data, usage)
+    rules = store.rules(plan_data)
+    inputs, cycle_months = _parse_inputs(rules, inputs or BillingInputs(), strict)
+    _check_usage_resolution(rules, usage)
 
     _warnings.unused_calendar_args(cache_dir, api_timeout)
     calendar = calendar_instance or taiwan_calendar()
@@ -591,7 +593,7 @@ def _bill(
     times = _times(context)
     metered = _read_registers(usage, billing_periods, times, inputs)
     usage_for_billing = _apply_minimum_usage(
-        plan_data, store, metered, inputs, billing_periods, cycle_months
+        rules, metered, inputs, billing_periods, cycle_months
     )
     demand = _read_demand(
         inputs,
@@ -623,7 +625,7 @@ def _bill(
     monthly_usage.index = monthly_usage.index.to_timestamp()
 
     basic_costs, basic_details = _calculate_basic_fees(
-        plan_data,
+        rules,
         inputs,
         month_index,
         parts,
@@ -632,10 +634,10 @@ def _bill(
     )
     basic_costs = _to_jiao(inputs, basic_costs)
     surcharge = _to_jiao(
-        inputs, _calculate_surcharges(plan_data, cycle_months, monthly_usage)
+        inputs, _calculate_surcharges(rules, cycle_months, monthly_usage)
     )
     adjustment, adjustment_details = _calculate_adjustments(
-        plan_data,
+        rules,
         inputs,
         basic_costs,
         basic_details,
@@ -652,7 +654,7 @@ def _bill(
     )
 
     total = _to_yuan(inputs, energy_costs + basic_costs + surcharge + adjustment)
-    min_fee = _minimum_fee(plan_data, cycle_months)
+    min_fee = _minimum_fee(rules, cycle_months)
     if min_fee is not None:
         min_adjustment = (min_fee - total).clip(lower=0.0)
         total = total.clip(lower=min_fee)
@@ -698,21 +700,6 @@ def _season_parts(
         ts: season_day_shares(ts.to_period("M"), cycle_months, season_strategy)
         for ts in month_index
     }
-
-
-def _household_fee(
-    plan_data: dict[str, Any], inputs: BillingInputs, contract: str
-) -> dict[str, Any] | None:
-    """The one 按戶計收 fee of a bill, by contract type and meter phase."""
-    phase = "three" if inputs.meter_phase == "three" else "single"
-    for entry in plan_data.get("basic_fees", []):
-        if (
-            entry.get("unit") == "per_household_month"
-            and entry.get("contract", contract) == contract
-            and entry.get("phase", phase) == phase
-        ):
-            return entry
-    return None
 
 
 def _idle_months(
@@ -769,7 +756,7 @@ def _installed_only(inputs: BillingInputs) -> bool:
 
 
 def _calculate_basic_fees(
-    plan_data: dict[str, Any],
+    rules: PlanRules,
     inputs: BillingInputs,
     month_index: pd.Index,
     parts: dict[pd.Timestamp, dict[str, float]],
@@ -779,14 +766,14 @@ def _calculate_basic_fees(
     """Each bill's 基本電費. A month of each season's fees is weighted by the
     season's share of the bill's days, as for a mid-month price change
     (營業規章 第二十七條一), and multiplied by the bill's months."""
-    idle_ratio = plan_data.get("billing_rules", {}).get("zero_usage_basic_fee_ratio")
+    idle_ratio = rules.idle_basic_fee_ratio
     details = []
     for ts in month_index:
         scale = float(months)
         if idle_ratio is not None and idle_months[ts]:
             scale *= float(idle_ratio)
         for season, share in parts[ts].items():
-            for label, quantity, rate in _basic_fee_rows(plan_data, inputs, season):
+            for label, quantity, rate in _basic_fee_rows(rules, inputs, season):
                 details.append(
                     {
                         "period": ts,
@@ -804,91 +791,81 @@ def _calculate_basic_fees(
     return monthly.reindex(month_index, fill_value=0.0), frame
 
 
-def _season_rate(entry: dict[str, Any], season: str) -> float | None:
-    """A basic fee's price in a season."""
-    if "summer" in entry or "non_summer" in entry:
-        rate = entry.get("summer") if season == "summer" else entry.get("non_summer")
-    else:
-        rate = entry.get("cost")
-    return None if rate is None else float(rate)
-
-
-def _label_rate(plan_data: dict[str, Any], label: str, season: str) -> float | None:
+def _label_rate(rules: PlanRules, label: str, season: str) -> float | None:
     """The price of the basic fee with this label, or None if the plan has none."""
-    entries = plan_data.get("basic_fees", [])
-    entry = next((e for e in entries if e.get("label") == label), None)
-    if entry is None:
+    fee = rules.fee(label)
+    if fee is None:
         return None
-    return _season_rate(entry, season) or 0.0
+    return fee.rate(season) or 0.0
 
 
 def _basic_fee_rows(
-    plan_data: dict[str, Any], inputs: BillingInputs, season: str
+    rules: PlanRules, inputs: BillingInputs, season: str
 ) -> list[tuple[str, float, float]]:
     """A month of 基本電費 in a season, as (label, quantity, rate) rows."""
-    formula = plan_data.get("billing_rules", {}).get("basic_fee_formula")
-    if formula and inputs.contract_capacities:
-        return _formula_rows(plan_data, inputs, formula, season)
+    if rules.formula and inputs.contract_capacities:
+        return _formula_rows(rules, inputs, rules.formula, season)
     rows = []
-    basic_fee = plan_data.get("basic_fee")
-    if basic_fee is not None:
+    if rules.basic_fee is not None:
         count = inputs.basic_fee_inputs.get("basic_fee", 1.0)
-        rows.append(("basic_fee", count, float(basic_fee)))
-    household = _household_fee(plan_data, inputs, "installed")
-    for entry in plan_data.get("basic_fees", []):
-        label = entry.get("label", "")
-        if entry.get("unit") == "per_household_month":
-            if entry is not household:
+        rows.append(("basic_fee", count, rules.basic_fee))
+    household = rules.household_fee("installed", _phase(inputs))
+    for fee in rules.basic_fees:
+        if fee.per_household:
+            if fee is not household:
                 continue
-            quantity = inputs.basic_fee_inputs.get(label, 1.0)
+            quantity = inputs.basic_fee_inputs.get(fee.label, 1.0)
         else:
-            quantity = inputs.basic_fee_inputs.get(label, 0.0)
-        rate = _season_rate(entry, season)
+            quantity = inputs.basic_fee_inputs.get(fee.label, 0.0)
+        rate = fee.rate(season)
         if quantity != 0 and rate is not None:
-            rows.append((label, quantity, rate))
+            rows.append((fee.label, quantity, rate))
     return rows
 
 
+def _phase(inputs: BillingInputs) -> str:
+    """The meter phase a 按戶計收 fee is picked by."""
+    return "three" if inputs.meter_phase == "three" else "single"
+
+
 def _formula_rows(
-    plan_data: dict[str, Any],
+    rules: PlanRules,
     inputs: BillingInputs,
-    formula: dict[str, Any],
+    formula: BasicFeeFormula,
     season: str,
 ) -> list[tuple[str, float, float]]:
     """A month of a 需量契約's 基本電費: 按戶計收, 經常契約, 非夏月 (非夏月 only)
     or 半尖峰契約, and the 週六半尖峰 and 離峰 contracts beyond half of the
     others (電價表 lines 374-403, 651-709 and 1025-1060)."""
-    entries = {entry["label"]: entry for entry in plan_data.get("basic_fees", [])}
 
-    def row(label: str, quantity: float) -> tuple[str, float, float]:
-        return label, quantity, _season_rate(entries.get(label, {}), season) or 0.0
+    def row(label: str | None, quantity: float) -> tuple[str, float, float]:
+        fee = rules.fee(label) if label else None
+        return label or "", quantity, (fee.rate(season) if fee else None) or 0.0
 
     rows = []
-    household = _household_fee(plan_data, inputs, "demand")
-    if household and household.get("cost") is not None:
-        label = household["label"]
-        count = inputs.basic_fee_inputs.get(label, 1.0)
-        rows.append((label, count, float(household["cost"])))
+    household = rules.household_fee("demand", _phase(inputs))
+    if household and household.cost is not None:
+        count = inputs.basic_fee_inputs.get(household.label, 1.0)
+        rows.append((household.label, count, float(household.cost)))
     capacities = inputs.contract_capacities
     regular = capacities.get("regular", 0.0)
-    rows.append(row(formula["regular_label"], regular))
-    if formula["type"] == "regular_only":
+    rows.append(row(formula.regular_label, regular))
+    if formula.type == "regular_only":
         return rows
-    if formula["type"] == "three_stage":
+    if formula.type == "three_stage":
         second = capacities.get("semi_peak", 0.0)
-        rows.append(row(formula["semi_peak_label"], second))
+        rows.append(row(formula.semi_peak_label, second))
     else:
         second = capacities.get("non_summer", 0.0)
         if season != "summer":
-            rows.append(row(formula["non_summer_label"], second))
+            rows.append(row(formula.non_summer_label, second))
     weekend = capacities.get("saturday_semi_peak", 0.0) + capacities.get(
         "off_peak", 0.0
     )
-    weekend_ratio = float(formula.get("weekend_ratio", 0.5))
     rows.append(
         row(
-            formula.get("saturday_label", ""),
-            max(0.0, weekend - (regular + second) * weekend_ratio),
+            formula.saturday_label,
+            max(0.0, weekend - (regular + second) * float(formula.weekend_ratio)),
         )
     )
     return rows
@@ -909,54 +886,50 @@ def _to_yuan(inputs: BillingInputs, amount: Any) -> Any:
 
 
 def _calculate_surcharges(
-    plan_data: dict[str, Any],
+    rules: PlanRules,
     months: int,
     monthly_usage: pd.Series,
 ) -> pd.Series:
-    rules = plan_data.get("billing_rules", {})
-    rule = rules.get("over_2000_kwh_surcharge") or plan_data.get(
-        "over_2000_kwh_surcharge"
-    )
     surcharge = pd.Series(0.0, index=monthly_usage.index)
+    rule = rules.surcharge
     if rule:
         # 每月總度數超過2000度之部分. A two-month bill's threshold is 4000 kWh,
         # as 第三章 五(一)2 doubles 分段度數 for 隔月抄表.
-        threshold = rule.get("threshold_kwh", 2000) * months
-        cost = rule.get("cost_per_kwh", 0.0)
-        over = (monthly_usage - threshold).clip(lower=0.0)
-        surcharge += over * cost
+        over = (monthly_usage - rule.threshold_kwh * months).clip(lower=0.0)
+        surcharge += over * rule.cost_per_kwh
     return surcharge
 
 
-def _power_factor_applies(eligible: dict[str, Any], inputs: BillingInputs) -> bool:
+def _power_factor_applies(
+    eligible: PowerFactorEligibility, inputs: BillingInputs
+) -> bool:
     """Whether the bill is one the 電價表 adjusts for power factor.
 
     An unknown meter_phase counts as eligible, since the caller gave a power
     factor. 用電設備容量 (20 kVA for 非時間 and 簡易型) is not an input.
     """
-    phase = eligible.get("phase")
-    if phase and inputs.meter_phase not in (None, phase):
+    if eligible.phase and inputs.meter_phase not in (None, eligible.phase):
         return False
     demand_kw = sum(inputs.contract_capacities.values())
     installed_kw = inputs.basic_fee_inputs.get("裝置契約", 0.0)
-    if "min_contract_kw" in eligible:
-        return demand_kw >= eligible["min_contract_kw"]
-    if "min_installed_kw" in eligible or "min_demand_kw" in eligible:
-        return installed_kw >= eligible.get(
-            "min_installed_kw", math.inf
-        ) or demand_kw >= eligible.get("min_demand_kw", math.inf)
+    if eligible.min_contract_kw is not None:
+        return demand_kw >= eligible.min_contract_kw
+    if eligible.min_installed_kw is not None or eligible.min_demand_kw is not None:
+        return installed_kw >= _or_inf(eligible.min_installed_kw) or (
+            demand_kw >= _or_inf(eligible.min_demand_kw)
+        )
     return True
 
 
+def _or_inf(bound: float | None) -> float:
+    return math.inf if bound is None else bound
+
+
 def _household_costs(
-    plan_data: dict[str, Any], basic_details: pd.DataFrame, month_index: pd.Index
+    rules: PlanRules, basic_details: pd.DataFrame, month_index: pd.Index
 ) -> pd.Series:
     """The 按戶計收 part of each bill's basic fee."""
-    labels = {"basic_fee"} | {
-        entry["label"]
-        for entry in plan_data.get("basic_fees", [])
-        if entry.get("unit") == "per_household_month"
-    }
+    labels = {"basic_fee"} | {f.label for f in rules.basic_fees if f.per_household}
     if basic_details.empty:
         return pd.Series(0.0, index=month_index)
     household = basic_details[basic_details["label"].isin(labels)]
@@ -966,7 +939,7 @@ def _household_costs(
 
 
 def _calculate_adjustments(
-    plan_data: dict[str, Any],
+    rules: PlanRules,
     inputs: BillingInputs,
     basic_costs: pd.Series,
     basic_details: pd.DataFrame,
@@ -981,18 +954,17 @@ def _calculate_adjustments(
     demand: pd.DataFrame | None,
     used: pd.Series,
 ) -> tuple[pd.Series, pd.DataFrame]:
-    rules = plan_data.get("billing_rules", {})
     details: list[dict[str, Any]] = []
     over_costs = pd.Series(0.0, index=month_index)
     outside_energy = pd.Series(0.0, index=month_index)
 
-    oc_rule = rules.get("over_contract_penalty")
+    oc_rule = rules.over_contract
     if oc_rule and _installed_only(inputs):
         _warn_installed_demand_over_capacity(inputs, demand)
     elif oc_rule:
         outside = (
             _times_outside_contract(inputs.contract_capacities)
-            if oc_rule.get("outside_contract_basic_ratio")
+            if oc_rule.outside_contract_basic_ratio
             else set()
         )
         over_by_bill = _compute_over_contract_kw(
@@ -1003,7 +975,7 @@ def _calculate_adjustments(
             # billed on each part's own excess, by its share of the days.
             amount = sum(
                 parts[idx][season]
-                * _over_contract_fee(plan_data, oc_rule, over, season, outside)
+                * _over_contract_fee(rules, oc_rule, over, season, outside)
                 for season, over in by_season.items()
             )
             over_costs.loc[idx] = _to_jiao(inputs, amount)
@@ -1018,7 +990,7 @@ def _calculate_adjustments(
                 usage.to_numpy() * unit_cost * in_outside,
                 index=usage.index,
             ).groupby(billing_periods).sum() * (
-                oc_rule["outside_contract_energy_ratio"] - 1
+                _ratio(oc_rule.outside_contract_energy_ratio) - 1
             )
             extra.index = extra.index.to_timestamp()
             outside_energy = _to_jiao(
@@ -1029,20 +1001,20 @@ def _calculate_adjustments(
                 for idx, v in outside_energy.items()
             )
 
-    pf_rule = rules.get("power_factor_adjustment")
+    pf_rule = rules.power_factor
     pf_cost = pd.Series(0.0, index=month_index)
     if (
         pf_rule
         and inputs.power_factor is not None
-        and _power_factor_applies(pf_rule.get("eligible", {}), inputs)
+        and _power_factor_applies(pf_rule.eligible, inputs)
     ):
-        base = pf_rule.get("base_percent", 80)
-        step = pf_rule.get("step_percent", 0.1)
-        pf = min(float(inputs.power_factor), pf_rule.get("max_discount_percent", 95))
+        base = pf_rule.base_percent
+        step = pf_rule.step_percent
+        pf = min(float(inputs.power_factor), pf_rule.max_discount_percent)
         # 功率因數 adjusts 該月份電費, but 按戶計收之基本電費，不列計功率因數調整費.
         target = (
             basic_costs
-            - _household_costs(plan_data, basic_details, month_index)
+            - _household_costs(rules, basic_details, month_index)
             + energy_costs
             + outside_energy
             + surcharge
@@ -1062,7 +1034,7 @@ def _calculate_adjustments(
             )
 
     adjustment = over_costs + outside_energy + pf_cost
-    ratio = rules.get("bill_ratio")
+    ratio = rules.bill_ratio
     if ratio is not None:
         # 各類電價表及計算範例 page 16 rounds the whole bill to the 元 before
         # taking its share, 89,729元×95%=85,243元. The items are within half
@@ -1097,26 +1069,28 @@ def _warn_installed_demand_over_capacity(
         )
 
 
-def _minimum_fee(plan_data: dict[str, Any], cycle_months: int) -> float | None:
+def _minimum_fee(rules: PlanRules, cycle_months: int) -> float | None:
     """The least a bill covering cycle_months months is charged."""
-    rules = plan_data.get("billing_rules", {})
-    value = rules.get("min_monthly_fee")
-    if value is None:
+    if rules.min_monthly_fee is None:
         return None
-    return float(value) * cycle_months
+    return float(rules.min_monthly_fee) * cycle_months
+
+
+def _ratio(value: float | None) -> float:
+    """A ratio plans.json must give where it is read."""
+    if value is None:
+        raise TariffError("plans.json lacks a ratio this bill needs")
+    return float(value)
 
 
 def _apply_minimum_usage(
-    plan_data: dict[str, Any],
-    store: PlanStore,
+    rules: PlanRules,
     usage: pd.Series,
     inputs: BillingInputs,
     billing_periods: pd.PeriodIndex,
     cycle_months: int,
 ) -> pd.Series:
-    rules = plan_data.get("billing_rules", {})
-    ref = rules.get("minimum_usage_rules_ref")
-    if not ref:
+    if not rules.has_minimum_usage:
         return usage
     if (
         inputs.meter_phase is None
@@ -1125,8 +1099,7 @@ def _apply_minimum_usage(
     ):
         return usage
 
-    definitions = store.definitions()
-    ruleset = definitions.get("minimum_usage_rules", {}).get(ref, [])
+    ruleset = rules.minimum_usage
     if not ruleset:
         return usage
 
@@ -1137,11 +1110,8 @@ def _apply_minimum_usage(
         (
             item
             for item in ruleset
-            if item["phase"] == inputs.meter_phase
-            and (
-                voltage == item.get("voltage_v")
-                or voltage < item.get("voltage_v_below", 0)
-            )
+            if item.phase == inputs.meter_phase
+            and (voltage == item.voltage_v or voltage < item.voltage_v_below)
         ),
         None,
     )
@@ -1154,8 +1124,8 @@ def _apply_minimum_usage(
         return usage
 
     # A low-voltage meter over its ampere_threshold counts as the threshold.
-    ampere = min(float(inputs.meter_ampere), target.get("ampere_threshold", math.inf))
-    min_kwh = ampere * target["kwh_per_ampere"]
+    ampere = min(float(inputs.meter_ampere), target.ampere_threshold)
+    min_kwh = ampere * target.kwh_per_ampere
 
     if min_kwh <= 0:
         return usage
@@ -1252,7 +1222,7 @@ def _compute_over_contract_kw(
     inputs: BillingInputs,
     demand: pd.DataFrame | None,
     parts: dict[pd.Timestamp, dict[str, float]],
-    oc_rule: dict[str, Any],
+    oc_rule: OverContractRule,
     outside: set[str],
 ) -> dict[pd.Timestamp, dict[str, dict[str, tuple[float, float]]]] | None:
     """Each bill's 超約瓩數 in each of its seasons, with the contract it is
@@ -1286,8 +1256,8 @@ def _compute_over_contract_kw(
 
 
 def _over_contract_fee(
-    plan_data: dict[str, Any],
-    oc_rule: dict[str, Any],
+    rules: PlanRules,
+    oc_rule: OverContractRule,
     over: dict[str, tuple[float, float]],
     season: str,
     outside: set[str],
@@ -1296,27 +1266,27 @@ def _over_contract_fee(
     以下部分按2倍、超過部分按3倍 (第三章 五(三)5, 第四章 七(二), 第五章 七(二)).
     Use outside the times a 週六半尖峰 or 離峰 contract alone covers pays 4.8倍
     (第三章 七(六), 第四章 八(六), 第五章 八(六))."""
-    formula = plan_data.get("billing_rules", {}).get("basic_fee_formula", {})
-    base_label = oc_rule.get("base_fee_label", "經常契約")
-    ratio = oc_rule.get("threshold_ratio", 0.10)
+    base_label = oc_rule.base_fee_label
     amount = 0.0
     counted = 0.0
     for segment, (kw, base) in over.items():
-        label = formula.get(_SEGMENT_FEE_LABELS[segment], base_label)
-        rate = _label_rate(plan_data, label, season)
+        label = (
+            getattr(rules.formula, _SEGMENT_FEE_LABELS[segment])
+            if rules.formula
+            else None
+        ) or base_label
+        rate = _label_rate(rules, label, season)
         if rate is None:
-            rate = _label_rate(plan_data, base_label, season)
+            rate = _label_rate(rules, base_label, season)
         if rate is None:
             continue
         if segment in outside:
-            amount += rate * kw * oc_rule["outside_contract_basic_ratio"]
+            amount += rate * kw * _ratio(oc_rule.outside_contract_basic_ratio)
             continue
         # 在契約容量10%以下部分: the contract this time's excess is over.
-        low = min(kw, max(0.0, base * ratio - counted))
+        low = min(kw, max(0.0, base * oc_rule.threshold_ratio - counted))
         counted += kw
-        amount += rate * (
-            low * oc_rule.get("rate_low", 2) + (kw - low) * oc_rule.get("rate_high", 3)
-        )
+        amount += rate * (low * oc_rule.rate_low + (kw - low) * oc_rule.rate_high)
     return amount
 
 
@@ -1387,7 +1357,7 @@ def _times(context: pd.DataFrame) -> np.ndarray:
 def _calculate_over_contract_from_categories(
     max_demand: dict[str, float],
     capacities: dict[str, float],
-    oc_rule: dict[str, Any],
+    oc_rule: OverContractRule,
     season: str,
     outside: set[str],
 ) -> dict[str, tuple[float, float]]:
@@ -1397,7 +1367,7 @@ def _calculate_over_contract_from_categories(
     so no kW is counted twice.
     """
     regular = capacities.get("regular", 0.0)
-    if oc_rule.get("tier") == "three_stage":
+    if oc_rule.tier == "three_stage":
         second, second_kw = "semi_peak", capacities.get("semi_peak", 0.0)
         peak_base = regular
     else:

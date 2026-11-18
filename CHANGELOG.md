@@ -44,6 +44,12 @@ given, where 0.2.0 ignored them silently.
   takes 3.4 ms instead of 32 ms, `pricing_context` 6.3 ms instead of 40 ms,
   `monthly_breakdown` 12 ms instead of 43 ms, and `calculate_bill` 17 ms
   instead of 48 ms. Every output of every plan is unchanged.
+- `calculate_bill` reads a plan's billing rules from typed objects that
+  `factory.py` builds from `plans.json`, so only `factory.py` knows the
+  file's shape. A key in `plans.json` that no rule knows now raises
+  `TariffError` instead of being ignored. `plans.json` gave
+  `over_2000_kwh_surcharge` twice for the 簡易型 plans; it is now only under
+  `billing_rules`.
 - A day type strategy loads its calendar's years through its own
   `preload_years`; the engine no longer reads the strategy's `_calendar`.
 - `docs/詳細電價表.pdf` is gone; the one copy is
