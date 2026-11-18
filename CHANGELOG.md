@@ -44,6 +44,10 @@ given, where 0.2.0 ignored them silently.
 - `docs/詳細電價表.pdf` is gone; the one copy is
   `src/taipower_tou/data/詳細電價表.pdf`.
 
+- It needs pandas 2.0.3 and numpy 1.24.4 or later, the oldest versions
+  its tests pass on. It claimed pandas 1.5, where 63 tests failed. CI runs
+  the tests on those oldest versions too.
+
 ### Fixed
 - An empty `DatetimeIndex` returns empty columns instead of raising
   `TypeError`.
