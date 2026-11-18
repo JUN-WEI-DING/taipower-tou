@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-18
+
 ### Removed
 Each warned `DeprecationWarning` in 0.3.0. Calling one now raises
 `AttributeError` or `TypeError`.
