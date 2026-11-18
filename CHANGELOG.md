@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-18
+
+### Added
+- `scripts/benchmark.py` times the main calls on a year of 15-minute
+  usage, so speed changes are measured the same way each time.
+
 ### Changed
 - A bill groups its timestamps by integer codes instead of a string per
   timestamp, and finds each timestamp's bill by month arithmetic. For a

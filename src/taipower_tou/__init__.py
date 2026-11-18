@@ -40,7 +40,7 @@ from taipower_tou.tariff import (
     TariffProfile,
 )
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 
 def is_holiday(
