@@ -355,20 +355,25 @@ class _Lookup:
             index=self.index,
         )
 
+    def period_names(self) -> list[str]:
+        """The name of each period number in period."""
+        return [_label_value(p) for p in self.engine._period_types]
+
+    def day_type_names(self) -> list[str]:
+        """The name of each day's day type, one per day in day_of."""
+        return [_label_value(d) for d in self.day_types]
+
+    def season_names(self) -> npt.NDArray[np.object_]:
+        """Each timestamp's season name."""
+        return _object_array([_label_value(s) for s in self.seasons])[self.day_of]
+
     def labels(self) -> pd.DataFrame:
         """frame with each season, day type and period as its name."""
-        period_names = _object_array(
-            [_label_value(p) for p in self.engine._period_types]
-        )
         return pd.DataFrame(
             {
-                "season": _object_array([_label_value(s) for s in self.seasons])[
-                    self.day_of
-                ],
-                "day_type": _object_array([_label_value(d) for d in self.day_types])[
-                    self.day_of
-                ],
-                "period": period_names[self.period],
+                "season": self.season_names(),
+                "day_type": _object_array(self.day_type_names())[self.day_of],
+                "period": _object_array(self.period_names())[self.period],
             },
             index=self.index,
         )

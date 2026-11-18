@@ -135,9 +135,8 @@ def _bill(
     )
     check_price_dates(usage.index, tariff_plan.rates.price_dates)
     lookup = tariff_plan.profile.engine.lookup(usage.index)
-    context = lookup.labels()
     unit_cost = lookup.unit_costs(tariff_plan.rates)
-    times = _times(context)
+    times = _times(lookup)
     metered = _read_registers(usage, billing_periods, times, inputs)
     usage_for_billing = _apply_minimum_usage(
         rules, metered, inputs, billing_periods, cycle_months
@@ -147,7 +146,7 @@ def _bill(
         tariff_plan.profile,
         lambda index: _bill_months(index, first_month, cycle_months),
         local,
-        context,
+        lookup,
         times,
         billing_periods,
     )
@@ -189,7 +188,7 @@ def _bill(
         basic_details,
         month_index,
         parts,
-        context,
+        times,
         unit_cost,
         billing_periods,
         energy_costs,
@@ -222,7 +221,7 @@ def _bill(
 
     details = _calculate_period_costs(
         usage_for_billing,
-        context,
+        lookup.labels(),
         unit_cost,
         billing_periods,
         tariff_plan,
@@ -483,7 +482,7 @@ def _calculate_adjustments(
     basic_details: pd.DataFrame,
     month_index: pd.Index,
     parts: dict[pd.Timestamp, dict[str, float]],
-    context_df: pd.DataFrame,
+    times: np.ndarray,
     unit_cost: np.ndarray,
     billing_periods: pd.PeriodIndex,
     energy_costs: pd.Series,
@@ -523,7 +522,7 @@ def _calculate_adjustments(
         if outside:
             # 1.6倍計收流動電費 for the kWh outside the contract's times
             # (第三章 七(六), 第四章 八(六), 第五章 八(六)).
-            in_outside = np.isin(_times(context_df), list(outside))
+            in_outside = np.isin(times, list(outside))
             extra = pd.Series(
                 usage.to_numpy() * unit_cost * in_outside,
                 index=usage.index,
@@ -663,11 +662,11 @@ def _bill_months(
     months = local.to_period("M")
     if cycle_months <= 1:
         return months
-    starts = {
-        month: first + (month - first).n // cycle_months * cycle_months
-        for month in months.unique()
-    }
-    return pd.PeriodIndex(months.map(starts), freq="M")
+    # Month ordinals count months, so a bill's first month is plain integer
+    # arithmetic on them.
+    offset = (months.asi8 - first.ordinal) // cycle_months * cycle_months
+    starts = first.ordinal + offset
+    return pd.PeriodIndex(pd.arrays.PeriodArray(starts, dtype=pd.PeriodDtype("M")))
 
 
 def _check_whole_months(

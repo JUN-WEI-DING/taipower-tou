@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- A bill groups its timestamps by integer codes instead of a string per
+  timestamp, and finds each timestamp's bill by month arithmetic. For a
+  year of 15-minute usage, `calculate_bill` takes 12 ms instead of 37 ms
+  on `residential_non_tou` (two-month bills), 12 ms instead of 18 ms on
+  `high_voltage_2_tier`, and 20 ms instead of 27 ms with demand and power
+  factor. Billing all 18 plans takes 0.24 s instead of 0.39 s. Every
+  output is unchanged.
+
 ## [0.4.0] - 2026-11-18
 
 ### Removed

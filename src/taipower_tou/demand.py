@@ -56,14 +56,14 @@ def _read_demand(
     profile: Any,
     bills: Callable[[pd.DatetimeIndex], pd.PeriodIndex],
     local: pd.DatetimeIndex,
-    context: pd.DataFrame,
+    lookup: Any,
     times: np.ndarray,
     billing_periods: pd.PeriodIndex,
 ) -> pd.DataFrame | None:
     """Each 需量 as Taipower reads it, in Taiwan wall time, with the bill,
     season and time it falls in. 需量 is the 十五分鐘平均瓩數 (營業規章 第三條),
     times demand_adjustment_factor, cut to whole kW (施行細則 第二十八條).
-    Demand on the usage's own timestamps reuses the usage's context."""
+    Demand on the usage's own timestamps reuses the usage's lookup."""
     demand = inputs.demand_kw
     if demand is None:
         return None
@@ -73,30 +73,38 @@ def _read_demand(
     _check_demand_resolution(demand)
     demand = _quarter_hour_demand(demand) * inputs.demand_adjustment_factor
     if not demand.index.equals(local):
-        context = profile.engine.lookup(demand.index).labels()
-        times = _times(context)
+        lookup = profile.engine.lookup(demand.index)
+        times = _times(lookup)
         billing_periods = bills(demand.index)
     return pd.DataFrame(
         {
             "kw": np.floor(np.round(demand.to_numpy(), 6)),
             "bill": billing_periods,
-            "season": context["season"].to_numpy(),
+            "season": lookup.season_names(),
             "time": times,
         },
         index=demand.index,
     )
 
 
-def _times(context: pd.DataFrame) -> np.ndarray:
-    """Each row's time of day: 尖峰, 半尖峰, 週六半尖峰 or 離峰, the register
-    its kWh is read on and the time its 最高需量 counts in. A 非時間電價 meter
-    has one register, and one 最高需量 against 經常 (+ 非夏月)."""
-    period = context["period"].to_numpy()
-    saturday = context["day_type"].to_numpy() == "saturday"
-    period = np.where(period == "flat", "peak", period)
-    return np.where(
-        saturday & (period == "semi_peak"), "saturday_semi_peak", period
+def _times(lookup: Any) -> np.ndarray:
+    """Each timestamp's time of day: 尖峰, 半尖峰, 週六半尖峰 or 離峰, the
+    register its kWh is read on and the time its 最高需量 counts in. A
+    非時間電價 meter has one register, and one 最高需量 against 經常 (+ 非夏月).
+    Decided once per day type and period, then expanded by position."""
+    periods = np.array(
+        ["peak" if name == "flat" else name for name in lookup.period_names()],
+        dtype=object,
+    )
+    saturday = np.array(
+        [name == "saturday" for name in lookup.day_type_names()], dtype=bool
+    )
+    table = np.where(
+        saturday[:, None] & (periods == "semi_peak")[None, :],
+        "saturday_semi_peak",
+        periods[None, :],
     ).astype(object)
+    return table[lookup.day_of, lookup.period]
 
 
 _SEGMENT_FEE_LABELS = {

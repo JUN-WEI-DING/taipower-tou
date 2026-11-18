@@ -189,3 +189,43 @@ def test_prices_are_read_per_kind_of_time_not_per_timestamp(monkeypatch) -> None
         calls = 0
         price()
         assert calls < 100, (name, calls)
+
+
+def test_a_bill_builds_no_per_timestamp_names(monkeypatch) -> None:
+    """0.4.0 built a string per timestamp for season, day type and period
+    and grouped on them, which took about a third of a bill. A bill reads
+    the lookup's integer codes; only calculate_bill_breakdown's details
+    need the names."""
+    from taipower_tou.tariff import _Lookup
+
+    calls = 0
+    labels = _Lookup.labels
+
+    def counting(self):
+        nonlocal calls
+        calls += 1
+        return labels(self)
+
+    usage = pd.Series(
+        1.0, index=pd.date_range("2026-01-01", "2026-12-31 23:45", freq="15min")
+    )
+    inputs = tou.BillingInputs(
+        contract_capacities={"regular": 100}, demand_kw=usage * 4, power_factor=90
+    )
+    monkeypatch.setattr(_Lookup, "labels", counting)
+    tou.calculate_bill(usage, "high_voltage_three_stage", inputs)
+    assert calls == 0
+    tou.calculate_bill_breakdown(usage, "high_voltage_three_stage", inputs)
+    assert calls == 1
+
+
+@pytest.mark.parametrize("cycle", [1, 2, 3])
+def test_bill_months_count_whole_cycles_from_the_first_month(cycle: int) -> None:
+    from taipower_tou.billing import _bill_months
+
+    index = pd.date_range("2025-11-14", "2027-02-03", freq="7h")
+    first = pd.Period("2025-11", freq="M")
+    got = _bill_months(index, first, cycle)
+    expected = [first + (ts.to_period("M") - first).n // cycle * cycle for ts in index]
+    assert list(got) == expected
+    assert got.freqstr == "M"
