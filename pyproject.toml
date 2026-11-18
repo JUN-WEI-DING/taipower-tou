@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "taipower-tou"
-version = "0.2.0"
+dynamic = ["version"]
 description = "Taiwan time-of-use electricity tariff calculator"
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9"
@@ -44,6 +44,9 @@ test = [
     "tomli>=1.1.0; python_version < '3.11'",
 ]
 dev = ["pre-commit", "ruff", "mypy"]
+
+[tool.setuptools.dynamic]
+version = {attr = "taipower_tou.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
