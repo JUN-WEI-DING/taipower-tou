@@ -11,6 +11,12 @@ import pytest
 import taipower_tou as tou
 from taipower_tou.factory import TariffFactory
 
+# The warnings these tests cause on purpose. Any other fails them.
+pytestmark = [
+    # dates outside the bundled price table
+    pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedPriceWarning"),
+]
+
 
 class TestAllPlans:
     """Parameterized tests to verify all plans can be loaded and evaluated."""

@@ -7,7 +7,6 @@ import pytest
 
 import taipower_tou as tou
 from taipower_tou.factory import PlanStore
-from taipower_tou.tariff import _warn_outside_price_dates
 
 # The warnings these tests cause on purpose. Any other fails them.
 pytestmark = [
@@ -42,7 +41,6 @@ def _price_uses():
     ids=["before", "after"],
 )
 def test_usage_outside_price_dates_warns_once(start, match):
-    _warn_outside_price_dates.cache_clear()
     with pytest.warns(tou.UncheckedPriceWarning, match=match) as record:
         for use in _price_uses():
             use(_usage(start))
@@ -50,7 +48,6 @@ def test_usage_outside_price_dates_warns_once(start, match):
 
 
 def test_usage_inside_price_dates_does_not_warn():
-    _warn_outside_price_dates.cache_clear()
     with warnings.catch_warnings():
         warnings.simplefilter("error", tou.UncheckedPriceWarning)
         for use in _price_uses():
@@ -59,7 +56,6 @@ def test_usage_inside_price_dates_does_not_warn():
 
 
 def test_price_dates_use_taiwan_local_time():
-    _warn_outside_price_dates.cache_clear()
     with warnings.catch_warnings():
         warnings.simplefilter("error", tou.UncheckedPriceWarning)
         tou.calculate_bill(
@@ -90,7 +86,6 @@ def test_caller_supplied_prices_do_not_warn():
         season_strategy=season,
     )
     plan = tou.build_tariff_plan(profile, rates)
-    _warn_outside_price_dates.cache_clear()
     with warnings.catch_warnings():
         warnings.simplefilter("error", tou.UncheckedPriceWarning)
         plan.calculate_costs(_usage("2020-01-01"))

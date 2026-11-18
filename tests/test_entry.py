@@ -102,6 +102,7 @@ def test_calculate_costs_rejects_infinite_usage() -> None:
         plan.calculate_costs(usage)
 
 
+@pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedPriceWarning")
 def test_entry_named_helpers() -> None:
     assert "high_voltage_2_tier" in list(tou.available_plans().keys())
     assert len(list(tou.available_plans().keys())) > 0  # Bilingual names

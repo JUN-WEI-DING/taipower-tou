@@ -218,3 +218,28 @@ def test_pricing_context_tiered_with_usage_error() -> None:
             usage=1.0,
             calendar_instance=calendar,
         )
+
+
+def test_period_context_refuses_what_is_not_a_datetime():
+    with pytest.raises(NotImplementedError, match="Unsupported type"):
+        plan("high_voltage_2_tier").profile.period_context("2026-07-01 10:00")
+
+
+def test_period_context_outside_the_calendar_years_raises():
+    from taipower_tou.errors import CalendarError
+
+    old = datetime(2010, 1, 4, 10)
+    with pytest.raises(CalendarError, match="2014-2100"):
+        plan("high_voltage_2_tier").profile.period_context(old)
+    with pytest.raises(CalendarError, match="2014-2100"):
+        plan("high_voltage_2_tier").pricing_context(old)
+
+
+def test_tiered_plan_refuses_a_price_for_usage():
+    """A tiered price depends on the month's total, not one reading."""
+    from taipower_tou import InvalidUsageInput
+
+    with pytest.raises(InvalidUsageInput, match="tiered"):
+        plan("residential_non_tou").pricing_context(
+            datetime(2026, 7, 1, 10), usage_kwh=1.0
+        )

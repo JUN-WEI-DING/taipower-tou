@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 import pandas as pd
+import pytest
 
 from taipower_tou.custom import (
     CustomCalendar,
@@ -9,7 +10,7 @@ from taipower_tou.custom import (
     build_tariff_profile,
     build_tariff_rate,
 )
-from taipower_tou.tariff import TaiwanSeasonStrategy
+from taipower_tou.tariff import PeriodType, TaiwanSeasonStrategy
 
 
 def test_custom_calendar_weekend_and_holiday() -> None:
@@ -61,3 +62,39 @@ def test_custom_plan_with_custom_period_label() -> None:
 
     context = plan.pricing_context(dt)
     assert context["period"] == "super_peak"
+
+
+def test_a_time_no_slot_covers_gets_the_default_period() -> None:
+    profile = build_tariff_profile(
+        name="gap",
+        season_strategy=TaiwanSeasonStrategy((6, 1), (9, 30)),
+        day_type_strategy=WeekdayDayTypeStrategy(CustomCalendar()),
+        schedules=[
+            {
+                "season": "summer",
+                "day_type": "weekday",
+                "slots": [{"start": "10:00", "end": "12:00", "period": "peak"}],
+            }
+        ],
+        default_period="semi_peak",
+    )
+    assert profile.period_at(datetime(2026, 7, 1, 11)) == PeriodType.PEAK
+    assert profile.period_at(datetime(2026, 7, 1, 13)) == PeriodType.SEMI_PEAK
+
+
+def test_a_slot_at_an_impossible_time_is_refused() -> None:
+    from taipower_tou import TariffError
+
+    with pytest.raises(TariffError, match="25:00"):
+        build_tariff_profile(
+            name="bad",
+            season_strategy=TaiwanSeasonStrategy((6, 1), (9, 30)),
+            day_type_strategy=WeekdayDayTypeStrategy(CustomCalendar()),
+            schedules=[
+                {
+                    "season": "summer",
+                    "day_type": "weekday",
+                    "slots": [{"start": "25:00", "end": "12:00", "period": "peak"}],
+                }
+            ],
+        )

@@ -8,6 +8,8 @@ import taipower_tou as tou
 
 # The warnings these tests cause on purpose. Any other fails them.
 pytestmark = [
+    # dates outside the bundled price table
+    pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedPriceWarning"),
     # bills that cover part of a month
     pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
     # readings a whole number of days apart
@@ -176,3 +178,19 @@ def test_monthly_tiers_are_not_doubled() -> None:
     )
     bill = tou.calculate_bill(usage, "residential_non_tou", inputs=inputs)
     assert bill["energy_cost"].tolist() == pytest.approx([120 * 1.78 + 80 * 2.55])
+
+
+def test_for_high_voltage_names_the_four_contracts():
+    """for_high_voltage is BillingInputs with its four contracts by key."""
+    demand = pd.Series(80.0, index=pd.date_range("2026-07-01", periods=4, freq="15min"))
+    inputs = tou.BillingInputs.for_high_voltage(
+        200, 10, 20, 30, power_factor=90, demand_kw=demand
+    )
+    assert inputs.contract_capacities == {
+        "regular": 200,
+        "non_summer": 10,
+        "saturday_semi_peak": 20,
+        "off_peak": 30,
+    }
+    assert inputs.power_factor == 90
+    assert inputs.demand_kw is demand

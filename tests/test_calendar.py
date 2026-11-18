@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 import taipower_tou as tou
-from taipower_tou.calendar import TaiwanCalendar, _warn_unchecked_year
+from taipower_tou.calendar import TaiwanCalendar
 from taipower_tou.errors import CalendarError
 
 
@@ -52,7 +52,6 @@ def test_timezone_aware_index_uses_local_dates() -> None:
 
 
 def test_year_after_last_checked_calendar_warns_once() -> None:
-    _warn_unchecked_year.cache_clear()
     with pytest.warns(tou.UncheckedYearWarning, match="2028") as record:
         for _ in range(3):
             tou.period_context(
@@ -66,3 +65,9 @@ def test_checked_years_do_not_warn() -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         TaiwanCalendar().is_holiday(pd.date_range("2014-01-01", "2027-12-31"))
+
+
+@pytest.mark.parametrize("target", ["2026-07-12", 20260712, None])
+def test_is_holiday_refuses_what_is_not_a_date(target) -> None:
+    with pytest.raises(CalendarError, match="Unsupported type"):
+        TaiwanCalendar().is_holiday(target)

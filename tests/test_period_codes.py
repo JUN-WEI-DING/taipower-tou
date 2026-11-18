@@ -158,6 +158,7 @@ def test_index_paths_decide_by_day_not_by_timestamp(monkeypatch) -> None:
         assert calls < len(index) // 20, (read.__name__, calls)
 
 
+@pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedPriceWarning")
 def test_prices_are_read_per_kind_of_time_not_per_timestamp(monkeypatch) -> None:
     """0.2.0 called TariffRate.get_cost once per timestamp, which made a year
     of 15-minute usage take about 30 ms to price."""

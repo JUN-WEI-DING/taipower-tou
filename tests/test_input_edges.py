@@ -696,3 +696,13 @@ def test_time_of_use_usage_coarser_than_an_hour_warns(plan, freq, warns):
         tou.calculate_bill(pd.Series(1.0, index=index), plan, inputs)
     coarse = [w for w in record if "hourly or finer" in str(w.message)]
     assert bool(coarse) == warns
+
+
+@pytest.mark.parametrize(
+    "usage",
+    [[1.0, 2.0], pd.Series([1.0, 2.0])],
+    ids=["list", "series without a DatetimeIndex"],
+)
+def test_costs_refuse_usage_without_times(usage):
+    with pytest.raises(tou.InvalidUsageInput):
+        tou.plan("residential_simple_2_tier").calculate_costs(usage)

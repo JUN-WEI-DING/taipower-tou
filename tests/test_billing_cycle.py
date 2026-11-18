@@ -19,6 +19,8 @@ from taipower_tou.tariff import _billing_period_group_index
 
 # The warnings these tests cause on purpose. Any other fails them.
 pytestmark = [
+    # dates outside the bundled price table
+    pytest.mark.filterwarnings("ignore::taipower_tou.UncheckedPriceWarning"),
     # bills that cover part of a month
     pytest.mark.filterwarnings("ignore::taipower_tou.PartialPeriodWarning"),
     # readings a whole number of days apart
