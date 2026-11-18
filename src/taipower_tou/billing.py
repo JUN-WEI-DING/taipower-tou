@@ -27,14 +27,12 @@ from taipower_tou.factory import (
     PlanStore,
     _build_tariff_plan_from_data,
 )
-from taipower_tou.models import BillingCycleType, _label_value
+from taipower_tou.models import BillingCycleType
 from taipower_tou.tariff import (
-    TariffRate,
     _validate_usage_series,
     check_price_dates,
     season_day_shares,
     tiered_energy_cost,
-    unit_costs,
 )
 
 
@@ -587,7 +585,9 @@ def _bill(
         billing_cycle_type=billing_cycle_type,
     )
     check_price_dates(usage.index, tariff_plan.rates.price_dates)
-    context = tariff_plan.profile.evaluate(usage.index)
+    lookup = tariff_plan.profile.engine.lookup(usage.index)
+    context = lookup.labels()
+    unit_cost = lookup.unit_costs(tariff_plan.rates)
     times = _times(context)
     metered = _read_registers(usage, billing_periods, times, inputs)
     usage_for_billing = _apply_minimum_usage(
@@ -608,7 +608,7 @@ def _bill(
         inputs,
         _calculate_energy_costs(
             usage_for_billing,
-            context,
+            unit_cost,
             billing_periods,
             tariff_plan,
             cycle_months,
@@ -642,11 +642,11 @@ def _bill(
         month_index,
         parts,
         context,
+        unit_cost,
         billing_periods,
         energy_costs,
         surcharge,
         usage_for_billing,
-        tariff_plan.rates,
         demand,
         _metered_bills(metered, billing_periods),
     )
@@ -675,6 +675,7 @@ def _bill(
     details = _calculate_period_costs(
         usage_for_billing,
         context,
+        unit_cost,
         billing_periods,
         tariff_plan,
         cycle_months,
@@ -972,11 +973,11 @@ def _calculate_adjustments(
     month_index: pd.Index,
     parts: dict[pd.Timestamp, dict[str, float]],
     context_df: pd.DataFrame,
+    unit_cost: np.ndarray,
     billing_periods: pd.PeriodIndex,
     energy_costs: pd.Series,
     surcharge: pd.Series,
     usage: pd.Series,
-    rates: TariffRate,
     demand: pd.DataFrame | None,
     used: pd.Series,
 ) -> tuple[pd.Series, pd.DataFrame]:
@@ -1014,7 +1015,7 @@ def _calculate_adjustments(
             # (第三章 七(六), 第四章 八(六), 第五章 八(六)).
             in_outside = np.isin(_times(context_df), list(outside))
             extra = pd.Series(
-                usage.to_numpy() * unit_costs(rates, context_df) * in_outside,
+                usage.to_numpy() * unit_cost * in_outside,
                 index=usage.index,
             ).groupby(billing_periods).sum() * (
                 oc_rule["outside_contract_energy_ratio"] - 1
@@ -1342,14 +1343,14 @@ def _read_demand(
     _check_demand_resolution(demand)
     demand = _quarter_hour_demand(demand) * inputs.demand_adjustment_factor
     if not demand.index.equals(local):
-        context = profile.evaluate(demand.index)
+        context = profile.engine.lookup(demand.index).labels()
         times = _times(context)
         billing_periods = _bill_months(demand.index, first, cycle_months)
     return pd.DataFrame(
         {
             "kw": np.floor(np.round(demand.to_numpy(), 6)),
             "bill": billing_periods,
-            "season": _labels(context["season"]),
+            "season": context["season"].to_numpy(),
             "time": times,
         },
         index=demand.index,
@@ -1371,17 +1372,12 @@ def _times_outside_contract(capacities: dict[str, float]) -> set[str]:
     return set()
 
 
-def _labels(values: pd.Series) -> np.ndarray:
-    """The string value of each season, day type or period."""
-    return values.map({v: _label_value(v) for v in values.unique()}).to_numpy()
-
-
 def _times(context: pd.DataFrame) -> np.ndarray:
     """Each row's time of day: 尖峰, 半尖峰, 週六半尖峰 or 離峰, the register
     its kWh is read on and the time its 最高需量 counts in. A 非時間電價 meter
     has one register, and one 最高需量 against 經常 (+ 非夏月)."""
-    period = _labels(context["period"])
-    saturday = _labels(context["day_type"]) == "saturday"
+    period = context["period"].to_numpy()
+    saturday = context["day_type"].to_numpy() == "saturday"
     period = np.where(period == "flat", "peak", period)
     return np.where(
         saturday & (period == "semi_peak"), "saturday_semi_peak", period
@@ -1431,7 +1427,7 @@ def _calculate_over_contract_from_categories(
 
 def _calculate_energy_costs(
     usage: pd.Series,
-    context_df: pd.DataFrame,
+    unit_cost: np.ndarray,
     billing_periods: pd.PeriodIndex,
     tariff_plan: Any,
     cycle_months: int,
@@ -1451,7 +1447,7 @@ def _calculate_energy_costs(
         }
         return pd.Series(totals).sort_index()
 
-    interval_costs = usage * unit_costs(rates, context_df)
+    interval_costs = usage * unit_cost
     totals = interval_costs.groupby(billing_periods).sum()
     if hasattr(totals, "index") and hasattr(totals.index, "to_timestamp"):
         totals.index = totals.index.to_timestamp()
@@ -1461,6 +1457,7 @@ def _calculate_energy_costs(
 def _calculate_period_costs(
     usage: pd.Series,
     context_df: pd.DataFrame,
+    unit_cost: np.ndarray,
     billing_periods: pd.PeriodIndex,
     tariff_plan: Any,
     cycle_months: int,
@@ -1488,12 +1485,11 @@ def _calculate_period_costs(
             )
         return pd.DataFrame(records, columns=columns)
 
-    unit_cost = unit_costs(rates, context_df)
     rows = pd.DataFrame(
         {
             "period": billing_periods.to_timestamp(),
-            "season": context_df["season"].map(_label_value).to_numpy(),
-            "period_type": context_df["period"].map(_label_value).to_numpy(),
+            "season": context_df["season"].to_numpy(),
+            "period_type": context_df["period"].to_numpy(),
             "usage_kwh": usage.to_numpy(),
             "energy_cost": usage.to_numpy() * unit_cost,
         }

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 from collections import Counter
+from dataclasses import dataclass
 from datetime import date, datetime, time
 from typing import Any, Protocol
 
@@ -236,45 +237,13 @@ class _TariffEngine:
                     self._lookup_table[s_idx, d_idx, :end_min] = p_idx
 
     def evaluate(self, index: pd.DatetimeIndex) -> pd.DataFrame:
-        day_of, seasons, day_types, period = self._by_day(index)
-        return pd.DataFrame(
-            {
-                "season": _object_array(seasons)[day_of],
-                "day_type": _object_array(day_types)[day_of],
-                "period": _object_array(self._period_types)[period],
-            },
-            index=index,
-        )
+        return self.lookup(index).frame()
 
     def codes(self, index: pd.DatetimeIndex) -> pd.DataFrame:
-        """evaluate as categorical columns named by strings, so a caller reads
-        integer codes instead of one Python object per timestamp."""
-        day_of, seasons, day_types, period = self._by_day(index)
+        return self.lookup(index).codes()
 
-        def column(labels: list[Any], codes: npt.NDArray[Any]) -> pd.Categorical:
-            # A custom TimeSlot may name a period by its string, as "peak"
-            # beside PeriodType.PEAK; both are one category.
-            # The trailing -1 keeps code -1 (no name) as -1.
-            names = [_label_value(label) for label in labels]
-            categories = list(dict.fromkeys(names))
-            to_category = np.array([categories.index(n) for n in names] + [-1])
-            return pd.Categorical.from_codes(to_category[codes], categories)
-
-        # A season or day type the strategy does not list gets no name (-1).
-        season_codes = np.array(
-            [self._season_map.get(s, -1) for s in seasons], dtype=np.intp
-        )
-        day_type_codes = np.array(
-            [self._day_type_map.get(d, -1) for d in day_types], dtype=np.intp
-        )
-        return pd.DataFrame(
-            {
-                "season": column(self.seasons, season_codes[day_of]),
-                "day_type": column(self.day_types, day_type_codes[day_of]),
-                "period": column(self._period_types, period),
-            },
-            index=index,
-        )
+    def lookup(self, index: pd.DatetimeIndex) -> _Lookup:
+        return _Lookup(self, index, *self._by_day(index))
 
     def _by_day(
         self, index: pd.DatetimeIndex
@@ -360,6 +329,100 @@ def _period(value: PeriodType | str) -> PeriodType | str:
         except ValueError:
             return value
     return value
+
+
+@dataclass(frozen=True)
+class _Lookup:
+    """One reading of an index: each Taiwan day's season and day type, and
+    each timestamp's day and period. frame, codes and unit_costs all read
+    from it, so a caller that needs two of them reads the calendar once."""
+
+    engine: _TariffEngine
+    index: pd.DatetimeIndex
+    day_of: npt.NDArray[np.intp]
+    seasons: list[Any]
+    day_types: list[Any]
+    period: npt.NDArray[np.int8]
+
+    def frame(self) -> pd.DataFrame:
+        """Season, day type and period objects, one row per timestamp."""
+        return pd.DataFrame(
+            {
+                "season": _object_array(self.seasons)[self.day_of],
+                "day_type": _object_array(self.day_types)[self.day_of],
+                "period": _object_array(self.engine._period_types)[self.period],
+            },
+            index=self.index,
+        )
+
+    def labels(self) -> pd.DataFrame:
+        """frame with each season, day type and period as its name."""
+        period_names = _object_array(
+            [_label_value(p) for p in self.engine._period_types]
+        )
+        return pd.DataFrame(
+            {
+                "season": _object_array([_label_value(s) for s in self.seasons])[
+                    self.day_of
+                ],
+                "day_type": _object_array([_label_value(d) for d in self.day_types])[
+                    self.day_of
+                ],
+                "period": period_names[self.period],
+            },
+            index=self.index,
+        )
+
+    def codes(self) -> pd.DataFrame:
+        """frame as categorical columns named by strings, so a caller reads
+        integer codes instead of one Python object per timestamp."""
+        engine = self.engine
+
+        def column(labels: list[Any], codes: npt.NDArray[Any]) -> pd.Categorical:
+            # A custom TimeSlot may name a period by its string, as "peak"
+            # beside PeriodType.PEAK; both are one category.
+            # The trailing -1 keeps code -1 (no name) as -1.
+            names = [_label_value(label) for label in labels]
+            categories = list(dict.fromkeys(names))
+            to_category = np.array([categories.index(n) for n in names] + [-1])
+            return pd.Categorical.from_codes(to_category[codes], categories)
+
+        # A season or day type the strategy does not list gets no name (-1).
+        season_codes = np.array(
+            [engine._season_map.get(s, -1) for s in self.seasons], dtype=np.intp
+        )
+        day_type_codes = np.array(
+            [engine._day_type_map.get(d, -1) for d in self.day_types], dtype=np.intp
+        )
+        return pd.DataFrame(
+            {
+                "season": column(engine.seasons, season_codes[self.day_of]),
+                "day_type": column(engine.day_types, day_type_codes[self.day_of]),
+                "period": column(engine._period_types, self.period),
+            },
+            index=self.index,
+        )
+
+    def unit_costs(self, rates: TariffRate) -> npt.NDArray[np.float64]:
+        """The price per kWh at each timestamp. rates.get_cost runs once per
+        season, day type and period that occurs, not once per timestamp."""
+        periods = self.engine._period_types
+        pairs: dict[tuple[Any, Any], int] = {}
+        pair_of_day = np.array(
+            [
+                pairs.setdefault((season, day_type), len(pairs))
+                for season, day_type in zip(self.seasons, self.day_types)
+            ],
+            dtype=np.intp,
+        )
+        table = np.array(
+            [
+                [rates.get_cost(season, period, day_type) for period in periods]
+                for season, day_type in pairs
+            ],
+            dtype=float,
+        ).reshape(len(pairs), len(periods))
+        return table[pair_of_day[self.day_of], self.period]
 
 
 def _object_array(values: list[Any]) -> npt.NDArray[np.object_]:
@@ -457,16 +520,15 @@ class TariffPlan:
             raise InvalidUsageInput("target must be a datetime or pandas.DatetimeIndex")
 
         check_price_dates(target, self.rates.price_dates)
-        context_df = self.profile.evaluate(target)
-        seasons = context_df["season"]
-        periods = context_df["period"]
+        lookup = self.profile.engine.lookup(target)
+        names = lookup.labels()
 
         if self.rates.tiered_rates:
             rate_series = pd.Series([None] * len(target), index=target, name="rate")
             cost_series = pd.Series([None] * len(target), index=target, name="cost")
         else:
             rate_series = pd.Series(
-                unit_costs(self.rates, context_df), index=target, name="rate"
+                lookup.unit_costs(self.rates), index=target, name="rate"
             )
             if usage_kwh is None:
                 cost_series = pd.Series([None] * len(target), index=target, name="cost")
@@ -477,8 +539,8 @@ class TariffPlan:
 
         result = pd.DataFrame(
             {
-                "season": seasons.apply(_label_value),
-                "period": periods.apply(_label_value),
+                "season": names["season"],
+                "period": names["period"],
                 "rate": rate_series,
                 "cost": cost_series,
             },
@@ -510,8 +572,10 @@ class TariffPlan:
             self.profile.engine._preload_calendar_years({int(y) for y in years})
             return self._calculate_tiered_costs(usage_kwh)
 
-        context = self.profile.evaluate(usage_kwh.index)
-        unit_cost = pd.Series(unit_costs(self.rates, context), index=usage_kwh.index)
+        unit_cost = pd.Series(
+            self.profile.engine.lookup(usage_kwh.index).unit_costs(self.rates),
+            index=usage_kwh.index,
+        )
         interval_costs = usage_kwh * unit_cost
         month_index = taiwan_wall_time(usage_kwh.index)
         monthly_costs = interval_costs.groupby(month_index.to_period("M")).sum()
@@ -554,7 +618,8 @@ class TariffPlan:
         check_price_dates(usage_kwh.index, self.rates.price_dates)
 
         month_index = taiwan_wall_time(usage_kwh.index)
-        context = self.profile.evaluate(usage_kwh.index)
+        lookup = self.profile.engine.lookup(usage_kwh.index)
+        names = lookup.labels()
 
         if self.rates.tiered_rates:
             billing_period_index = _billing_period_group_index(
@@ -563,9 +628,9 @@ class TariffPlan:
             monthly_usage = usage_kwh.groupby(billing_period_index).sum()
             monthly_costs = self._calculate_tiered_costs(usage_kwh)
             month_seasons = (
-                context["season"]
+                names["season"]
                 .groupby(billing_period_index)
-                .agg(lambda x: _label_value(x.mode().iloc[0]))
+                .agg(lambda x: x.mode().iloc[0])
             )
             records = []
             for month, usage in monthly_usage.items():
@@ -599,12 +664,12 @@ class TariffPlan:
                 ]
             return result
 
-        unit_cost = pd.Series(unit_costs(self.rates, context), index=usage_kwh.index)
+        unit_cost = pd.Series(lookup.unit_costs(self.rates), index=usage_kwh.index)
         base = pd.DataFrame(
             {
                 "month": month_index.to_period("M"),
-                "season": context["season"].apply(_label_value),
-                "period": context["period"].apply(_label_value),
+                "season": names["season"].to_numpy(),
+                "period": names["period"].to_numpy(),
                 "usage_kwh": usage_kwh.values,
                 "cost": (usage_kwh * unit_cost).values,
             }
@@ -631,19 +696,6 @@ class TariffPlan:
                 ]
             ]
         return grouped[["month", "season", "period", "usage_kwh", "cost"]]
-
-
-def unit_costs(rates: TariffRate, context: pd.DataFrame) -> npt.NDArray[np.float64]:
-    """The price per kWh for each row of a season, day type and period context."""
-    return np.array(
-        [
-            rates.get_cost(season, period, day_type)
-            for season, day_type, period in zip(
-                context["season"], context["day_type"], context["period"]
-            )
-        ],
-        dtype=float,
-    )
 
 
 def check_price_dates(

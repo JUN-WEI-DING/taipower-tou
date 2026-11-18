@@ -156,3 +156,35 @@ def test_index_paths_decide_by_day_not_by_timestamp(monkeypatch) -> None:
         calls = 0
         read(index)
         assert calls < len(index) // 20, (read.__name__, calls)
+
+
+def test_prices_are_read_per_kind_of_time_not_per_timestamp(monkeypatch) -> None:
+    """0.2.0 called TariffRate.get_cost once per timestamp, which made a year
+    of 15-minute usage take about 30 ms to price."""
+    from taipower_tou.models import TariffRate
+
+    calls = 0
+    get_cost = TariffRate.get_cost
+
+    def counting(self, *args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return get_cost(self, *args, **kwargs)
+
+    index = INDEXES["15 minutes, 2025"]
+    usage = pd.Series(1.0, index=index)
+    plan = tou.plan("high_voltage_three_stage")
+    monkeypatch.setattr(TariffRate, "get_cost", counting)
+    for name, price in {
+        "calculate_costs": lambda: plan.calculate_costs(usage),
+        "monthly_breakdown": lambda: plan.monthly_breakdown(usage),
+        "pricing_context": lambda: plan.pricing_context(index),
+        "calculate_bill": lambda: tou.calculate_bill(
+            usage,
+            "high_voltage_three_stage",
+            tou.BillingInputs(contract_capacities={"regular": 100}),
+        ),
+    }.items():
+        calls = 0
+        price()
+        assert calls < 100, (name, calls)

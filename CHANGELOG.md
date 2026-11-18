@@ -39,6 +39,11 @@ given, where 0.2.0 ignored them silently.
   A year of 15-minute timestamps takes 3.9 ms instead of 11.1 ms, with the
   same values and dtypes. `calculate_costs` and `monthly_breakdown` gain
   the same 7 ms.
+- Prices are read once per season, day type and period that occurs, not
+  once per timestamp. For a year of 15-minute usage, `calculate_costs`
+  takes 3.4 ms instead of 32 ms, `pricing_context` 6.3 ms instead of 40 ms,
+  `monthly_breakdown` 12 ms instead of 43 ms, and `calculate_bill` 17 ms
+  instead of 48 ms. Every output of every plan is unchanged.
 - A day type strategy loads its calendar's years through its own
   `preload_years`; the engine no longer reads the strategy's `_calendar`.
 - `docs/詳細電價表.pdf` is gone; the one copy is
