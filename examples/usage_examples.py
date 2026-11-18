@@ -24,15 +24,10 @@ def main() -> None:
     # available_plans: 取得 plan ID 與中文名稱的對照
     print("available_plans:", tou.available_plans())
 
-    # residential_simple_2_tier_plan、high_voltage_2_tier_plan、
-    # residential_non_tou_plan: 直接取得各方案的 TariffPlan
-    simple_plan = tou.residential_simple_2_tier_plan(calendar)
-    tou.high_voltage_2_tier_plan(calendar)
-    non_tou_plan = tou.residential_non_tou_plan(calendar)
-
     # plan: 以方案名稱取得 TariffPlan
-    plan_by_name = tou.plan("residential_simple_2_tier", calendar_instance=calendar)
-    print("plan name:", plan_by_name.profile.name)
+    simple_plan = tou.plan("residential_simple_2_tier", calendar_instance=calendar)
+    non_tou_plan = tou.plan("residential_non_tou", calendar_instance=calendar)
+    print("plan name:", simple_plan.profile.name)
 
     # period_at: 以方案名稱取得時間點的時段型別
     dt = datetime(2026, 7, 15, 10, 0)
@@ -40,8 +35,8 @@ def main() -> None:
         "period_at:",
         tou.period_at(dt, "residential_simple_2_tier", calendar_instance=calendar),
     )
-    # get_period: 直接用 profile 查時段型別
-    print("get_period:", tou.get_period(dt, simple_plan.profile))
+    # TariffPlan.period_at: 已有方案物件時直接查
+    print("plan.period_at:", simple_plan.period_at(dt))
 
     # period_context: 回傳 season/day_type/period
     print(
@@ -78,10 +73,10 @@ def main() -> None:
         tou.plan_details("high_voltage_2_tier", calendar_instance=calendar),
     )
 
-    # calculate_costs: 以 TariffPlan 計算每月流動電費，不含基本電費
+    # TariffPlan.calculate_costs: 計算每月流動電費，不含基本電費
     # （usage 必須是 Series，index 為 DatetimeIndex）
     usage = _sample_usage(datetime(2026, 7, 15, 16, 0), periods=4, freq_minutes=30)
-    print("calculate_costs:", tou.calculate_costs(usage, simple_plan))
+    print("calculate_costs:", simple_plan.calculate_costs(usage))
     # costs: 以方案名稱計算每月流動電費
     print(
         "costs:",
@@ -120,7 +115,7 @@ def main() -> None:
     non_tou_usage = _sample_usage(
         datetime(2026, 7, 1, 0, 0), periods=5, freq_minutes=60
     )
-    print("non_tou_costs:", tou.calculate_costs(non_tou_usage, non_tou_plan))
+    print("non_tou_costs:", non_tou_plan.calculate_costs(non_tou_usage))
 
     # period_context（DatetimeIndex 版本）: 回傳 DataFrame（season/day_type/period）
     start = datetime(2026, 7, 15)

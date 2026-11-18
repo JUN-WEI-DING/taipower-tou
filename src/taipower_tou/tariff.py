@@ -16,7 +16,7 @@ except ImportError:
     npt: Any = None  # type: ignore
     pd: Any = None  # type: ignore
 
-from taipower_tou._warnings import warn
+from taipower_tou._warnings import deprecated, warn
 from taipower_tou.calendar import (
     preload_calendar_years,
     taiwan_wall_datetime,
@@ -132,6 +132,33 @@ class TariffProfile:
         if pd is None:
             raise TariffError("pandas is required for tariff evaluation")
         return self.engine.evaluate(index)
+
+    def period_at(self, target: object) -> PeriodType | str | pd.Series:
+        """The period at a datetime, or a period Series for a DatetimeIndex."""
+        if pd is not None and isinstance(target, pd.DatetimeIndex):
+            return self.engine.evaluate(target)["period"]
+        if isinstance(target, datetime):
+            return self.engine.get_period_type_scalar(taiwan_wall_datetime(target))
+        raise NotImplementedError(f"Unsupported type: {type(target)}")
+
+    def period_context(self, target: object) -> Any:
+        """Season, day type and period at a datetime, or a frame for a
+        DatetimeIndex."""
+        if pd is not None and isinstance(target, pd.DatetimeIndex):
+            return self.engine.evaluate(target)
+        if not isinstance(target, datetime):
+            raise NotImplementedError(f"Unsupported type: {type(target)}")
+        local = taiwan_wall_datetime(target)
+        return {
+            "season": self.season_strategy.get_season(local.date()),
+            "day_type": self.day_type_strategy.get_day_type(local.date()),
+            "period": self.engine.get_period_type_scalar(local),
+        }
+
+    def period_codes(self, index: pd.DatetimeIndex) -> pd.DataFrame:
+        """period_context for a DatetimeIndex, with categorical columns whose
+        .cat.codes are integers and .cat.categories their names."""
+        return self.engine.codes(index)
 
     def describe(self) -> dict[str, Any]:
         def _slot_to_dict(slot: TimeSlot) -> dict[str, str]:
@@ -353,26 +380,15 @@ def _object_array(values: list[Any]) -> npt.NDArray[np.object_]:
 
 
 def get_period(target: object, profile: TariffProfile) -> PeriodType | str | pd.Series:
-    """The period at a datetime, or a period Series for a DatetimeIndex."""
-    if pd is not None and isinstance(target, pd.DatetimeIndex):
-        return profile.engine.evaluate(target)["period"]
-    if isinstance(target, datetime):
-        return profile.engine.get_period_type_scalar(taiwan_wall_datetime(target))
-    raise NotImplementedError(f"Unsupported type: {type(target)}")
+    """Deprecated: profile.period_at(target)."""
+    deprecated("get_period(target, profile)", "Use profile.period_at(target).")
+    return profile.period_at(target)
 
 
 def get_context(target: object, profile: TariffProfile) -> Any:
-    """Season, day type and period at a datetime, or a frame for a DatetimeIndex."""
-    if pd is not None and isinstance(target, pd.DatetimeIndex):
-        return profile.engine.evaluate(target)
-    if not isinstance(target, datetime):
-        raise NotImplementedError(f"Unsupported type: {type(target)}")
-    local = taiwan_wall_datetime(target)
-    return {
-        "season": profile.season_strategy.get_season(local.date()),
-        "day_type": profile.day_type_strategy.get_day_type(local.date()),
-        "period": profile.engine.get_period_type_scalar(local),
-    }
+    """Deprecated: profile.period_context(target)."""
+    deprecated("get_context(target, profile)", "Use profile.period_context(target).")
+    return profile.period_context(target)
 
 
 class TariffPlan:
@@ -389,6 +405,18 @@ class TariffPlan:
     @property
     def name(self) -> str:
         return self.profile.name
+
+    def period_at(self, target: object) -> PeriodType | str | pd.Series:
+        """TariffProfile.period_at."""
+        return self.profile.period_at(target)
+
+    def period_context(self, target: object) -> Any:
+        """TariffProfile.period_context."""
+        return self.profile.period_context(target)
+
+    def period_codes(self, index: pd.DatetimeIndex) -> pd.DataFrame:
+        """TariffProfile.period_codes."""
+        return self.profile.period_codes(index)
 
     def describe(self) -> dict[str, Any]:
         return {
@@ -412,7 +440,7 @@ class TariffPlan:
 
         if isinstance(target, datetime):
             check_price_dates(pd.DatetimeIndex([target]), self.rates.price_dates)
-            context = get_context(target, self.profile)
+            context = self.profile.period_context(target)
             season = context["season"]
             period = context["period"]
             unit_cost: float | None = None

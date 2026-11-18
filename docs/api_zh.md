@@ -24,22 +24,21 @@
 
 - `available_plans()` 回傳 `{plan_id: 中文名稱}`，共 18 個方案。
 - `plan(name, calendar_instance=None, billing_cycle_type=BillingCycleType.MONTHLY)` 回傳 `TariffPlan`。`billing_cycle_type` 只影響累進電價方案的 `calculate_costs` 與 `monthly_breakdown`。`high_voltage_ev` 的單價是低壓電動車電價的 95%。
-- `residential_simple_2_tier_plan()`、`high_voltage_2_tier_plan()`、`residential_non_tou_plan(billing_cycle_type=...)` 等同用該 ID 呼叫 `plan()`。
 - `plan_details(plan_name)` 回傳 `TariffPlan.describe()`，含時段表 `profile` 與費率表 `rates`。
 - `get_plan_requirements(plan_name)` 回傳 dict，鍵為 `requires_contract_capacity`（高壓、特高壓方案必填契約容量）、`requires_meter_spec`（表燈非時間方案的底度需電表規格）、`valid_basic_fee_labels`、`uses_basic_fee_formula` 與 `formula_type`（`two_stage`、`three_stage`、`regular_only` 或 `None`）。
 - `PlanRequirements` 是同樣欄位的 dataclass（`valid_basic_fee_labels` 為 set）。`PlanRequirements.from_plan_data(plan_data)` 從 `plans.json` 的一個方案建立。
 
 ## 時段查詢
 
-- `get_period(target, profile)` 對 `datetime` 回傳該時刻的時段，為 `PeriodType` 或字串（例如 `low_voltage_power` 的 `"flat"`），對 `DatetimeIndex` 回傳 `pd.Series`。其他型別（包括 `date`）拋出 `NotImplementedError`。
-- `get_context(target, profile)` 回傳季節、日型與時段。單點為 dict，`DatetimeIndex` 為欄位 `season`、`day_type`、`period` 的 `DataFrame`。
-- `period_at(target, plan_name)` 與 `period_context(target, plan_name)` 以方案名稱呼叫上面兩個函式。
+- `period_at(target, plan_name)` 對 `datetime` 回傳該時刻的時段，為 `PeriodType` 或字串（例如 `low_voltage_power` 的 `"flat"`），對 `DatetimeIndex` 回傳 `pd.Series`。其他型別（包括 `date`）拋出 `NotImplementedError`。
+- `period_context(target, plan_name)` 回傳季節、日型與時段。單點為 dict，`DatetimeIndex` 為欄位 `season`、`day_type`、`period` 的 `DataFrame`。
+- 自己建的方案用 `TariffPlan` 或 `TariffProfile` 的 `period_at(target)`、`period_context(target)`、`period_codes(index)`，結果同上。
 - `period_codes(index, plan_name)` 只收 `DatetimeIndex`，回傳和 `period_context` 相同欄位的 `DataFrame`，但每欄是 categorical：`.cat.codes` 是整數，`.cat.categories` 是名稱字串（例如 `"saturday"`、`"semi_peak"`）。一整年 15 分鐘資料，讀出時段約 3 毫秒，經 `period_context` 的物件約 7 毫秒。
 - `pricing_context(target, plan_name, usage=None, include_details=False)` 回傳 `season`、`period`、`rate`、`cost`，單點為 dict，`DatetimeIndex` 為 `DataFrame`。單點的 `usage` 是數值，序列的 `usage` 須為 `pd.Series`。沒給 `usage` 時 `cost` 為 `None`。累進電價方案沒有逐時單價，`rate` 為 `None`，傳入 `usage` 拋出 `InvalidUsageInput`。`include_details=True` 回傳鍵為 `context`、`rate_details`、`profile_details` 的 dict。
 
 ## 能量費
 
-- `calculate_costs(usage, plan)` 與 `costs(usage, plan_name)` 回傳每期能量費的 `pd.Series`（名稱 `cost`，索引為該期的抄表月）。時間電價方案依台灣時間的月份加總。累進電價方案依方案的 `billing_cycle_type` 分期，兩個月一期時級距度數加倍。一期橫跨夏月與非夏月時，依台電「請問電費如何計算」FAQ，整期度數分別以兩季累進電價計算，再依各季天數比例加權。結果不進位，也不含基本費、超約與功率因數。
+- `costs(usage, plan_name)` 與 `TariffPlan.calculate_costs(usage)` 回傳每期能量費的 `pd.Series`（名稱 `cost`，索引為該期的抄表月）。時間電價方案依台灣時間的月份加總。累進電價方案依方案的 `billing_cycle_type` 分期，兩個月一期時級距度數加倍。一期橫跨夏月與非夏月時，依台電「請問電費如何計算」FAQ，整期度數分別以兩季累進電價計算，再依各季天數比例加權。結果不進位，也不含基本費、超約與功率因數。
 - `monthly_breakdown(usage, plan_name, include_shares=False, billing_cycle_type=...)` 回傳每月、季節、時段一列的 `DataFrame`，欄位為 `month`、`season`、`period`、`usage_kwh`、`cost`。累進電價方案每期一列，`period` 為 `"tiered"`，`season` 為多數資料所在的季節。`include_shares=True` 加上 `usage_share` 與 `cost_share`。
 - `usage` 須為索引是 `DatetimeIndex` 的 `pd.Series`。空的、含 NaN、無限大或負值、時間未排序、同一時間有兩筆的資料拋出 `InvalidUsageInput`。
 
@@ -83,9 +82,6 @@
 其他帳單函式：
 
 - `calculate_bill_breakdown(...)` 的引數同 `calculate_bill`，回傳 dict。`summary` 是 `calculate_bill` 的欄位加上 `min_fee_adjustment`（`total` 中補到最低電費的部分）。`details` 是每期、季節、時段的 `usage_kwh` 與未進位的 `energy_cost`。`basic_details` 是每期、每項基本費與季節的 `share`、`quantity`、`rate`、`cost`。`adjustment_details` 的 `type` 為 `over_contract`、`outside_contract_energy`、`power_factor` 或 `bill_ratio`。
-- `calculate_bill_simple(usage, plan_id)` 等同不傳 `inputs` 的 `calculate_bill`。
-- `calculate_bill_from_list(usage, plan_id, start, freq="1h", inputs=None)` 從 `start` 起每 `freq` 一筆建立序列再計算。
-- `calculate_bill_from_dict(usage, plan_id, inputs=None)` 以 dict 的鍵為時間。
 
 ## BillingInputs
 

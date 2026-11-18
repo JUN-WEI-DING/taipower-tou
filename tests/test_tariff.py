@@ -12,7 +12,7 @@ from taipower_tou import (
     pricing_context,
 )
 from taipower_tou.calendar import TaiwanCalendar
-from taipower_tou.tariff import PeriodType, SeasonType, get_period
+from taipower_tou.tariff import PeriodType, SeasonType
 
 
 def test_residential_simple_2_tier_periods() -> None:
@@ -22,8 +22,8 @@ def test_residential_simple_2_tier_periods() -> None:
     dt_peak = datetime(2025, 7, 15, 10, 0)
     dt_off_peak = datetime(2025, 7, 13, 10, 0)
 
-    peak_result = get_period(dt_peak, tariff_plan.profile)
-    off_peak_result = get_period(dt_off_peak, tariff_plan.profile)
+    peak_result = tariff_plan.period_at(dt_peak)
+    off_peak_result = tariff_plan.period_at(dt_off_peak)
     # Result can be either the enum or its value
     assert peak_result in (PeriodType.PEAK, PeriodType.PEAK.value)
     assert off_peak_result in (PeriodType.OFF_PEAK, PeriodType.OFF_PEAK.value)

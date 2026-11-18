@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from taipower_tou._warnings import deprecated, unused_calendar_args
 from taipower_tou.billing import (
     BillingInputs,
     calculate_bill,
@@ -53,6 +54,8 @@ __version__ = "0.2.0"
 
 
 def calculate_costs(usage: Any, plan: TariffPlan) -> Any:
+    """Deprecated: plan.calculate_costs(usage)."""
+    deprecated("calculate_costs(usage, plan)", "Use plan.calculate_costs(usage).")
     return plan.calculate_costs(usage)
 
 
@@ -66,9 +69,8 @@ def is_holiday(
 
     See TaiwanCalendar.is_holiday.
     """
-    calendar_instance = calendar or taiwan_calendar(
-        cache_dir=cache_dir, api_timeout=api_timeout
-    )
+    unused_calendar_args(cache_dir, api_timeout)
+    calendar_instance = calendar or taiwan_calendar()
     return calendar_instance.is_holiday(target)
 
 
@@ -78,6 +80,9 @@ def residential_simple_2_tier_plan(
     api_timeout: int | None = None,
 ) -> TariffPlan:
     """plan("residential_simple_2_tier")."""
+    deprecated(
+        "residential_simple_2_tier_plan()", 'Use plan("residential_simple_2_tier").'
+    )
     return plan(
         "residential_simple_2_tier",
         calendar_instance,
@@ -92,6 +97,7 @@ def high_voltage_2_tier_plan(
     api_timeout: int | None = None,
 ) -> TariffPlan:
     """plan("high_voltage_2_tier")."""
+    deprecated("high_voltage_2_tier_plan()", 'Use plan("high_voltage_2_tier").')
     return plan("high_voltage_2_tier", calendar_instance, cache_dir, api_timeout)
 
 
@@ -102,6 +108,7 @@ def residential_non_tou_plan(
     billing_cycle_type: BillingCycleType = BillingCycleType.MONTHLY,
 ) -> TariffPlan:
     """plan("residential_non_tou", billing_cycle_type=billing_cycle_type)."""
+    deprecated("residential_non_tou_plan()", 'Use plan("residential_non_tou").')
     return plan(
         "residential_non_tou",
         calendar_instance,
@@ -150,9 +157,8 @@ def plan(
         >>> plan = tou.plan("residential_non_tou",
         ...                 billing_cycle_type=BillingCycleType.ODD_MONTH)
     """
-    calendar = calendar_instance or taiwan_calendar(
-        cache_dir=cache_dir, api_timeout=api_timeout
-    )
+    unused_calendar_args(cache_dir, api_timeout)
+    calendar = calendar_instance or taiwan_calendar()
     return TariffFactory.create(
         name, calendar=calendar, billing_cycle_type=billing_cycle_type
     )
@@ -166,7 +172,7 @@ def period_at(
     api_timeout: int | None = None,
 ) -> Any:
     selected_plan = plan(plan_name, calendar_instance, cache_dir, api_timeout)
-    return get_period(target, selected_plan.profile)
+    return selected_plan.period_at(target)
 
 
 def period_context(
@@ -177,7 +183,7 @@ def period_context(
     api_timeout: int | None = None,
 ) -> Any:
     selected_plan = plan(plan_name, calendar_instance, cache_dir, api_timeout)
-    return get_context(target, selected_plan.profile)
+    return selected_plan.period_context(target)
 
 
 def period_codes(
@@ -197,7 +203,7 @@ def period_codes(
         ['off_peak', 'semi_peak']
     """
     selected_plan = plan(plan_name, calendar_instance)
-    return selected_plan.profile.engine.codes(index)
+    return selected_plan.period_codes(index)
 
 
 def costs(
@@ -208,7 +214,7 @@ def costs(
     api_timeout: int | None = None,
 ) -> Any:
     selected_plan = plan(plan_name, calendar_instance, cache_dir, api_timeout)
-    return calculate_costs(usage, selected_plan)
+    return selected_plan.calculate_costs(usage)
 
 
 def monthly_breakdown(

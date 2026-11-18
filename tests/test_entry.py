@@ -16,7 +16,6 @@ from taipower_tou.tariff import (
     TariffProfile,
     TariffRate,
     TimeSlot,
-    get_period,
 )
 
 
@@ -60,9 +59,6 @@ def test_entry_calendar_and_tariffs() -> None:
     helper_calendar = tou.taiwan_calendar()
     assert helper_calendar.is_holiday(date(2024, 1, 1))
 
-    helper_plan = tou.residential_simple_2_tier_plan(calendar)
-    assert isinstance(helper_plan, TariffPlan)
-
     named_plan = tou.plan("residential_simple_2_tier", calendar_instance=calendar)
     assert isinstance(named_plan, TariffPlan)
 
@@ -77,8 +73,8 @@ def test_entry_get_period_and_calculate_costs() -> None:
     )
     plan = TariffPlan(profile, rate)
 
-    assert get_period(datetime(2024, 7, 1, 13, 0), profile) == PeriodType.PEAK
-    assert tou.get_period(datetime(2024, 7, 1, 13, 0), profile) == PeriodType.PEAK
+    assert profile.period_at(datetime(2024, 7, 1, 13, 0)) == PeriodType.PEAK
+    assert plan.period_at(datetime(2024, 7, 1, 13, 0)) == PeriodType.PEAK
 
     usage = pd.Series(
         [1.5, 2.0],
@@ -86,7 +82,6 @@ def test_entry_get_period_and_calculate_costs() -> None:
     )
     costs = plan.calculate_costs(usage)
     assert list(costs.values) == [7.5]
-    assert list(tou.calculate_costs(usage, plan).values) == [7.5]
 
 
 def test_calculate_costs_rejects_infinite_usage() -> None:

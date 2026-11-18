@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `period_codes(index, plan_name)`: `period_context` for a `DatetimeIndex`
   with categorical columns, whose `.cat.codes` are integers and
   `.cat.categories` their names.
+- `TariffPlan` and `TariffProfile` have `period_at`, `period_context` and
+  `period_codes`, so a plan built with `build_tariff_profile` needs no
+  plan name.
+
+### Deprecated
+Each still works in 0.3.0, warns `DeprecationWarning` with what to write
+instead, and is removed in 0.4.0.
+
+| Removed in 0.4.0 | Write instead |
+| --- | --- |
+| `get_period(target, profile)` | `profile.period_at(target)` |
+| `get_context(target, profile)` | `profile.period_context(target)` |
+| `calculate_costs(usage, plan)` | `plan.calculate_costs(usage)` |
+| `residential_simple_2_tier_plan()`, `high_voltage_2_tier_plan()`, `residential_non_tou_plan()` | `plan("residential_simple_2_tier")` and so on |
+| `calculate_bill_simple(usage, plan_id)` | `calculate_bill(usage, plan_id)` |
+| `calculate_bill_from_list(usage, plan_id, start, freq)` | `calculate_bill(pd.Series(usage, index=pd.date_range(start, periods=len(usage), freq=freq)), plan_id)` |
+| `calculate_bill_from_dict(usage, plan_id)` | `calculate_bill(pd.Series(list(usage.values()), index=pd.to_datetime(list(usage))), plan_id)` |
+| `cache_dir` and `api_timeout` on every function | leave them out; they do nothing |
+
+`cache_dir` and `api_timeout` now warn even when `calendar_instance` is
+given, where 0.2.0 ignored them silently.
 
 ### Changed
 - `period_context`, `get_context` and `TariffProfile.evaluate` on a

@@ -282,31 +282,27 @@ csv_usage = df["usage"]
 
 #### Example C: Lists and Dicts (範例 C：用 list 或 dict)
 
-`calculate_bill_from_list` and `calculate_bill_from_dict` build the Series for you and call `calculate_bill`.
+Build the Series from a list or dict, then call `calculate_bill`.
 
-`calculate_bill_from_list` 與 `calculate_bill_from_dict` 會替您建立 Series，再呼叫 `calculate_bill`。
+先把 list 或 dict 轉成 Series，再呼叫 `calculate_bill`。
 
 ```python
 # Regularly spaced readings
 # 固定間隔資料
-result = tou.calculate_bill_from_list(
-    usage=[1.5, 2.3, 1.8, 2.0, 1.6],
-    plan_id="簡易型二段式",
-    start="2026-07-15 09:00",
-    freq="1h",
-)
+readings = [1.5, 2.3, 1.8, 2.0, 1.6]
+hours = pd.date_range("2026-07-15 09:00", periods=len(readings), freq="1h")
+result = tou.calculate_bill(pd.Series(readings, index=hours), "簡易型二段式")
 print(f"Total: {result['total'].iloc[0]:.2f} TWD")  # Total: 121.00 TWD
 
 # Irregularly spaced readings
 # 不規則間隔資料
-result = tou.calculate_bill_from_dict(
-    usage={
-        "2026-07-15 09:00": 1.5,
-        "2026-07-15 10:00": 2.3,
-        "2026-07-15 14:30": 2.0,
-    },
-    plan_id="residential_simple_2_tier",
-)
+readings = {
+    "2026-07-15 09:00": 1.5,
+    "2026-07-15 10:00": 2.3,
+    "2026-07-15 14:30": 2.0,
+}
+usage = pd.Series(list(readings.values()), index=pd.to_datetime(list(readings)))
+result = tou.calculate_bill(usage, "residential_simple_2_tier")
 print(f"Total: {result['total'].iloc[0]:.2f} TWD")  # Total: 106.00 TWD
 ```
 
@@ -733,16 +729,15 @@ Readings outside the bills of `usage` are not billed.
 - `plan_details(name)` and `TariffPlan.describe()` return a plan's seasons, day types, schedules and prices.
 - `get_plan_requirements(name)` says whether a plan needs a contract or meter details and lists its `basic_fee_inputs` labels. `PlanRequirements` holds the same fields.
 - `TariffFactory` builds a `TariffPlan` from the bundled data with a calendar of your choice.
-- `residential_simple_2_tier_plan()`, `high_voltage_2_tier_plan()` and `residential_non_tou_plan()` are `plan(...)` for those plans.
 
 ### Time and price (時段與費率)
-- `period_at`, `period_context` and `pricing_context` take a datetime and a plan name. `get_period` and `get_context` take a `TariffProfile`. A `pandas.DatetimeIndex` in place of the datetime returns a Series or DataFrame.
+- `period_at`, `period_context` and `pricing_context` take a datetime and a plan name. `TariffPlan` and `TariffProfile` have `period_at`, `period_context` and `period_codes` methods that take only the time, for a plan you built yourself. A `pandas.DatetimeIndex` in place of the datetime returns a Series or DataFrame.
 - `period_codes(index, plan_name)` returns `period_context`'s DataFrame with categorical columns: `.cat.codes` are integers and `.cat.categories` their names, such as `"saturday"` and `"semi_peak"`. Reading a year of 15-minute periods this way takes about 3 ms instead of about 7 ms through `period_context`'s objects.
 
 ### Costs and bills (電費與帳單)
-- `TariffPlan.calculate_costs`, `costs(usage, name)` and `calculate_costs(usage, plan)` return the energy cost per month.
+- `costs(usage, name)` and `TariffPlan.calculate_costs(usage)` return the energy cost per month.
 - `TariffPlan.monthly_breakdown` and `monthly_breakdown(usage, name)` return kWh and cost per month, season and period. `include_shares=True` adds each row's share of its month.
-- `calculate_bill` returns one row per bill. `calculate_bill_simple` is `calculate_bill` with no `BillingInputs`. `calculate_bill_from_list` and `calculate_bill_from_dict` take a list or dict in place of a Series.
+- `calculate_bill` returns one row per bill.
 - `calculate_bill_breakdown` returns a dict of DataFrames: `summary` (the bill items, `min_fee_adjustment` and `total`), `details` (kWh and energy cost per bill, season and period), `basic_details` (each basic fee's `season`, `share`, `quantity`, `rate` and `cost`) and `adjustment_details` (each 超約, 功率因數 or other adjustment).
 - `BillingInputs` holds a bill's inputs. `BillingInputs.for_high_voltage`, `for_high_voltage_three_stage`, `for_extra_high_voltage`, `for_extra_high_voltage_three_stage`, `for_residential` and `for_lighting_standard` build common ones.
 - `BillingCycleType` is `MONTHLY`, `ODD_MONTH` or `EVEN_MONTH`.

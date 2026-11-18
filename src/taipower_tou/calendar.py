@@ -15,7 +15,7 @@ try:
 except ImportError:
     pd = None
 
-from taipower_tou._warnings import warn
+from taipower_tou._warnings import unused_calendar_args, warn
 from taipower_tou.errors import CalendarError, UncheckedYearWarning
 
 # Taipower bills by Taiwan local time, which has been UTC+8 without daylight
@@ -161,12 +161,7 @@ class TaiwanCalendar:
     def __init__(
         self, cache_dir: Path | None = None, api_timeout: int | None = None
     ) -> None:
-        if cache_dir is not None or api_timeout is not None:
-            warn(
-                "cache_dir and api_timeout have no effect: off-peak days are "
-                "computed from Taipower's rule without network access.",
-                DeprecationWarning,
-            )
+        unused_calendar_args(cache_dir, api_timeout)
 
     def preload_years(self, years: set[int]) -> None:
         """Validate and compute off-peak days for several years up front."""
@@ -204,4 +199,5 @@ def preload_calendar_years(calendar: Any, years: set[int]) -> None:
 def taiwan_calendar(
     cache_dir: Path | None = None, api_timeout: int | None = None
 ) -> TaiwanCalendar:
-    return TaiwanCalendar(cache_dir=cache_dir, api_timeout=api_timeout)
+    unused_calendar_args(cache_dir, api_timeout)
+    return TaiwanCalendar()

@@ -14,7 +14,7 @@ def main() -> None:
     usage = pd.Series(1.0, index=hours)
 
     print("simple_bill:")
-    print(tou.calculate_bill_simple(usage, "residential_simple_2_tier"))
+    print(tou.calculate_bill(usage, "residential_simple_2_tier"))
 
     # residential_non_tou's 底度 depends on the meter.
     inputs = tou.BillingInputs.for_residential(phase="single", voltage=110, ampere=10)

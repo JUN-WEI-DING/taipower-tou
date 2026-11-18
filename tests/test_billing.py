@@ -10,7 +10,7 @@ import taipower_tou as tou
 def test_calculate_bill_basic_fee() -> None:
     index = pd.to_datetime(["2025-07-15 10:00", "2025-07-15 23:00"])
     usage = pd.Series([1.0, 2.0], index=index)
-    result = tou.calculate_bill_simple(
+    result = tou.calculate_bill(
         usage,
         "residential_simple_2_tier",
     )

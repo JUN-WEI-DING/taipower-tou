@@ -694,7 +694,7 @@ def test_two_readings_at_one_timestamp_are_refused(series):
 
 def test_empty_usage_list_is_refused():
     """CHANGELOG 0.2.0 Fixed: an empty usage series raises InvalidUsageInput."""
-    with pytest.raises(tou.InvalidUsageInput):
+    with pytest.raises(tou.InvalidUsageInput), pytest.warns(DeprecationWarning):
         tou.calculate_bill_from_list(
             [], "residential_simple_2_tier", start="2026-07-01", freq="1h"
         )

@@ -9,7 +9,7 @@ from taipower_tou.custom import (
     build_tariff_profile,
     build_tariff_rate,
 )
-from taipower_tou.tariff import TaiwanSeasonStrategy, get_period
+from taipower_tou.tariff import TaiwanSeasonStrategy
 
 
 def test_custom_calendar_weekend_and_holiday() -> None:
@@ -57,7 +57,7 @@ def test_custom_plan_with_custom_period_label() -> None:
     plan = build_tariff_plan(profile, rate)
 
     dt = datetime(2025, 7, 1, 13, 0)
-    assert get_period(dt, plan.profile) == "super_peak"
+    assert plan.period_at(dt) == "super_peak"
 
     context = plan.pricing_context(dt)
     assert context["period"] == "super_peak"

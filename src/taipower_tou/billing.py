@@ -501,7 +501,10 @@ def calculate_bill_simple(
     api_timeout: int | None = None,
     strict: bool = False,
 ) -> pd.DataFrame:
-    """calculate_bill without BillingInputs."""
+    """Deprecated: calculate_bill without BillingInputs."""
+    _warnings.deprecated(
+        "calculate_bill_simple(usage, plan_id)", "Use calculate_bill(usage, plan_id)."
+    )
     return calculate_bill(
         usage,
         plan_id,
@@ -565,9 +568,8 @@ def _bill(
     inputs, cycle_months = _parse_inputs(plan_data, inputs or BillingInputs(), strict)
     _check_usage_resolution(plan_data, usage)
 
-    calendar = calendar_instance or taiwan_calendar(
-        cache_dir=cache_dir, api_timeout=api_timeout
-    )
+    _warnings.unused_calendar_args(cache_dir, api_timeout)
+    calendar = calendar_instance or taiwan_calendar()
 
     local = taiwan_wall_time(usage.index)
     first_month = local.min().to_period("M")
@@ -1561,6 +1563,11 @@ def calculate_bill_from_list(
             freq="1h",
         )
     """
+    _warnings.deprecated(
+        "calculate_bill_from_list(usage, plan_id, start, freq)",
+        "Use calculate_bill(pd.Series(usage, index=pd.date_range(start, "
+        "periods=len(usage), freq=freq)), plan_id).",
+    )
     series = _normalize_usage_to_series(usage, start=start, freq=freq)
     return calculate_bill(
         series,
@@ -1594,6 +1601,11 @@ def calculate_bill_from_dict(
             plan_id="residential_simple_2_tier",
         )
     """
+    _warnings.deprecated(
+        "calculate_bill_from_dict(usage, plan_id)",
+        "Use calculate_bill(pd.Series(list(usage.values()), "
+        "index=pd.to_datetime(list(usage))), plan_id).",
+    )
     series = _normalize_usage_to_series(usage)
     return calculate_bill(
         series,

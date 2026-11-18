@@ -501,7 +501,7 @@ class TestComparison:
         usage = pd.Series([100.0, 100.0, 100.0], index=index)
 
         # residential_simple_2_tier has monthly billing
-        result = tou.calculate_bill_simple(
+        result = tou.calculate_bill(
             usage,
             "residential_simple_2_tier",
         )

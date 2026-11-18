@@ -13,7 +13,7 @@ from taipower_tou.custom import (
     build_tariff_profile,
 )
 from taipower_tou.models import _label_value
-from taipower_tou.tariff import SeasonType, TaiwanSeasonStrategy, get_context
+from taipower_tou.tariff import SeasonType, TaiwanSeasonStrategy
 
 INDEXES = {
     "15 minutes, 2025": pd.date_range(
@@ -30,7 +30,7 @@ SAMPLE = 300
 
 
 def _scalar_context(index: pd.DatetimeIndex, profile) -> pd.DataFrame:
-    rows = [get_context(ts.to_pydatetime(), profile) for ts in index]
+    rows = [profile.period_context(ts.to_pydatetime()) for ts in index]
     return pd.DataFrame(rows, index=index)
 
 
