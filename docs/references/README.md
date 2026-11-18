@@ -1,7 +1,7 @@
 # Taipower references
 
 The bundled 電價表 (`src/taipower_tou/data/詳細電價表.md`, from
-`docs/詳細電價表.pdf`) leaves some billing rules to other Taipower documents.
+`src/taipower_tou/data/詳細電價表.pdf`) leaves some billing rules to other Taipower documents.
 The files here fill those gaps. Tests cite them, and none ship with the package.
 Taipower's files were read from Wayback Machine snapshots of its pages,
 except the 營業規章's 第一至三章 and 第五至十章 and the 114/10/1 計算範例. The

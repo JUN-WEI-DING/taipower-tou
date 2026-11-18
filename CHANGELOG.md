@@ -18,11 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   A year of 15-minute timestamps takes 3.9 ms instead of 11.1 ms, with the
   same values and dtypes. `calculate_costs` and `monthly_breakdown` gain
   the same 7 ms.
+- A day type strategy loads its calendar's years through its own
+  `preload_years`; the engine no longer reads the strategy's `_calendar`.
+- `docs/詳細電價表.pdf` is gone; the one copy is
+  `src/taipower_tou/data/詳細電價表.pdf`.
 
 ### Fixed
 - An empty `DatetimeIndex` returns empty columns instead of raising
   `TypeError`.
 - An index with `NaT` raises `ValueError` that names `NaT`.
+- A tiered plan's `period` is `PeriodType.OFF_PEAK` on every day. 0.2.0
+  gave the string `"off_peak"` on days other than summer weekdays. A
+  `default_period` given as a period's name is its `PeriodType`.
 
 ## [0.2.0] - 2026-10-28
 

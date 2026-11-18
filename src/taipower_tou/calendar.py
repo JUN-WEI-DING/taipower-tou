@@ -193,6 +193,14 @@ class TaiwanCalendar:
         raise CalendarError(f"Unsupported type: {type(target)}")
 
 
+def preload_calendar_years(calendar: Any, years: set[int]) -> None:
+    """Let a calendar that can check and compute years do it up front.
+    TaiwanCalendar raises CalendarError here for a year it does not cover."""
+    preload = getattr(calendar, "preload_years", None)
+    if preload is not None:
+        preload(years)
+
+
 def taiwan_calendar(
     cache_dir: Path | None = None, api_timeout: int | None = None
 ) -> TaiwanCalendar:

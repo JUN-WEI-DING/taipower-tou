@@ -17,7 +17,11 @@ except ImportError:
     pd: Any = None  # type: ignore
 
 from taipower_tou._warnings import warn
-from taipower_tou.calendar import taiwan_wall_datetime, taiwan_wall_time
+from taipower_tou.calendar import (
+    preload_calendar_years,
+    taiwan_wall_datetime,
+    taiwan_wall_time,
+)
 from taipower_tou.errors import InvalidUsageInput, TariffError, UncheckedPriceWarning
 from taipower_tou.models import (
     BillingCycleType,
@@ -79,6 +83,9 @@ class TaiwanDayTypeStrategy:
             return "saturday"
         return "weekday"
 
+    def preload_years(self, years: set[int]) -> None:
+        preload_calendar_years(self._calendar, years)
+
     def get_day_types_batch(self, dates: pd.Series) -> dict[date, str]:
         """Each date's day type, from one calendar lookup for all of them."""
         dates_index = pd.DatetimeIndex(dates)
@@ -112,7 +119,7 @@ class TariffProfile:
         self.season_strategy = season_strategy
         self.day_type_strategy = day_type_strategy
         self.schedules = schedules
-        self.default_period = default_period
+        self.default_period = _period(default_period)
         self._engine: _TariffEngine | None = None
 
     @property
@@ -226,7 +233,8 @@ class _TariffEngine:
         day_of, seasons, day_types, period = self._by_day(index)
 
         def column(labels: list[Any], codes: npt.NDArray[Any]) -> pd.Categorical:
-            # A plan's default "off_peak" and PeriodType.OFF_PEAK share a name.
+            # A custom TimeSlot may name a period by its string, as "peak"
+            # beside PeriodType.PEAK; both are one category.
             # The trailing -1 keeps code -1 (no name) as -1.
             names = [_label_value(label) for label in labels]
             categories = list(dict.fromkeys(names))
@@ -294,14 +302,11 @@ class _TariffEngine:
         return day_of, seasons, day_types, period
 
     def _preload_calendar_years(self, years: set[int]) -> None:
-        """Let the calendar check and compute each year once, before the
-        per-day lookups. TaiwanCalendar raises CalendarError here for a year
-        it does not cover."""
-        day_type_strategy = self.profile.day_type_strategy
-        if hasattr(day_type_strategy, "_calendar"):
-            calendar = day_type_strategy._calendar
-            if hasattr(calendar, "preload_years"):
-                calendar.preload_years(years)
+        """Let the day type strategy check and compute each year once, before
+        the per-day lookups."""
+        preload = getattr(self.profile.day_type_strategy, "preload_years", None)
+        if preload is not None:
+            preload(years)
 
     def get_period_type_scalar(self, dt: datetime) -> PeriodType | str:
         season = self.profile.season_strategy.get_season(dt.date())
@@ -327,6 +332,17 @@ class _TariffEngine:
                 if t >= slot.start or t < slot.end:
                     return slot.period_type
         return default_period
+
+
+def _period(value: PeriodType | str) -> PeriodType | str:
+    """A period name as its PeriodType, or as given when it is not one, such
+    as low_voltage_power's "flat"."""
+    if isinstance(value, str):
+        try:
+            return PeriodType(value)
+        except ValueError:
+            return value
+    return value
 
 
 def _object_array(values: list[Any]) -> npt.NDArray[np.object_]:

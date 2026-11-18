@@ -13,7 +13,7 @@ from taipower_tou.custom import (
     build_tariff_profile,
 )
 from taipower_tou.models import _label_value
-from taipower_tou.tariff import TaiwanSeasonStrategy, get_context
+from taipower_tou.tariff import SeasonType, TaiwanSeasonStrategy, get_context
 
 INDEXES = {
     "15 minutes, 2025": pd.date_range(
@@ -123,3 +123,36 @@ def test_period_codes_takes_only_an_index() -> None:
         tou.period_codes(
             pd.Timestamp("2025-07-01").to_pydatetime(), "high_voltage_three_stage"
         )
+
+
+@pytest.mark.parametrize("plan_id", sorted(tou.available_plans()))
+def test_one_object_per_period_name(plan_id: str) -> None:
+    """0.2.0 gave a tiered plan's off_peak as PeriodType.OFF_PEAK on summer
+    weekdays and as the string "off_peak" on other days."""
+    context = tou.period_context(INDEXES["15 minutes, 2025"], plan_id)
+    for column in context:
+        objects = {(type(v), v) for v in context[column].unique()}
+        names = [_label_value(v) for _, v in objects]
+        assert len(names) == len(set(names)), (column, objects)
+
+
+def test_index_paths_decide_by_day_not_by_timestamp(monkeypatch) -> None:
+    """0.2.0 hashed a SeasonType once per timestamp, which made a year of
+    15-minute timestamps take 11 ms. Deciding by day hashes it about once a
+    day."""
+    calls = 0
+    enum_hash = SeasonType.__hash__
+
+    def counting_hash(self: SeasonType) -> int:
+        nonlocal calls
+        calls += 1
+        return enum_hash(self)
+
+    index = INDEXES["15 minutes, 2025"]
+    profile = tou.plan("high_voltage_three_stage").profile
+    profile.evaluate(index[:96])  # build the engine outside the count
+    monkeypatch.setattr(SeasonType, "__hash__", counting_hash)
+    for read in (profile.evaluate, profile.engine.codes):
+        calls = 0
+        read(index)
+        assert calls < len(index) // 20, (read.__name__, calls)

@@ -12,6 +12,7 @@ try:
 except ImportError:
     pd = None
 
+from taipower_tou.calendar import preload_calendar_years
 from taipower_tou.errors import CalendarError, TariffError
 from taipower_tou.models import (
     BillingCycleType,
@@ -98,6 +99,9 @@ class WeekdayDayTypeStrategy:
             6: "sunday",
         }
         self._holiday_label = holiday_label
+
+    def preload_years(self, years: set[int]) -> None:
+        preload_calendar_years(self._calendar, years)
 
     def get_day_type(self, target: date) -> str:
         if self._calendar.is_holiday(target):
