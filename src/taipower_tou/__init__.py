@@ -4,11 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from taipower_tou.billing import (
-    BillingInputs,
-    calculate_bill,
-    calculate_bill_breakdown,
-)
+from taipower_tou.billing import calculate_bill, calculate_bill_breakdown
+from taipower_tou.billing_inputs import BillingInputs
 from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar
 from taipower_tou.custom import (
     CustomCalendar,

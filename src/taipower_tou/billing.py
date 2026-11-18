@@ -3,28 +3,33 @@
 from __future__ import annotations
 
 import math
-import numbers
-from dataclasses import dataclass, field, replace
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from taipower_tou import _warnings
+from taipower_tou.billing_inputs import (
+    BillingInputs,
+    _check_usage_resolution,
+    _parse_inputs,
+)
 from taipower_tou.calendar import TaiwanCalendar, taiwan_calendar, taiwan_wall_time
 from taipower_tou.custom import CustomCalendar
+from taipower_tou.demand import (
+    _compute_over_contract_kw,
+    _over_contract_fee,
+    _ratio,
+    _read_demand,
+    _times,
+    _times_outside_contract,
+    _warn_installed_demand_over_capacity,
+)
 from taipower_tou.errors import (
-    InvalidBasicFeeInput,
-    InvalidBillingInput,
-    InvalidUsageInput,
-    MissingRequiredInput,
     PartialPeriodWarning,
-    TariffError,
 )
 from taipower_tou.factory import (
     BasicFeeFormula,
-    OverContractRule,
-    PlanRequirements,
     PlanRules,
     PlanStore,
     PowerFactorEligibility,
@@ -37,419 +42,6 @@ from taipower_tou.tariff import (
     season_day_shares,
     tiered_energy_cost,
 )
-
-
-@dataclass
-class BillingInputs:
-    """What a bill needs besides usage.
-
-    Attributes:
-        basic_fee_inputs: Quantity per basic fee label that
-            get_plan_requirements lists, such as {"裝置契約": 10} in kW or
-            {"按戶計收-單相": 2} households. 簡易型 plans take
-            {"basic_fee": households}.
-        power_factor: 功率因數 in percent, 95 and not 0.95.
-        contract_capacity_kw: The 經常契約 kW, contract_capacities["regular"].
-        over_contract_kw: 超約 kW at 尖峰 for every bill, in place of demand_kw.
-        contract_capacities: kW of each contract, keyed "regular",
-            "non_summer" or "semi_peak", "saturday_semi_peak" and "off_peak".
-        demand_kw: 需量 readings in kW. Readings finer than 15 minutes are
-            averaged over each quarter hour, and 最高需量 counts whole kW.
-        meter_phase, meter_voltage_v, meter_ampere: The meter, for the 底度.
-            meter_phase, "single" or "three", also picks the 按戶計收 fee
-            and whether 功率因數 applies.
-        billing_cycle_months: 1 or 2 months per bill. None takes the plan's,
-            2 for 表燈非時間 and 1 otherwise.
-        demand_adjustment_factor: Multiplies each 需量 after the quarter-hour
-            average.
-        taipower_rounding: False keeps kWh and amounts unrounded.
-    """
-
-    basic_fee_inputs: dict[str, float] = field(default_factory=dict)
-    power_factor: float | None = None
-    contract_capacity_kw: float | None = None
-    over_contract_kw: float | None = None
-    contract_capacities: dict[str, float] = field(default_factory=dict)
-    demand_kw: pd.Series | None = None
-    meter_phase: str | None = None
-    meter_voltage_v: int | None = None
-    meter_ampere: float | None = None
-    billing_cycle_months: int | None = None
-    demand_adjustment_factor: float = 1.0
-    # 營業規章施行細則 第二十八、二十九條 rounding of kWh and amounts. False is for
-    # callers that compare or optimize bills. 最高需量 is whole kW either way.
-    taipower_rounding: bool = True
-
-    @classmethod
-    def for_high_voltage(
-        cls,
-        regular: float,
-        non_summer: float,
-        saturday_semi_peak: float,
-        off_peak: float,
-        power_factor: float | None = None,
-        demand_kw: pd.Series | None = None,
-        demand_adjustment_factor: float = 1.0,
-    ) -> BillingInputs:
-        """Inputs for a 高壓 二段式 or 批次生產 bill.
-
-        Args:
-            regular: 經常契約 kW.
-            non_summer: 非夏月契約 kW.
-            saturday_semi_peak: 週六半尖峰契約 kW.
-            off_peak: 離峰契約 kW.
-            power_factor: 功率因數 in percent.
-            demand_kw: 需量 readings in kW, for 超約.
-            demand_adjustment_factor: Multiplies each 需量.
-        """
-        return cls(
-            contract_capacities={
-                "regular": regular,
-                "non_summer": non_summer,
-                "saturday_semi_peak": saturday_semi_peak,
-                "off_peak": off_peak,
-            },
-            power_factor=power_factor,
-            demand_kw=demand_kw,
-            demand_adjustment_factor=demand_adjustment_factor,
-        )
-
-    @classmethod
-    def for_high_voltage_three_stage(
-        cls,
-        regular: float,
-        semi_peak: float,
-        saturday_semi_peak: float,
-        off_peak: float,
-        power_factor: float | None = None,
-        demand_kw: pd.Series | None = None,
-        demand_adjustment_factor: float = 1.0,
-    ) -> BillingInputs:
-        """Inputs for a 高壓 三段式 bill.
-
-        Args:
-            regular: 經常契約 kW.
-            semi_peak: 半尖峰契約 kW.
-            saturday_semi_peak: 週六半尖峰契約 kW.
-            off_peak: 離峰契約 kW.
-            power_factor: 功率因數 in percent.
-            demand_kw: 需量 readings in kW, for 超約.
-            demand_adjustment_factor: Multiplies each 需量.
-        """
-        return cls(
-            contract_capacities={
-                "regular": regular,
-                "semi_peak": semi_peak,
-                "saturday_semi_peak": saturday_semi_peak,
-                "off_peak": off_peak,
-            },
-            power_factor=power_factor,
-            demand_kw=demand_kw,
-            demand_adjustment_factor=demand_adjustment_factor,
-        )
-
-    @classmethod
-    def for_extra_high_voltage(
-        cls,
-        regular: float,
-        non_summer: float,
-        saturday_semi_peak: float,
-        off_peak: float,
-        power_factor: float | None = None,
-        demand_kw: pd.Series | None = None,
-        demand_adjustment_factor: float = 1.0,
-    ) -> BillingInputs:
-        """Inputs for a 特高壓 二段式 or 批次生產 bill, as for_high_voltage."""
-        return cls(
-            contract_capacities={
-                "regular": regular,
-                "non_summer": non_summer,
-                "saturday_semi_peak": saturday_semi_peak,
-                "off_peak": off_peak,
-            },
-            power_factor=power_factor,
-            demand_kw=demand_kw,
-            demand_adjustment_factor=demand_adjustment_factor,
-        )
-
-    @classmethod
-    def for_extra_high_voltage_three_stage(
-        cls,
-        regular: float,
-        semi_peak: float,
-        saturday_semi_peak: float,
-        off_peak: float,
-        power_factor: float | None = None,
-        demand_kw: pd.Series | None = None,
-        demand_adjustment_factor: float = 1.0,
-    ) -> BillingInputs:
-        """Inputs for a 特高壓 三段式 bill, as for_high_voltage_three_stage."""
-        return cls(
-            contract_capacities={
-                "regular": regular,
-                "semi_peak": semi_peak,
-                "saturday_semi_peak": saturday_semi_peak,
-                "off_peak": off_peak,
-            },
-            power_factor=power_factor,
-            demand_kw=demand_kw,
-            demand_adjustment_factor=demand_adjustment_factor,
-        )
-
-    @classmethod
-    def for_residential(
-        cls,
-        phase: str,
-        voltage: int,
-        ampere: float,
-        basic_fee_multiplier: float = 1.0,
-    ) -> BillingInputs:
-        """Inputs for a 表燈 bill on one meter.
-
-        Args:
-            phase: "single" or "three".
-            voltage: Meter volts. Any voltage under 1000 V is a 低壓 meter.
-                The 高壓 meters with a 底度 are 3300 and 6600 V single-phase
-                and 3300, 5700 and 11400 V three-phase. On a plan with a 底度,
-                other voltages warn.
-            ampere: Meter amperes, for the 底度.
-            basic_fee_multiplier: Households a 簡易型 plan bills its
-                basic_fee for. Other plans warn when it is not 1.
-        """
-        # Only 簡易型 plans bill "basic_fee", so a single household leaves it
-        # out and the inputs fit every residential plan, strict mode too.
-        return cls(
-            meter_phase=phase,
-            meter_voltage_v=voltage,
-            meter_ampere=ampere,
-            basic_fee_inputs=(
-                {}
-                if basic_fee_multiplier == 1.0
-                else {"basic_fee": basic_fee_multiplier}
-            ),
-        )
-
-    @classmethod
-    def for_lighting_standard(
-        cls,
-        phase: str,
-        contract_kw: float,
-        household_count: float = 1.0,
-    ) -> BillingInputs:
-        """Inputs for a 標準型 bill.
-
-        Args:
-            phase: "single" or "three", which picks the 按戶計收 fee.
-            contract_kw: 經常契約 kW.
-            household_count: Households billed 按戶計收.
-        """
-        label = "按戶計收-三相" if phase.lower() == "three" else "按戶計收-單相"
-        return cls(
-            meter_phase=phase,
-            contract_capacities={"regular": contract_kw},
-            basic_fee_inputs={label: household_count},
-        )
-
-
-def _number(value: Any) -> float:
-    """A real number as a float, and anything else as NaN, which every range
-    check refuses."""
-    return float(value) if isinstance(value, numbers.Real) else math.nan
-
-
-def _check_amount(
-    name: str, value: Any, error: type[InvalidBillingInput] = InvalidBillingInput
-) -> None:
-    """A kW, household count or ampere is a finite number, 0 or more."""
-    if not 0 <= _number(value) < math.inf:
-        raise error(f"{name} must be a finite number of 0 or more, got {value!r}.")
-
-
-def _check_values(inputs: BillingInputs) -> None:
-    """Refuse a value no bill can have, whatever the plan."""
-    for key, value in inputs.contract_capacities.items():
-        _check_amount(f"contract_capacities[{key!r}]", value)
-    for key, value in inputs.basic_fee_inputs.items():
-        _check_amount(f"basic_fee_inputs[{key!r}]", value, InvalidBasicFeeInput)
-    for name in ("contract_capacity_kw", "over_contract_kw", "meter_ampere"):
-        if getattr(inputs, name) is not None:
-            _check_amount(name, getattr(inputs, name))
-    factor = inputs.demand_adjustment_factor
-    if not 0 < _number(factor) < math.inf:
-        raise InvalidBillingInput(
-            f"demand_adjustment_factor must be a finite number above 0, got {factor!r}."
-        )
-    pf = inputs.power_factor
-    if pf is not None:
-        if not 0 < _number(pf) <= 100:
-            raise InvalidBillingInput(
-                f"power_factor must be a percentage above 0 and up to 100, got {pf!r}."
-            )
-        if pf <= 1:
-            raise InvalidBillingInput(
-                f"power_factor is a percentage, 95 for 95%, not 0.95. Got {pf!r}."
-            )
-    if inputs.billing_cycle_months not in (None, 1, 2):
-        raise InvalidBillingInput(
-            "billing_cycle_months must be 1, 2 or None (the plan's default), "
-            f"got {inputs.billing_cycle_months!r}."
-        )
-    phase = inputs.meter_phase
-    if phase is not None and (
-        not isinstance(phase, str) or phase.lower() not in ("single", "three")
-    ):
-        raise InvalidBillingInput(
-            f"meter_phase must be 'single', 'three' or None, got {phase!r}."
-        )
-
-
-def _check_demand(demand: Any) -> None:
-    if demand is None:
-        return
-    if not isinstance(demand, pd.Series) or not isinstance(
-        demand.index, pd.DatetimeIndex
-    ):
-        raise InvalidUsageInput("demand_kw must be a pandas.Series with DatetimeIndex")
-    if demand.index.has_duplicates:
-        raise InvalidUsageInput("demand_kw has more than one reading at a timestamp")
-
-
-def _parse_inputs(
-    rules: PlanRules, inputs: BillingInputs, strict: bool
-) -> tuple[BillingInputs, int]:
-    """The caller's inputs as this plan's bill reads them, and the bill's
-    months. They are checked here once, and the bill trusts them. The
-    caller's BillingInputs is left as given, so it can bill another plan."""
-    _check_values(inputs)
-    _check_demand(inputs.demand_kw)
-    contracts = dict(inputs.contract_capacities)
-    if inputs.contract_capacity_kw is not None:
-        regular = contracts.setdefault("regular", inputs.contract_capacity_kw)
-        if regular != inputs.contract_capacity_kw:
-            raise InvalidBillingInput(
-                f"contract_capacity_kw {inputs.contract_capacity_kw:g} is the "
-                f"經常契約, and contract_capacities gives another, {regular:g}."
-            )
-    cycle_months = int(inputs.billing_cycle_months or rules.cycle_months or 1)
-    parsed = replace(
-        inputs,
-        contract_capacities=contracts,
-        contract_capacity_kw=None,
-        meter_phase=inputs.meter_phase and inputs.meter_phase.lower(),
-        billing_cycle_months=cycle_months,
-    )
-    for message in _validate_billing_inputs(rules, parsed, cycle_months, strict):
-        _warnings.warn(message, UserWarning)
-    return parsed, cycle_months
-
-
-def _validate_billing_inputs(
-    rules: PlanRules,
-    inputs: BillingInputs,
-    cycle_months: int,
-    strict: bool,
-) -> list[str]:
-    """Warnings for inputs this plan does not bill as given, which strict
-    mode raises instead.
-
-    Raises:
-        MissingRequiredInput: If required inputs are missing
-        InvalidBasicFeeInput: If basic_fee_inputs has invalid keys (strict mode)
-        InvalidBillingInput: If contract_capacities has a key the plan does
-            not bill (strict mode)
-    """
-    requirements = PlanRequirements.from_rules(rules)
-    warnings = []
-    contracts = inputs.contract_capacities
-    contract_keys = requirements.contract_keys
-
-    if requirements.requires_contract_capacity and not contracts:
-        raise MissingRequiredInput(
-            f"Plan '{rules.plan_id}' requires contract capacity. "
-            f"Provide either contract_capacity_kw or contract_capacities. "
-            f"Use BillingInputs.for_high_voltage() or "
-            f"BillingInputs.for_extra_high_voltage() for convenient setup."
-        )
-
-    valid_basic_fee_labels = set(requirements.valid_basic_fee_labels)
-    if rules.basic_fee is not None:
-        valid_basic_fee_labels.add("basic_fee")
-
-    if inputs.basic_fee_inputs:
-        unknown_keys = set(inputs.basic_fee_inputs.keys()) - valid_basic_fee_labels
-        if unknown_keys:
-            if strict:
-                raise InvalidBasicFeeInput(
-                    f"Unknown keys in basic_fee_inputs: {unknown_keys}. "
-                    f"Valid keys for this plan: {valid_basic_fee_labels}"
-                )
-            warnings.append(
-                f"Unknown keys in basic_fee_inputs (ignored): {unknown_keys}"
-            )
-
-    unknown_contracts = set(contracts) - contract_keys
-    if unknown_contracts:
-        message = (
-            f"Plan '{rules.plan_id}' bills no {sorted(unknown_contracts)} "
-            "contract, so the bill leaves them out. "
-            + (
-                f"Its contracts are {sorted(contract_keys)}."
-                if contract_keys
-                else "It bills no 契約容量."
-            )
-        )
-        if strict:
-            raise InvalidBillingInput(message)
-        warnings.append(message)
-    if contract_keys and not contracts and "裝置契約" not in inputs.basic_fee_inputs:
-        message = (
-            f"Plan '{rules.plan_id}' bills its basic fee per kW of "
-            "contract_capacities, or of a 裝置契約 in basic_fee_inputs where the "
-            "plan has one. With neither, it bills no kW."
-        )
-        if strict:
-            raise MissingRequiredInput(message)
-        warnings.append(message)
-    if cycle_months > 1 and contract_keys & set(contracts):
-        warnings.append(
-            f"Taipower bills a 契約容量 every month, since 超約 is on 當月最高需量. "
-            f"This bill of plan '{rules.plan_id}' covers {cycle_months} "
-            "months and does not match Taipower's."
-        )
-
-    if requirements.requires_meter_spec:
-        if not all([inputs.meter_phase, inputs.meter_voltage_v, inputs.meter_ampere]):
-            if strict:
-                raise MissingRequiredInput(
-                    f"Plan '{rules.plan_id}' has minimum usage rules. "
-                    f"Providing meter_phase, meter_voltage_v, and meter_ampere "
-                    f"is required for accurate billing. "
-                    f"Use BillingInputs.for_residential() for convenient setup."
-                )
-            warnings.append(
-                f"Plan '{rules.plan_id}' has minimum usage rules. "
-                f"Providing meter specifications is recommended."
-            )
-
-    return warnings
-
-
-def _check_usage_resolution(rules: PlanRules, usage: pd.Series) -> None:
-    """Warn for time-of-use usage that steps by more than an hour. A reading
-    is priced at the period of its timestamp, so a day's kWh would all be
-    priced at 00:00. Irregular readings warn only when every gap between
-    them is a multiple of one step over an hour."""
-    if not rules.time_of_use or len(usage) < 2:
-        return
-    steps = np.unique(np.diff(usage.index.as_unit("ns").asi8))
-    step = pd.Timedelta(math.gcd(*steps.tolist()))
-    if step > pd.Timedelta("1h"):
-        _warnings.warn(
-            f"Usage timestamps are {step / pd.Timedelta('1h'):g} hours apart, or "
-            "a multiple of that. A time-of-use plan prices each reading at the "
-            "period its timestamp falls in, so pass hourly or finer usage.",
-            UserWarning,
-        )
 
 
 def calculate_bill(
@@ -553,8 +145,7 @@ def _bill(
     demand = _read_demand(
         inputs,
         tariff_plan.profile,
-        first_month,
-        cycle_months,
+        lambda index: _bill_months(index, first_month, cycle_months),
         local,
         context,
         times,
@@ -744,14 +335,6 @@ def _calculate_basic_fees(
     frame = pd.DataFrame(details, columns=columns)
     monthly = frame.groupby("period")["cost"].sum().astype(float)
     return monthly.reindex(month_index, fill_value=0.0), frame
-
-
-def _label_rate(rules: PlanRules, label: str, season: str) -> float | None:
-    """The price of the basic fee with this label, or None if the plan has none."""
-    fee = rules.fee(label)
-    if fee is None:
-        return None
-    return fee.rate(season) or 0.0
 
 
 def _basic_fee_rows(
@@ -1004,38 +587,11 @@ def _calculate_adjustments(
     return adjustment, pd.DataFrame(details)
 
 
-def _warn_installed_demand_over_capacity(
-    inputs: BillingInputs, demand: pd.DataFrame | None
-) -> None:
-    """第四章 七(一)2: a metered 裝置契約 user stays on 裝置契約電價 and pays no
-    超約, until 最高需量 passes the 裝置契約容量. From that month the bill moves
-    to 需量契約電價, at a 契約容量 the 電價表 does not give."""
-    if demand is None:
-        return
-    installed = inputs.basic_fee_inputs["裝置契約"]
-    peaks = demand.groupby("bill")["kw"].max()
-    over = peaks[peaks > installed]
-    if not over.empty:
-        _warnings.warn(
-            f"最高需量 {over.iloc[0]:g} kW in {over.index[0]} passes the 裝置契約 "
-            f"{installed:g} kW. From that month Taipower bills 需量契約電價; pass "
-            "contract_capacities with the new 契約容量 to bill it.",
-            UserWarning,
-        )
-
-
 def _minimum_fee(rules: PlanRules, cycle_months: int) -> float | None:
     """The least a bill covering cycle_months months is charged."""
     if rules.min_monthly_fee is None:
         return None
     return float(rules.min_monthly_fee) * cycle_months
-
-
-def _ratio(value: float | None) -> float:
-    """A ratio plans.json must give where it is read."""
-    if value is None:
-        raise TariffError("plans.json lacks a ratio this bill needs")
-    return float(value)
 
 
 def _apply_minimum_usage(
@@ -1132,222 +688,6 @@ def _check_whole_months(
             "one meter reading to the next.",
             PartialPeriodWarning,
         )
-
-
-def _quarter_hour_demand(demand: pd.Series) -> pd.Series:
-    """營業規章 第三條: 需量 is the 十五分鐘平均瓩數, so readings finer than 15
-    minutes are averaged over each quarter hour."""
-    if len(demand) < 2:
-        return demand
-    if demand.index.to_series().diff().median() >= pd.Timedelta("15min"):
-        return demand
-    return demand.resample("15min").mean().dropna()
-
-
-def _check_demand_resolution(demand: pd.Series) -> None:
-    """Warn when demand readings are more than 15 minutes apart. 需量 is a
-    15-minute average (營業規章 第三條), so coarser readings can miss the
-    最高需量."""
-    if len(demand) < 2:
-        return
-
-    minutes = demand.index.to_series().diff().median().total_seconds() / 60
-    if minutes > 15:
-        _warnings.warn(
-            f"Demand data resolution is approximately {int(minutes)} minutes, "
-            f"which is coarser than the recommended 15-minute resolution. "
-            f"Taiwan Power Company calculates demand penalties based on 15-minute "
-            f"intervals. Using coarser data may underestimate peak demand and result "
-            f"in inaccurate penalty calculations. "
-            f"Consider using 'demand_adjustment_factor' parameter to apply a "
-            f"conservative adjustment (e.g., 1.1-1.2 for hourly data).",
-            UserWarning,
-        )
-
-
-_SEGMENT_FEE_LABELS = {
-    "peak": "regular_label",
-    "semi_peak": "semi_peak_label",
-    "saturday_semi_peak": "saturday_label",
-    "off_peak": "off_peak_label",
-}
-
-
-def _compute_over_contract_kw(
-    inputs: BillingInputs,
-    demand: pd.DataFrame | None,
-    parts: dict[pd.Timestamp, dict[str, float]],
-    oc_rule: OverContractRule,
-    outside: set[str],
-) -> dict[pd.Timestamp, dict[str, dict[str, tuple[float, float]]]] | None:
-    """Each bill's 超約瓩數 in each of its seasons, with the contract it is
-    over, by time in the order the 電價表 deducts them."""
-    if inputs.over_contract_kw is not None:
-        contract_kw = inputs.contract_capacities.get("regular", 0.0)
-        over = {"peak": (float(inputs.over_contract_kw), contract_kw)}
-        return {ts: dict.fromkeys(seasons, over) for ts, seasons in parts.items()}
-    if demand is None:
-        return None
-    highest: dict[tuple[pd.Timestamp, str], dict[str, float]] = {
-        (ts, season): {} for ts, seasons in parts.items() for season in seasons
-    }
-    peaks = demand.groupby(["bill", "season", "time"])["kw"].max()
-    for (bill, season, time), kw in peaks.items():
-        if (bill.to_timestamp(), season) in highest:
-            highest[(bill.to_timestamp(), season)][time] = kw
-    return {
-        ts: {
-            season: _calculate_over_contract_from_categories(
-                highest[(ts, season)],
-                inputs.contract_capacities,
-                oc_rule,
-                season,
-                outside,
-            )
-            for season in seasons
-        }
-        for ts, seasons in parts.items()
-    }
-
-
-def _over_contract_fee(
-    rules: PlanRules,
-    oc_rule: OverContractRule,
-    over: dict[str, tuple[float, float]],
-    season: str,
-    outside: set[str],
-) -> float:
-    """A month's 超約 fee at a season's prices. 超出部分依適用電價，在契約容量10%
-    以下部分按2倍、超過部分按3倍 (第三章 五(三)5, 第四章 七(二), 第五章 七(二)).
-    Use outside the times a 週六半尖峰 or 離峰 contract alone covers pays 4.8倍
-    (第三章 七(六), 第四章 八(六), 第五章 八(六))."""
-    base_label = oc_rule.base_fee_label
-    amount = 0.0
-    counted = 0.0
-    for segment, (kw, base) in over.items():
-        label = (
-            getattr(rules.formula, _SEGMENT_FEE_LABELS[segment])
-            if rules.formula
-            else None
-        ) or base_label
-        rate = _label_rate(rules, label, season)
-        if rate is None:
-            rate = _label_rate(rules, base_label, season)
-        if rate is None:
-            continue
-        if segment in outside:
-            amount += rate * kw * _ratio(oc_rule.outside_contract_basic_ratio)
-            continue
-        # 在契約容量10%以下部分: the contract this time's excess is over.
-        low = min(kw, max(0.0, base * oc_rule.threshold_ratio - counted))
-        counted += kw
-        amount += rate * (low * oc_rule.rate_low + (kw - low) * oc_rule.rate_high)
-    return amount
-
-
-def _read_demand(
-    inputs: BillingInputs,
-    profile: Any,
-    first: pd.Period,
-    cycle_months: int,
-    local: pd.DatetimeIndex,
-    context: pd.DataFrame,
-    times: np.ndarray,
-    billing_periods: pd.PeriodIndex,
-) -> pd.DataFrame | None:
-    """Each 需量 as Taipower reads it, in Taiwan wall time, with the bill,
-    season and time it falls in. 需量 is the 十五分鐘平均瓩數 (營業規章 第三條),
-    times demand_adjustment_factor, cut to whole kW (施行細則 第二十八條).
-    Demand on the usage's own timestamps reuses the usage's context."""
-    demand = inputs.demand_kw
-    if demand is None:
-        return None
-    demand = pd.Series(
-        demand.to_numpy(dtype="float64"), index=taiwan_wall_time(demand.index)
-    )
-    _check_demand_resolution(demand)
-    demand = _quarter_hour_demand(demand) * inputs.demand_adjustment_factor
-    if not demand.index.equals(local):
-        context = profile.engine.lookup(demand.index).labels()
-        times = _times(context)
-        billing_periods = _bill_months(demand.index, first, cycle_months)
-    return pd.DataFrame(
-        {
-            "kw": np.floor(np.round(demand.to_numpy(), 6)),
-            "bill": billing_periods,
-            "season": context["season"].to_numpy(),
-            "time": times,
-        },
-        index=demand.index,
-    )
-
-
-def _times_outside_contract(capacities: dict[str, float]) -> set[str]:
-    """Times a 週六半尖峰 or 離峰 contract alone does not cover (第八章 二(一)8).
-
-    A 週六半尖峰契約容量 covers 週六半尖峰 and 離峰, a 離峰契約容量 離峰 only.
-    Any other contract covers every time.
-    """
-    if any(capacities.get(k) for k in ("regular", "non_summer", "semi_peak")):
-        return set()
-    if capacities.get("saturday_semi_peak"):
-        return {"peak", "semi_peak"}
-    if capacities.get("off_peak"):
-        return {"peak", "semi_peak", "saturday_semi_peak"}
-    return set()
-
-
-def _times(context: pd.DataFrame) -> np.ndarray:
-    """Each row's time of day: 尖峰, 半尖峰, 週六半尖峰 or 離峰, the register
-    its kWh is read on and the time its 最高需量 counts in. A 非時間電價 meter
-    has one register, and one 最高需量 against 經常 (+ 非夏月)."""
-    period = context["period"].to_numpy()
-    saturday = context["day_type"].to_numpy() == "saturday"
-    period = np.where(period == "flat", "peak", period)
-    return np.where(
-        saturday & (period == "semi_peak"), "saturday_semi_peak", period
-    ).astype(object)
-
-
-def _calculate_over_contract_from_categories(
-    max_demand: dict[str, float],
-    capacities: dict[str, float],
-    oc_rule: OverContractRule,
-    season: str,
-    outside: set[str],
-) -> dict[str, tuple[float, float]]:
-    """超約瓩數 per time from each time's highest demand (第五章 七(一)).
-
-    Each time's excess leaves out the largest excess of the times before it,
-    so no kW is counted twice.
-    """
-    regular = capacities.get("regular", 0.0)
-    if oc_rule.tier == "three_stage":
-        second, second_kw = "semi_peak", capacities.get("semi_peak", 0.0)
-        peak_base = regular
-    else:
-        second, second_kw = None, capacities.get("non_summer", 0.0)
-        # 夏月尖峰時間超約瓩數＝當月尖峰時間用電最高需量－經常契約容量.
-        peak_base = regular if season == "summer" else regular + second_kw
-    bases = {"peak": peak_base}
-    if second:
-        bases[second] = regular + second_kw
-    bases["saturday_semi_peak"] = (
-        regular + second_kw + capacities.get("saturday_semi_peak", 0.0)
-    )
-    bases["off_peak"] = bases["saturday_semi_peak"] + capacities.get("off_peak", 0.0)
-
-    over: dict[str, tuple[float, float]] = {}
-    largest = 0.0
-    for segment, base in bases.items():
-        excess = max(0.0, max_demand.get(segment, 0.0) - base)
-        if segment in outside:
-            # Billed at 4.8x on its own 最高需量, not 超約 later times deduct.
-            over[segment] = (excess, base)
-            continue
-        over[segment] = (max(0.0, excess - largest), base)
-        largest = max(largest, excess)
-    return over
 
 
 def _calculate_energy_costs(

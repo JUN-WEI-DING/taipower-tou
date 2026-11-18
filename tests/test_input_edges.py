@@ -129,7 +129,7 @@ def test_high_voltage_bill_without_a_contract_is_refused(plan):
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_contract_capacity_kw_is_billed_as_the_contract():
-    """The MissingRequiredInput message (billing.py:290) says to provide either
+    """The MissingRequiredInput message says to provide either
     contract_capacity_kw or contract_capacities. A 200 kW contract pays
     200 x 223.60 = 44720.0 in July, and 150 kW of demand is within it."""
     bill = _high_voltage_bill(
@@ -218,8 +218,8 @@ def test_basic_fee_input_unknown_to_the_plan_is_refused_in_strict_mode():
 
 def test_demand_given_as_a_list_is_refused_as_invalid_usage():
     """InvalidUsageInput docstring: raised when usage inputs are missing or
-    invalid, and billing.py:1389 says demand_kw must be a pandas.Series with a
-    DatetimeIndex."""
+    invalid, and _check_demand says demand_kw must be a pandas.Series with
+    a DatetimeIndex."""
     with pytest.raises(tou.InvalidUsageInput):
         _high_voltage_bill(pd.Series(0.25, index=JULY), demand_kw=[100.0, 230.0])
 
@@ -337,10 +337,8 @@ IN_PROCESS_WARNINGS = {
 
 @pytest.mark.parametrize("case", IN_PROCESS_WARNINGS)
 def test_warning_names_the_callers_line(case):
-    """Each warnings.warn in the package passes a stacklevel (billing.py:387,
-    992, 1353; calendar.py:163) so the warning names the caller's line.
-    A DeprecationWarning that names a package line is hidden by Python's
-    default filter."""
+    """Every warning goes through _warnings.warn, which names the first line
+    outside the package, so the warning names the caller's line."""
     category, call = IN_PROCESS_WARNINGS[case]
     with warnings.catch_warnings(record=True) as record:
         warnings.simplefilter("always")
